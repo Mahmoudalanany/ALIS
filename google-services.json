@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "172006516486",
+    "firebase_url": "https://alis-ac07d.firebaseio.com",
+    "project_id": "alis-ac07d",
+    "storage_bucket": "alis-ac07d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:172006516486:android:107141ab2efe06cf",
+        "android_client_info": {
+          "package_name": "alis.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "172006516486-bsaaav25hpehh80topck4vjurooii3u6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7M6eWAxmvkxI8OS9lPcoyQsRD7Gb_BOU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
