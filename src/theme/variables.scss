@@ -86,3 +86,15 @@ $colors: (
 
 @import "roboto";
 @import "noto-sans";
+//@import "Avenir Next LT Pro";
+
+@font-face{
+  font-family : 'Avenir Next LT Pro';
+  src : url("../assets/fonts/AvenirNextLTPro-Regular.otf");
+  //src : url("../assets/fonts/AvenirNextLTPro-MediumCn.otf");
+  //src:url("../assets/fonts/AvenirNextLTPro-HeavyCn.otf");
+ // font-style: medium;
+  font-weight: 200 !important;
+}
+
+

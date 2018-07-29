@@ -1,14 +1,29 @@
 <ion-header>
   <ion-navbar>
     <ion-title>
-      Ionic Blank
+      Alis
     </ion-title>
   </ion-navbar>
 </ion-header>
 
-<ion-content padding>
-  The world is your oyster.
-  <p>
-    If you get lost, the <a href="http://ionicframework.com/docs/v2">docs</a> will be your guide.
-  </p>
+<ion-content padding text-wrap>
+  
+    <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question">    
+      </ion-input>
+    
+      <button ion-button round outline small class = "Enter" (click)="ask(question)">Enter</button>
+
+
+  <ion-card text-wrap class = "grey">
+    <ion-item text-wrap class = "greytext">{{question}} </ion-item>
+    <ion-label class = "greyclock">{{CurrentTime}} </ion-label>     
+  </ion-card>
+
+  
+  <ion-card text-wrap class = "purple">
+      <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> {{answer}}</ion-item>
+    <ion-label class = "purpleclock">{{CurrentTime}} </ion-label>    
+  </ion-card> 
+
+
 </ion-content>

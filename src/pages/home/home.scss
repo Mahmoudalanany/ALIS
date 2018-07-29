@@ -1,3 +1,65 @@
+$font-family-base: "Avenir Next LT Pro";
+
 page-home {
+
+    .grey{
+        background-color : #efefef;
+        border-radius : 8px;
+        color : #303030;
+        width : 75%;
+        float : left;       
+    }
+
+    .purple{
+        background-color : #8a25d3;
+        border-radius : 8px;
+        color : #ffffff;
+        width : 75%;
+        float : right;     
+    }
+
+    .greytext{
+        background-color : #efefef;
+        color : #303030;
+        float: left;
+        font-family: "Avenir Next LT Pro" !important;
+        font-size: 12px; 
+    }
+
+    .purpletext{
+        background-color : #8a25d3;
+        color : #ffffff;
+        float: left;
+        font-family: "Avenir Next LT Pro" !important;
+        font-size: 12px; 
+    }
+
+    .greyclock{
+        float : right !important;
+        text-align: right !important;
+        font-size : 9px;
+        font-weight:bold;
+        color: #a2a2a2;
+    }
+
+    .purpleclock{
+        float : right !important;
+        text-align: right !important;
+        font-size : 9px;
+        font-weight:bold;
+        color: #efefef;
+    }
+
+    .inputText{
+        position:absolute;
+        bottom:10px;
+        text-align: center;
+    }
+
+    .Enter{
+        position:absolute;
+        bottom:10px;
+        text-align: Left;
+    }
 
 }
