@@ -21061,7 +21061,7 @@ ion-navbar.toolbar {
 }
 
 .toolbar-background-ios {
-  background: #f8f8f8;
+  background: #ffffff;
 }
 
 .header-ios .toolbar-background-ios,
@@ -22565,7 +22565,7 @@ ion-navbar.toolbar {
 
 .toolbar-background-md {
   border-color: #b2b2b2;
-  background: #f8f8f8;
+  background: #ffffff;
 }
 
 .header-md::after,
@@ -24024,7 +24024,7 @@ ion-navbar.toolbar {
 
 .toolbar-background-wp {
   border-color: #b2b2b2;
-  background: #f8f8f8;
+  background: #ffffff;
 }
 
 .toolbar-content-wp {
@@ -25741,5 +25741,6 @@ page-home .inputText {
 page-home .Enter {
   position: absolute;
   bottom: 10px;
-  text-align: Left;
+  right: 5%;
+  text-align: right;
 }
