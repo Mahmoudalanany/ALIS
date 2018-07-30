@@ -11,6 +11,8 @@ export class HomePage {
 
   answers = [];
   CurrentTime;
+  GreyText;
+  PurpleText;
 
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone) {
     var hours = new Date().getHours()
@@ -30,16 +32,18 @@ export class HomePage {
   }
 
   ask(question) {
-    ApiAIPromises.requestText({
+      ApiAIPromises.requestText({
       query: question
     })
       .then(({ result: { fulfillment: { speech } } }) => {
         this.ngZone.run(() => {
+          this.GreyText = question;
+          this.answers.pop();
           this.answers.push(speech);
         });
       }).catch(e => {
         console.log(e);
-      })  
+      }) 
   }
 
 }
