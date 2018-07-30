@@ -37,13 +37,13 @@ export class HomePage {
     })
       .then(({ result: { fulfillment: { speech } } }) => {
         this.ngZone.run(() => {
-          this.GreyText = question;
           this.answers.pop();
           this.answers.push(speech);
         });
       }).catch(e => {
         console.log(e);
       }) 
+      this.GreyText = question;
   }
 
 }
