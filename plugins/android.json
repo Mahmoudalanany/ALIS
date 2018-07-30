@@ -1,0 +1,33 @@
+{
+  "prepare_queue": {
+    "installed": [],
+    "uninstalled": []
+  },
+  "config_munge": {
+    "files": {}
+  },
+  "installed_plugins": {
+    "cordova-plugin-apiai": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-fcm": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-whitelist": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-device": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-splashscreen": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-ionic-webview": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-ionic-keyboard": {
+      "PACKAGE_NAME": "alis.app"
+    }
+  },
+  "dependent_plugins": {}
+}
