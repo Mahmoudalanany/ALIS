@@ -1,29 +1,26 @@
 <ion-header no-border>
-  <ion-navbar color="red">
+  <ion-navbar color="red">      
     <ion-title >
-      Alis
+      <ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>
+      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>
+      <img class ="logo" src="../assets/imgs/Purple-PNG.png" > 
     </ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding text-wrap>
   
-    <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question">    
-      </ion-input>
-    
-      <button ion-button padding round outline small class = "Enter" (click)="ask(question)">Enter</button>
-
+    <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question"></ion-input> 
+    <button ion-button round outline small class = "Enter" (click)="ask(question)">Enter</button>
 
   <ion-card text-wrap class = "grey">
-    <ion-item text-wrap class = "greytext">{{GreyText}} </ion-item>
-    <ion-label class = "greyclock">{{CurrentTime}} </ion-label>     
+    <ion-item text-wrap class = "greytext">{{GreyText}}</ion-item>
+    <ion-label class = "greyclock">{{CurrentTime}}</ion-label>     
   </ion-card>
-
   
   <ion-card text-wrap class = "purple">
-      <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> {{answer}}</ion-item>
-    <ion-label class = "purpleclock">{{CurrentTime}} </ion-label>    
+      <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers">{{answer}}</ion-item>
+    <ion-label class = "purpleclock">{{CurrentTime}}</ion-label>    
   </ion-card> 
-
 
 </ion-content>
