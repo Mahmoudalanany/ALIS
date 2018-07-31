@@ -80,6 +80,8 @@ var HomePage = /** @class */ (function () {
             .then(function (_a) {
             var speech = _a.result.fulfillment.speech;
             _this.ngZone.run(function () {
+                _this.GreyText = question;
+                _this.answers.pop();
                 _this.answers.push(speech);
             });
         }).catch(function (e) {
@@ -88,7 +90,7 @@ var HomePage = /** @class */ (function () {
     };
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/'<ion-header background-color="#ffffff">\n  <ion-navbar background-color="#ffffff">\n    <ion-title color="#ffffff">\n      Alis\n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding text-wrap>\n  \n    <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question">    \n      </ion-input>\n    \n      <button ion-button round outline small class = "Enter" (click)="ask(question)">Enter</button>\n\n\n  <ion-card text-wrap class = "grey">\n    <ion-item text-wrap class = "greytext">{{question}} </ion-item>\n    <ion-label class = "greyclock">{{CurrentTime}} </ion-label>     \n  </ion-card>\n\n  \n  <ion-card text-wrap class = "purple">\n      <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> {{answer}}</ion-item>\n    <ion-label class = "purpleclock">{{CurrentTime}} </ion-label>    \n  </ion-card> \n\n\n</ion-content>\n'/*ion-inline-end:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/'<ion-header no-border>\n  <ion-navbar color="red">\n    <ion-title >\n      Alis\n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content padding text-wrap>\n  \n    <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question">    \n      </ion-input>\n    \n      <button ion-button padding round outline small class = "Enter" (click)="ask(question)">Enter</button>\n\n\n  <ion-card text-wrap class = "grey">\n    <ion-item text-wrap class = "greytext">{{GreyText}} </ion-item>\n    <ion-label class = "greyclock">{{CurrentTime}} </ion-label>     \n  </ion-card>\n\n  \n  <ion-card text-wrap class = "purple">\n      <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> {{answer}}</ion-item>\n    <ion-label class = "purpleclock">{{CurrentTime}} </ion-label>    \n  </ion-card> \n\n\n</ion-content>\n'/*ion-inline-end:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["d" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["e" /* Platform */], __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* NgZone */]])
     ], HomePage);

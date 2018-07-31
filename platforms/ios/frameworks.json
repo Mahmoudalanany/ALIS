@@ -1,0 +1,11 @@
+{
+    "Security.framework": 2,
+    "Foundation.framework": 1,
+    "CoreAudio.framework": 1,
+    "AudioToolbox.framework": 1,
+    "libc++.tbd": 1,
+    "libz.tbd": 3,
+    "AddressBook.framework": 1,
+    "libsqlite3.0.tbd": 1,
+    "WebKit.framework": 1
+}
