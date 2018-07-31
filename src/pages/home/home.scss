@@ -2,6 +2,9 @@ $font-family-base: "Avenir Next LT Pro";
 
 page-home {
 
+    .scroll-content {
+    padding-bottom: 0 !important;
+     }
     .logo{
         display: block;
         margin-left: auto;
@@ -87,6 +90,8 @@ page-home {
     }
 
     .Enter{
+        color:#8a25d3;
+        font-size: 20pt;
         position:fixed;
         bottom:10px;
         right: 5%;

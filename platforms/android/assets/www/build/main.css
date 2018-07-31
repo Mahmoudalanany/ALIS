@@ -25684,6 +25684,39 @@ ion-navbar.toolbar {
   min-height: calc(46px + env(safe-area-inset-bottom));
 }
 
+page-home .scroll-content {
+  padding-bottom: 0 !important;
+}
+
+page-home .logo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 7px;
+  text-align: center;
+  width: 25%;
+}
+
+page-home .Righticon {
+  float: right !important;
+  color: #d8dcdf !important;
+  position: fixed;
+  top: 15%;
+  right: 5%;
+  text-align: right;
+  font-size: 30px;
+}
+
+page-home .Lefticon {
+  float: left !important;
+  color: #d8dcdf !important;
+  position: fixed;
+  top: 15%;
+  left: 5%;
+  text-align: left;
+  font-size: 30px;
+}
+
 page-home .grey {
   background-color: #efefef;
   border-radius: 8px;
@@ -25733,13 +25766,16 @@ page-home .purpleclock {
 }
 
 page-home .inputText {
-  position: absolute;
+  position: fixed;
   bottom: 10px;
+  left: 5%;
   text-align: center;
 }
 
 page-home .Enter {
-  position: absolute;
+  color: #8a25d3;
+  font-size: 20pt;
+  position: fixed;
   bottom: 10px;
   right: 5%;
   text-align: right;

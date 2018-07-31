@@ -8,10 +8,12 @@
   </ion-navbar>
 </ion-header>
 
-<ion-content>
+<ion-content no-bounce>
   
   <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question"></ion-input> 
-  <button ion-button round outline small class = "Enter" (click)="ask(question)">Enter</button>
+    
+      
+<ion-icon (mousedown)="$event.preventDefault(); sendMessage($event)" medium class = "Enter" (click)="ask(question)" name="send"></ion-icon>
 
   <ion-card text-wrap class = "grey">
     <ion-item text-wrap class = "greytext">{{GreyText}}</ion-item>
@@ -22,5 +24,11 @@
     <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers">{{answer}}</ion-item>
     <ion-label class = "purpleclock">{{CurrentTime}}</ion-label>    
   </ion-card> 
+
+
+
+
+
+
 
 </ion-content>
