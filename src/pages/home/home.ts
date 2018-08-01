@@ -8,7 +8,7 @@ declare var ApiAIPromises: any;
   templateUrl: 'home.html'
 })
 export class HomePage {
-
+  showImage=true;
   answers = [];
   CurrentTime;
   GreyText;

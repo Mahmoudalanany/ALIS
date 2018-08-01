@@ -1,8 +1,8 @@
 <ion-header no-border>
   <ion-navbar color="red">      
     <ion-title >
-      <ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>
-      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>
+      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>
+      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->
       <img class ="logo" src="../assets/imgs/Purple-PNG.png" > 
     </ion-title>
   </ion-navbar>
@@ -10,7 +10,7 @@
 
 <ion-content no-bounce>
   
-  <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question"></ion-input> 
+  <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question"><button type="submit" class="button" ng-click="ask(question)"></button></ion-input> 
     
       
 <ion-icon (mousedown)="$event.preventDefault(); sendMessage($event)" medium class = "Enter" (click)="ask(question)" name="send"></ion-icon>
@@ -19,12 +19,19 @@
     <ion-item text-wrap class = "greytext">{{GreyText}}</ion-item>
     <ion-label class = "greyclock">{{CurrentTime}}</ion-label>     
   </ion-card>
-  
+
+  <!--<ion-card text-wrap class = "purple" >
+    <ion-item text-wrap class = "purpletext" > 
+<h1 style="color:#fff"><typing [message]="'.....'" [referenceSpeed]="700" [typo]="false">He;</typing>
+ </h1>
+  </ion-item>    
+  </ion-card> -->
+
   <ion-card text-wrap class = "purple">
-    <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers">{{answer}}</ion-item>
+    <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> 
+{{answer}}</ion-item>
     <ion-label class = "purpleclock">{{CurrentTime}}</ion-label>    
   </ion-card> 
-
 
 
 

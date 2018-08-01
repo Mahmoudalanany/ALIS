@@ -57,6 +57,7 @@ var HomePage = /** @class */ (function () {
         this.navCtrl = navCtrl;
         this.platform = platform;
         this.ngZone = ngZone;
+        this.showImage = true;
         this.answers = [];
         var hours = new Date().getHours();
         var minutes = new Date().getMinutes();
@@ -90,7 +91,7 @@ var HomePage = /** @class */ (function () {
     };
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/'<ion-header no-border>\n  <ion-navbar color="red">      \n    <ion-title >\n      <ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>\n      <img class ="logo" src="../assets/imgs/Purple-PNG.png" > \n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content no-bounce>\n  \n  <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question"></ion-input> \n    \n      \n<ion-icon (mousedown)="$event.preventDefault(); sendMessage($event)" medium class = "Enter" (click)="ask(question)" name="send"></ion-icon>\n\n  <ion-card text-wrap class = "grey">\n    <ion-item text-wrap class = "greytext">{{GreyText}}</ion-item>\n    <ion-label class = "greyclock">{{CurrentTime}}</ion-label>     \n  </ion-card>\n  \n  <ion-card text-wrap class = "purple">\n    <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers">{{answer}}</ion-item>\n    <ion-label class = "purpleclock">{{CurrentTime}}</ion-label>    \n  </ion-card> \n\n</ion-content>'/*ion-inline-end:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/'<ion-header no-border>\n  <ion-navbar color="red">      \n    <ion-title >\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n      <img class ="logo" src="../assets/imgs/Purple-PNG.png" > \n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n<ion-content no-bounce>\n  \n  <ion-input placeholder="Type A Message" class = "inputText" [(ngModel)]="question"></ion-input> \n    \n      \n<ion-icon (mousedown)="$event.preventDefault(); sendMessage($event)" medium class = "Enter" (click)="ask(question)" name="send"></ion-icon>\n\n  <ion-card text-wrap class = "grey">\n    <ion-item text-wrap class = "greytext">{{GreyText}}</ion-item>\n    <ion-label class = "greyclock">{{CurrentTime}}</ion-label>     \n  </ion-card>\n\n <ion-card text-wrap class = "purple" >\n    <ion-item text-wrap class = "purpletext" > \n <h1 style="color:#fff"><typing [message]="\'.....\'" [referenceSpeed]="700" [typo]="false">He;</typing></h1></ion-item>    \n  </ion-card> \n\n  <ion-card text-wrap class = "purple">\n    <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> \n{{answer}}</ion-item>\n    <ion-label class = "purpleclock">{{CurrentTime}}</ion-label>    \n  </ion-card> \n\n\n\n\n\n\n</ion-content>\n'/*ion-inline-end:"/Users/mahmoudal-anany/Documents/GitHub/ALIS/src/pages/home/home.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["d" /* NavController */], __WEBPACK_IMPORTED_MODULE_1_ionic_angular__["e" /* Platform */], __WEBPACK_IMPORTED_MODULE_0__angular_core__["M" /* NgZone */]])
     ], HomePage);
@@ -125,9 +126,10 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__ = __webpack_require__(190);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_status_bar__ = __webpack_require__(192);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__app_component__ = __webpack_require__(268);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__pages_home_home__ = __webpack_require__(193);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_fcm__ = __webpack_require__(194);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_ng_typing__ = __webpack_require__(268);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_component__ = __webpack_require__(269);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__pages_home_home__ = __webpack_require__(193);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_fcm__ = __webpack_require__(194);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -142,30 +144,32 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 
 
 
+
 var AppModule = /** @class */ (function () {
     function AppModule() {
     }
     AppModule = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_1__angular_core__["I" /* NgModule */])({
             declarations: [
-                __WEBPACK_IMPORTED_MODULE_5__app_component__["a" /* MyApp */],
-                __WEBPACK_IMPORTED_MODULE_6__pages_home_home__["a" /* HomePage */]
+                __WEBPACK_IMPORTED_MODULE_6__app_component__["a" /* MyApp */],
+                __WEBPACK_IMPORTED_MODULE_7__pages_home_home__["a" /* HomePage */]
             ],
             imports: [
                 __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
-                __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["c" /* IonicModule */].forRoot(__WEBPACK_IMPORTED_MODULE_5__app_component__["a" /* MyApp */], {}, {
+                __WEBPACK_IMPORTED_MODULE_5_ng_typing__["a" /* TypingModule */],
+                __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["c" /* IonicModule */].forRoot(__WEBPACK_IMPORTED_MODULE_6__app_component__["a" /* MyApp */], {}, {
                     links: []
                 })
             ],
             bootstrap: [__WEBPACK_IMPORTED_MODULE_2_ionic_angular__["a" /* IonicApp */]],
             entryComponents: [
-                __WEBPACK_IMPORTED_MODULE_5__app_component__["a" /* MyApp */],
-                __WEBPACK_IMPORTED_MODULE_6__pages_home_home__["a" /* HomePage */]
+                __WEBPACK_IMPORTED_MODULE_6__app_component__["a" /* MyApp */],
+                __WEBPACK_IMPORTED_MODULE_7__pages_home_home__["a" /* HomePage */]
             ],
             providers: [
                 __WEBPACK_IMPORTED_MODULE_4__ionic_native_status_bar__["a" /* StatusBar */],
                 __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__["a" /* SplashScreen */],
-                __WEBPACK_IMPORTED_MODULE_7__ionic_native_fcm__["a" /* FCM */],
+                __WEBPACK_IMPORTED_MODULE_8__ionic_native_fcm__["a" /* FCM */],
                 { provide: __WEBPACK_IMPORTED_MODULE_1__angular_core__["u" /* ErrorHandler */], useClass: __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["b" /* IonicErrorHandler */] }
             ]
         })
@@ -177,7 +181,7 @@ var AppModule = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 268:
+/***/ 269:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
