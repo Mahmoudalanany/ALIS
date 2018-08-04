@@ -1,5 +1,5 @@
-import { Component , NgZone } from '@angular/core';
-import { NavController , Platform } from 'ionic-angular';
+import { Component , NgZone , ViewChild } from '@angular/core';
+import { NavController , Platform , NavParams , Content} from 'ionic-angular';
 
 declare var ApiAIPromises: any;
 
@@ -8,11 +8,13 @@ declare var ApiAIPromises: any;
   templateUrl: 'home.html'
 })
 export class HomePage {
-  showImage=true;
+  @ViewChild(Content) content: Content;
+  showImage = true;
   answers = [];
   CurrentTime;
   GreyText;
   PurpleText;
+  chats = [];
 
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone) {
     var hours = new Date().getHours()
@@ -31,6 +33,10 @@ export class HomePage {
     }).catch(e => {console.log(e);});
   }
 
+  ionViewDidLoad() {
+    console.log("I'm alive!");
+  }
+  
   ask(question) {
       ApiAIPromises.requestText({
       query: question
@@ -44,6 +50,8 @@ export class HomePage {
         console.log(e);
       }) 
       this.GreyText = question;
+      this.chats.pop();
+      this.chats.push(question);
   }
 
 }
