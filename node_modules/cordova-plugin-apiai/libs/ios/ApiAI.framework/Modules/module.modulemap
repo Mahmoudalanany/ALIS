@@ -1,6 +1,0 @@
-framework module ApiAI {
-  umbrella header "ApiAI.h"
-
-  export *
-  module * { export * }
-}
