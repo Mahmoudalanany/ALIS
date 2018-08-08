@@ -1,0 +1,49 @@
+<ion-header no-border>
+  <ion-navbar color="red">      
+    <ion-title >
+      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>
+      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->
+      <img class ="logo" src="../assets/imgs/Purple-PNG.png" > 
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+
+<ion-content no-bounce>
+
+  <ion-list>
+
+    <div *ngFor="let chat of chats" no-lines>
+
+      <ion-card text-wrap class = "grey">
+        <ion-item text-wrap class = "greytext">{{GreyText}}</ion-item>
+        <ion-label class = "greyclock">{{CurrentTime}}</ion-label>     
+      </ion-card>
+
+      <!--<ion-card text-wrap class = "purple" >
+        <ion-item text-wrap class = "purpletext" > 
+          <h1 style="color:#fff">
+            <typing [message]="'.....'" [referenceSpeed]="700" [typo]="false">He;</typing>
+          </h1>
+        </ion-item>    
+      </ion-card> -->
+
+      <ion-card text-wrap class = "purple">
+        <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> {{answer}}</ion-item>
+        <ion-label class = "purpleclock">{{CurrentTime}}</ion-label>    
+      </ion-card> 
+
+    </div>
+
+  </ion-list>
+
+</ion-content>
+
+<ion-footer>
+  <div class="flex-items" padding>
+    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">
+      <button type="submit" class="button" ng-click="ask(question)"></button>
+    </ion-input>
+    <ion-icon (click)="ask(question)" class="send" name="send"></ion-icon>
+  </div>
+</ion-footer>
