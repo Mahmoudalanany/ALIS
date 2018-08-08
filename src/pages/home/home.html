@@ -44,6 +44,6 @@
     <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">
       <button type="submit" class="button" ng-click="ask(question)"></button>
     </ion-input>
-    <ion-icon  (mousedown)="$event.preventDefault(); sendMessage($event)"  (click)="ask(question)" class="send" name="send"></ion-icon>
+    <ion-icon (click)="ask(question)" class="send" name="send"></ion-icon>
   </div>
 </ion-footer>
