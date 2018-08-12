@@ -88,9 +88,9 @@ var HomePage = /** @class */ (function () {
         this.CurrentTime = strTime;
         platform.ready().then(function () {
             ApiAIPromises.init({
-                clientAccessToken: "e1fa9f39f9b344088ebb4636c307da50"
-            }).then(function (result) { return console.log(result); });
-        }).catch(function (e) { console.log(e); });
+                clientAccessToken: "7327b7cfa4a144a0b3924da4f9b375b9"
+            });
+        });
     }
     HomePage.prototype.ionViewDidLoad = function () {
         console.log("I'm alive!");
@@ -98,25 +98,25 @@ var HomePage = /** @class */ (function () {
     HomePage.prototype.ask = function (question) {
         var _this = this;
         this.answers.pop();
-        if (this.step < 99) {
-            this.SignUp(question);
-        }
-        else {
-            console.log("Signed up completely");
-            ApiAIPromises.requestText({
-                query: question
-            })
-                .then(function (_a) {
-                var speech = _a.result.fulfillment.speech;
-                console.log(JSON.parse(speech));
-                //console.log(JSON.parse(speech).data[0]["name"]);
-                _this.ngZone.run(function () {
-                    _this.answers.push(speech);
-                });
-            }).catch(function (e) {
-                console.log(e);
+        // if (this.step < 99) {
+        //   this.SignUp(question);
+        // }
+        // else {
+        console.log("Signed up completely");
+        ApiAIPromises.requestText({
+            query: question
+        })
+            .then(function (_a) {
+            var fulfillment = _a.result.fulfillment;
+            console.log(fulfillment);
+            //console.log(JSON.parse(speech).data[0]["name"]);
+            _this.ngZone.run(function () {
+                // this.answers.push(speech);
             });
-        }
+        }).catch(function (e) {
+            console.log(e);
+        });
+        // }
         this.GreyText = question;
         this.chats.pop();
         this.chats.push(question);

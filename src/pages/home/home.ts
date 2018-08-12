@@ -44,9 +44,9 @@ export class HomePage {
 
     platform.ready().then(() => {
       ApiAIPromises.init({
-        clientAccessToken: "e1fa9f39f9b344088ebb4636c307da50"
-      }).then(result => console.log(result));
-    }).catch(e => { console.log(e); });
+        clientAccessToken: "7327b7cfa4a144a0b3924da4f9b375b9"
+      })
+    })
   }
 
   ionViewDidLoad() {
@@ -55,25 +55,25 @@ export class HomePage {
 
   ask(question) {
     this.answers.pop();
-    if (this.step < 99) {
-      this.SignUp(question);
-    }
-    else {
+    // if (this.step < 99) {
+    //   this.SignUp(question);
+    // }
+    // else {
       console.log("Signed up completely");
       ApiAIPromises.requestText({
         query: question
       })
-        .then(({ result: { fulfillment: { speech } } }) => {
-          console.log(JSON.parse(speech));
+        .then(({result:{fulfillment}}) => {
+          console.log(fulfillment);
           //console.log(JSON.parse(speech).data[0]["name"]);
 
           this.ngZone.run(() => {
-            this.answers.push(speech);
+            // this.answers.push(speech);
           });
         }).catch(e => {
           console.log(e);
         })
-    }
+    // }
     this.GreyText = question;
     this.chats.pop();
     this.chats.push(question);
