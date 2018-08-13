@@ -10,29 +10,30 @@ import { FCM } from '@ionic-native/fcm';
   templateUrl: 'app.html'
 })
 export class MyApp {
-  rootPage:any = HomePage;
-
+  rootPage: any = HomePage;
+  Token: string
   constructor(platform: Platform, statusBar: StatusBar, splashScreen: SplashScreen, private fcm: FCM) {
     platform.ready().then(() => {
       //Notifications
       fcm.subscribeToTopic('all');
-      fcm.getToken().then(token=>{
-          console.log(token);
+      fcm.getToken().then(token => {
+        console.log(token);
+        this.Token = token;
       })
-      fcm.onNotification().subscribe(data=>{
-        if(data.wasTapped){
+      fcm.onNotification().subscribe(data => {
+        if (data.wasTapped) {
           console.log("Received in background");
         } else {
           console.log("Received in foreground");
         };
       })
-      fcm.onTokenRefresh().subscribe(token=>{
+      fcm.onTokenRefresh().subscribe(token => {
         console.log(token);
       });
       //end notifications.
-       statusBar.styleDefault();
-       splashScreen.hide();
-     });
+      statusBar.styleDefault();
+      splashScreen.hide();
+    });
   }
 }
 

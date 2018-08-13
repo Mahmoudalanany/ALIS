@@ -106,8 +106,9 @@ var HomePage = /** @class */ (function () {
         ApiAIPromises.requestText({
             query: question
         })
-            .then(function (result) {
-            console.log(result);
+            .then(function (_a) {
+            var fulfillment = _a.result.fulfillment;
+            console.log(fulfillment);
             //console.log(JSON.parse(speech).data[0]["name"]);
             _this.ngZone.run(function () {
                 // this.answers.push(speech);

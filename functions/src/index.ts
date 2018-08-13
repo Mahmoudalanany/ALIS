@@ -79,3 +79,10 @@ function checkPhoneNumber(Phone: string){
         snapshot.exists()
     });
 };
+
+function RetrievePhoneNumber(Phone: string){
+    return admin.database().ref('/users').child(Phone).once('value').then((snapshot) => {
+        return snapshot.val();
+    });
+};
+
