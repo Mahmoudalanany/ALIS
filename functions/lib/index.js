@@ -5,6 +5,7 @@ const admin = require("firebase-admin");
 admin.initializeApp();
 /*********************************************************************Firebase Functions********************************************************************************/
 exports.DialogFlow = functions.https.onRequest((request, response) => {
+    console.log(request.body.result);
     if (request.body.result.action == "SignUp-Name-Phone") {
         ADD_User_Name(request.body.result.parameters["phone-number"], request.body.result.contexts[0].parameters["Name"]).then().catch();
     }
@@ -77,6 +78,12 @@ function ADD_User_Study_Level(Phone, Study_Level) {
 function checkPhoneNumber(Phone) {
     return admin.database().ref('/users').child(Phone).once('value').then((snapshot) => {
         snapshot.exists();
+    });
+}
+;
+function RetrievePhoneNumber(Phone) {
+    return admin.database().ref('/users').child(Phone).once('value').then((snapshot) => {
+        return snapshot.val();
     });
 }
 ;

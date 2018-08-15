@@ -1,10 +1,8 @@
-import { MyApp } from './../../app/app.component';
-import { User } from './../../models/user/user.model';
+import { SharingService } from './../../services/Sharing-Service/SharingService.service';
 import { Component, NgZone, ViewChild } from '@angular/core';
-import { NavController, Platform, NavParams, Content } from 'ionic-angular';
+import { NavController, Platform, Content } from 'ionic-angular';
 import { AngularFireDatabase } from '../../../node_modules/angularfire2/database';
-
-declare var ApiAIPromises: any;
+import * as APIModule from 'apiai';
 
 @Component({
   selector: 'page-home',
@@ -18,19 +16,10 @@ export class HomePage {
   GreyText;
   PurpleText;
   chats = [];
+  Token = '';
+  API_Agent: APIModule.Application;
 
-  step = 0;
-  userPhone = '';
-  user: User = {
-    Name: '',
-    Age: undefined,
-    Gender: '',
-    Grade: '',
-    High_School_Name: '',
-    High_School_Degree: ''
-  };
-
-  constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase) {
+  constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService) {
     var hours = new Date().getHours()
     var minutes = new Date().getMinutes();
     var ampm = hours >= 12 ? 'PM' : 'AM';
@@ -41,47 +30,80 @@ export class HomePage {
     this.CurrentTime = strTime;
 
     platform.ready().then(() => {
-      ApiAIPromises.init({
-        clientAccessToken: "7327b7cfa4a144a0b3924da4f9b375b9"
-      })
+      this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
+      this.Token = this.Share.getToken();
+      console.log("Initializing...");
+      //sign in by token
+      this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
+        if (snapshot1.child(this.Token).exists()) {
+          this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('Name').val() } }, { sessionId: '0123456789' })
+            .once('response', ({ result: { fulfillment: { speech } } }) => {
+              console.log(speech + "😊");
+            }).once('error', (error) => {
+              console.log(error);
+            }).end();
+        } else {
+          this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '0123456789' })
+            .once('response', ({ result: { fulfillment: { speech } } }) => {
+              console.log(speech + "😊");
+            }).once('error', (error) => {
+              console.log(error);
+            }).end();
+        }
+      });
     })
-  }
-
-  // ionViewWillLoad() {
-  //   var user_found = false;
-  //   console.log("Initializing...");
-  //   this.afDatabase.database.ref('/users').child(this.app.Token).once('value').then((snapshot) => {
-  //     if (snapshot.exists()) {
-  //       //sign in using app Token
-  //       user_found = true;
-  //       console.log(snapshot.val());
-  //     }
-  //   });
-  //   //   else if () {
-  //   //   //sign in using phone
-
-  //   // }
-  //   // else {
-  //   //   //sign up & put new token
-  //   // }
-  // }
-
-  ionViewDidLoad() {
-    console.log("I'm alive!");
   }
 
   ask(question) {
     this.answers.pop();
-    ApiAIPromises.requestText({ query: question})
-      .then(({ result: { fulfillment: { speech } } }) => {
-        this.ngZone.run(() => {
-          this.answers.push(speech);
-        });
-      }).catch(e => {
-        console.log(e);
-      })
+
+    this.API_Agent.textRequest(question, { sessionId: '0123456789' })
+      .once('response', ({ result }) => {
+        if (result.action == "SignIn.SignIn-custom") {
+          this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
+            if (snapshot1.exists()) {
+              snapshot1.forEach((snapshot2) => {
+                if (snapshot2.child('Phone').val() == result.parameters['phone-number']) {
+                  if (snapshot2.child('Phone').ref.parent.key != this.Token) {
+                    var child = snapshot2.child('Phone').ref.parent;
+                    child.once('value').then((replace) => {
+                      child.parent.child(this.Token).set(replace.val());
+                      child.remove();
+                    });
+                  }
+                  this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('Name').val() } }, { sessionId: '0123456789' })
+                    .once('response', ({ result: { fulfillment: { speech } } }) => {
+                      console.log(speech + "😊");
+                    }).once('error', (error) => {
+                      console.log(error);
+                    }).end();
+                  return true;
+                } else {
+                  console.log("Sorry, I can't find your number. You can sign up again!😊");
+                }
+              })
+            } else {
+              console.log("I think you should sign up!😊");
+            }
+          })
+        } else if (result.action == "SignUp-Name-Phone") {
+          this.ADD_User_Name_and_Phone(result.parameters["phone-number"], result.contexts[0].parameters["Name"]).then().catch();
+          console.log(result.fulfillment.speech);
+        } else {
+          console.log(result.fulfillment.speech);
+        }
+      }).once('error', (error) => {
+        console.log(error);
+      }).end();
     this.GreyText = question;
     this.chats.pop();
     this.chats.push(question);
   }
+
+  ADD_User_Name_and_Phone(Phone: string, Name: string) {
+    return this.afDatabase.database.ref('/users').child(this.Token).update({
+      Name: Name,
+      Phone: Phone
+    });
+  };
 }

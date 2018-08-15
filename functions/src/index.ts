@@ -3,6 +3,8 @@ import * as admin from 'firebase-admin';
 admin.initializeApp();
 /*********************************************************************Firebase Functions********************************************************************************/
 exports.DialogFlow = functions.https.onRequest((request, response) => {
+    console.log(request.body.result);
+    
     if (request.body.result.action == "SignUp-Name-Phone") {
         ADD_User_Name(request.body.result.parameters["phone-number"],request.body.result.contexts[0].parameters["Name"]).then().catch();
     }

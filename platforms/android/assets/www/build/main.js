@@ -1,6 +1,43 @@
 webpackJsonp([0],{
 
-/***/ 179:
+/***/ 158:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SharingService; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+var SharingService = /** @class */ (function () {
+    function SharingService() {
+        this.Token = '';
+    }
+    SharingService.prototype.getToken = function () {
+        return this.Token;
+    };
+    SharingService.prototype.setToken = function (token) {
+        this.Token = token;
+    };
+    SharingService = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["A" /* Injectable */])(),
+        __metadata("design:paramtypes", [])
+    ], SharingService);
+    return SharingService;
+}());
+
+//# sourceMappingURL=SharingService.service.js.map
+
+/***/ }),
+
+/***/ 195:
 /***/ (function(module, exports) {
 
 function webpackEmptyAsyncContext(req) {
@@ -13,11 +50,11 @@ function webpackEmptyAsyncContext(req) {
 webpackEmptyAsyncContext.keys = function() { return []; };
 webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
 module.exports = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = 179;
+webpackEmptyAsyncContext.id = 195;
 
 /***/ }),
 
-/***/ 220:
+/***/ 236:
 /***/ (function(module, exports) {
 
 function webpackEmptyAsyncContext(req) {
@@ -30,21 +67,21 @@ function webpackEmptyAsyncContext(req) {
 webpackEmptyAsyncContext.keys = function() { return []; };
 webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
 module.exports = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = 220;
+webpackEmptyAsyncContext.id = 236;
 
 /***/ }),
 
-/***/ 263:
+/***/ 279:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return HomePage; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__app_firebase_credentials__ = __webpack_require__(441);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__services_Sharing_Service_SharingService_service__ = __webpack_require__(158);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase_app__ = __webpack_require__(442);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_firebase_app___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_firebase_app__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_firebase_functions__ = __webpack_require__(449);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(112);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__node_modules_angularfire2_database__ = __webpack_require__(280);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_apiai__ = __webpack_require__(496);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_apiai___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_apiai__);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -59,25 +96,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-__WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.initializeApp(__WEBPACK_IMPORTED_MODULE_0__app_firebase_credentials__["a" /* FIREBASE_CONFIG */]);
 var HomePage = /** @class */ (function () {
-    function HomePage(navCtrl, platform, ngZone) {
+    function HomePage(navCtrl, platform, ngZone, afDatabase, Share) {
+        var _this = this;
         this.navCtrl = navCtrl;
         this.platform = platform;
         this.ngZone = ngZone;
+        this.afDatabase = afDatabase;
+        this.Share = Share;
         this.showImage = true;
         this.answers = [];
         this.chats = [];
-        this.step = 0;
-        this.userPhone = '';
-        this.user = {
-            Name: '',
-            Age: undefined,
-            Gender: '',
-            Grade: '',
-            High_School_Name: '',
-            High_School_Degree: ''
-        };
+        this.Token = '';
         var hours = new Date().getHours();
         var minutes = new Date().getMinutes();
         var ampm = hours >= 12 ? 'PM' : 'AM';
@@ -87,168 +117,115 @@ var HomePage = /** @class */ (function () {
         var strTime = hours + ':' + minutesupdated + ' ' + ampm;
         this.CurrentTime = strTime;
         platform.ready().then(function () {
-            ApiAIPromises.init({
-                clientAccessToken: "7327b7cfa4a144a0b3924da4f9b375b9"
+            _this.API_Agent = __WEBPACK_IMPORTED_MODULE_4_apiai__("7327b7cfa4a144a0b3924da4f9b375b9");
+            _this.Token = _this.Share.getToken();
+            console.log("Initializing...");
+            //sign in by token
+            _this.afDatabase.database.ref('/users').once('value').then(function (snapshot1) {
+                if (snapshot1.child(_this.Token).exists()) {
+                    _this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(_this.Token).child('Name').val() } }, { sessionId: '0123456789' })
+                        .once('response', function (_a) {
+                        var speech = _a.result.fulfillment.speech;
+                        console.log(speech + "😊");
+                    }).once('error', function (error) {
+                        console.log(error);
+                    }).end();
+                }
+                else {
+                    _this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '0123456789' })
+                        .once('response', function (_a) {
+                        var speech = _a.result.fulfillment.speech;
+                        console.log(speech + "😊");
+                    }).once('error', function (error) {
+                        console.log(error);
+                    }).end();
+                }
             });
         });
     }
-    HomePage.prototype.ionViewDidLoad = function () {
-        console.log("I'm alive!");
-    };
     HomePage.prototype.ask = function (question) {
         var _this = this;
         this.answers.pop();
-        // if (this.step < 99) {
-        //   this.SignUp(question);
-        // }
-        // else {
-        console.log("Signed up completely");
-        ApiAIPromises.requestText({
-            query: question
-        })
-            .then(function (_a) {
-            var fulfillment = _a.result.fulfillment;
-            console.log(fulfillment);
-            //console.log(JSON.parse(speech).data[0]["name"]);
-            _this.ngZone.run(function () {
-                // this.answers.push(speech);
-            });
-        }).catch(function (e) {
-            console.log(e);
-        });
-        // }
-        this.GreyText = question;
-        this.chats.pop();
-        this.chats.push(question);
-    };
-    HomePage.prototype.SignUp = function (reply) {
-        var _this = this;
-        console.log("The current step is " + this.step);
-        if (this.step == 0) {
-            this.answers.push("Welcome to Alis , Please Enter your number");
-            this.step = 1;
-        }
-        else if (this.step == 1) {
-            //check phone 
-            this.userPhone = reply;
-            if (this.userPhone) {
-                //1)check valid number
-                //2)check in database
-                __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('checkPhoneNumber')(this.userPhone).then(function (result) {
-                    if (result.data) {
-                        console.log("exists");
-                        __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('RetrievePhoneNumber')(_this.userPhone).then(function (result) {
-                            //feh number we name bas mafish ay hagah b2yaa
-                            console.log(result.data);
-                            if (result.data.Name == undefined) {
-                                _this.step = 2;
-                                _this.answers.push("What is your Name ?");
-                                return;
+        this.API_Agent.textRequest(question, { sessionId: '0123456789' })
+            .once('response', function (_a) {
+            var result = _a.result;
+            if (result.action == "SignIn.SignIn-custom") {
+                _this.afDatabase.database.ref('/users').once('value').then(function (snapshot1) {
+                    if (snapshot1.exists()) {
+                        snapshot1.forEach(function (snapshot2) {
+                            if (snapshot2.child('Phone').val() == result.parameters['phone-number']) {
+                                if (snapshot2.child('Phone').ref.parent.key != _this.Token) {
+                                    var child = snapshot2.child('Phone').ref.parent;
+                                    child.once('value').then(function (replace) {
+                                        child.parent.child(_this.Token).set(replace.val());
+                                        child.remove();
+                                    });
+                                }
+                                _this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('Name').val() } }, { sessionId: '0123456789' })
+                                    .once('response', function (_a) {
+                                    var speech = _a.result.fulfillment.speech;
+                                    console.log(speech + "😊");
+                                }).once('error', function (error) {
+                                    console.log(error);
+                                }).end();
+                                return true;
                             }
                             else {
-                                _this.user.Name = result.data.Name;
-                            }
-                            if (result.data.Age == undefined) {
-                                _this.step = 3;
-                                _this.answers.push("How Old Are You , " + _this.user.Name + " ?");
-                            }
-                            else if (result.data.Gender == undefined) {
-                                _this.step = 4;
-                                _this.answers.push("Male or Female , " + _this.user.Name + " ?");
-                            }
-                            else if (result.data.Grade == undefined) {
-                                _this.step = 5;
-                                _this.answers.push("What is your School Grade , " + _this.user.Name + " ?");
-                            }
-                            else if (result.data.High_School_Name == undefined) {
-                                _this.step = 6;
-                                _this.answers.push("Which school do you attend , " + _this.user.Name + " ?");
-                            }
-                            else if (result.data.High_School_Degree == undefined) {
-                                _this.step = 7;
-                                _this.answers.push("IG , SAT or National , " + _this.user.Name + " ?");
-                            }
-                            else {
-                                _this.step = 1000;
-                                _this.answers.push("Welcome " + _this.user.Name + ", How can I help you ?");
+                                console.log("Sorry, I can't find your number. You can sign up again!😊");
                             }
                         });
                     }
                     else {
-                        console.log("Doesn't exist");
-                        _this.step = 2;
-                        _this.answers.push("What is your Name ?");
+                        console.log("Sorry, I can't find your number. You can sign up again!😊");
                     }
                 });
             }
-        }
-        else if (this.step == 2) {
-            this.user.Name = reply;
-            //insert database *Phone as Key, Name as value*
-            __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('ADD_User_Name')({ Phone: this.userPhone, data: this.user.Name });
-            this.step = 3;
-            this.answers.push("How Old Are You , " + this.user.Name + " ?");
-        }
-        else if (this.step == 3) {
-            this.user.Age = parseInt(reply);
-            //insert database
-            __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('ADD_User_Age')({ Phone: this.userPhone, data: this.user.Age });
-            this.step = 4;
-            this.answers.push("Male or Female , " + this.user.Name + " ?");
-        }
-        else if (this.step == 4) {
-            this.user.Gender = reply;
-            //insert database
-            __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('ADD_User_Gender')({ Phone: this.userPhone, data: this.user.Gender });
-            this.step = 5;
-            this.answers.push("What is your School Grade , " + this.user.Name + " ?");
-        }
-        else if (this.step == 5) {
-            this.user.Grade = reply;
-            //insert database
-            __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('ADD_User_Grade')({ Phone: this.userPhone, data: this.user.Grade });
-            this.step = 6;
-            this.answers.push("Which school do you attend , " + this.user.Name + " ?");
-        }
-        else if (this.step == 6) {
-            this.user.High_School_Name = reply;
-            //insert database
-            __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('ADD_User_High_School_Name')({ Phone: this.userPhone, data: this.user.High_School_Name });
-            this.step = 7;
-            this.answers.push("IG , SAT or National , " + this.user.Name + " ?");
-        }
-        else if (this.step == 7) {
-            this.user.High_School_Degree = reply;
-            //insert database
-            __WEBPACK_IMPORTED_MODULE_3_firebase_app___default.a.functions().httpsCallable('ADD_User_High_School_Degree')({ Phone: this.userPhone, data: this.user.High_School_Degree });
-            this.step = 1000;
-            this.answers.push("Welcome " + this.user.Name + ", How can I help you ?");
-        }
+            else if (result.action == "SignUp-Name-Phone") {
+                _this.ADD_User_Name_and_Phone(result.parameters["phone-number"], result.contexts[0].parameters["Name"]).then().catch();
+                console.log(result.fulfillment.speech);
+            }
+            else {
+                console.log(result.fulfillment.speech);
+            }
+        }).once('error', function (error) {
+            console.log(error);
+        }).end();
+        this.GreyText = question;
+        this.chats.pop();
+        this.chats.push(question);
     };
+    HomePage.prototype.ADD_User_Name_and_Phone = function (Phone, Name) {
+        return this.afDatabase.database.ref('/users').child(this.Token).update({
+            Name: Name,
+            Phone: Phone
+        });
+    };
+    ;
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_1__angular_core__["_8" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_2_ionic_angular__["a" /* Content */]),
-        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["a" /* Content */])
+        __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["a" /* Content */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["a" /* Content */]) === "function" && _a || Object)
     ], HomePage.prototype, "content", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_1__angular_core__["m" /* Component */])({
             selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n  <ion-navbar color="red">      \n    <ion-title >\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n      <img class ="logo" src="../assets/imgs/Purple-PNG.png" > \n    </ion-title>\n  </ion-navbar>\n</ion-header>\n\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngFor="let chat of chats" no-lines>\n\n      <ion-card text-wrap class = "grey">\n        <ion-item text-wrap class = "greytext">{{GreyText}}</ion-item>\n        <ion-label class = "greyclock">{{CurrentTime}}</ion-label>     \n      </ion-card>\n\n      <!--<ion-card text-wrap class = "purple" >\n        <ion-item text-wrap class = "purpletext" > \n          <h1 style="color:#fff">\n            <typing [message]="\'.....\'" [referenceSpeed]="700" [typo]="false">He;</typing>\n          </h1>\n        </ion-item>    \n      </ion-card> -->\n\n      <ion-card text-wrap class = "purple">\n        <ion-item text-wrap class = "purpletext" *ngFor = "let answer of answers"> {{answer}}</ion-item>\n        <ion-label class = "purpleclock">{{CurrentTime}}</ion-label>    \n      </ion-card> \n\n    </div>\n\n  </ion-list>\n\n</ion-content>\n\n<ion-footer>\n  <div class="flex-items" padding>\n    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">\n      <button type="submit" class="button" ng-click="ask(question)"></button>\n    </ion-input>\n    <ion-icon (click)="ask(question)" class="send" name="send"></ion-icon>\n  </div>\n</ion-footer>\n'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2_ionic_angular__["e" /* NavController */], __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["f" /* Platform */], __WEBPACK_IMPORTED_MODULE_1__angular_core__["M" /* NgZone */]])
+        __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["e" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["e" /* NavController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["f" /* Platform */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["f" /* Platform */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_1__angular_core__["M" /* NgZone */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_core__["M" /* NgZone */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_3__node_modules_angularfire2_database__["a" /* AngularFireDatabase */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__node_modules_angularfire2_database__["a" /* AngularFireDatabase */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_0__services_Sharing_Service_SharingService_service__["a" /* SharingService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__services_Sharing_Service_SharingService_service__["a" /* SharingService */]) === "function" && _f || Object])
     ], HomePage);
     return HomePage;
+    var _a, _b, _c, _d, _e, _f;
 }());
 
 //# sourceMappingURL=home.js.map
 
 /***/ }),
 
-/***/ 266:
+/***/ 304:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(267);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(389);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(305);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(427);
 
 
 Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* platformBrowserDynamic */])().bootstrapModule(__WEBPACK_IMPORTED_MODULE_1__app_module__["a" /* AppModule */]);
@@ -256,26 +233,34 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 
 /***/ }),
 
-/***/ 389:
+/***/ 427:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(45);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__ = __webpack_require__(260);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_status_bar__ = __webpack_require__(262);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_ng_typing__ = __webpack_require__(439);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__app_component__ = __webpack_require__(440);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__pages_home_home__ = __webpack_require__(263);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__ionic_native_fcm__ = __webpack_require__(265);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__firebase_credentials__ = __webpack_require__(428);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_ionic_angular__ = __webpack_require__(112);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_splash_screen__ = __webpack_require__(276);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_status_bar__ = __webpack_require__(278);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_ng_typing__ = __webpack_require__(478);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__app_component__ = __webpack_require__(479);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__pages_home_home__ = __webpack_require__(279);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9_angularfire2__ = __webpack_require__(287);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_angularfire2_database__ = __webpack_require__(280);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__ionic_native_fcm__ = __webpack_require__(303);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__services_Sharing_Service_SharingService_service__ = __webpack_require__(158);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
+
+
+
 
 
 
@@ -289,28 +274,31 @@ var AppModule = /** @class */ (function () {
     function AppModule() {
     }
     AppModule = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_1__angular_core__["I" /* NgModule */])({
+        Object(__WEBPACK_IMPORTED_MODULE_2__angular_core__["I" /* NgModule */])({
             declarations: [
-                __WEBPACK_IMPORTED_MODULE_6__app_component__["a" /* MyApp */],
-                __WEBPACK_IMPORTED_MODULE_7__pages_home_home__["a" /* HomePage */]
+                __WEBPACK_IMPORTED_MODULE_7__app_component__["a" /* MyApp */],
+                __WEBPACK_IMPORTED_MODULE_8__pages_home_home__["a" /* HomePage */]
             ],
             imports: [
-                __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__["a" /* BrowserModule */],
-                __WEBPACK_IMPORTED_MODULE_5_ng_typing__["a" /* TypingModule */],
-                __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["d" /* IonicModule */].forRoot(__WEBPACK_IMPORTED_MODULE_6__app_component__["a" /* MyApp */], {}, {
+                __WEBPACK_IMPORTED_MODULE_1__angular_platform_browser__["a" /* BrowserModule */],
+                __WEBPACK_IMPORTED_MODULE_6_ng_typing__["a" /* TypingModule */],
+                __WEBPACK_IMPORTED_MODULE_3_ionic_angular__["d" /* IonicModule */].forRoot(__WEBPACK_IMPORTED_MODULE_7__app_component__["a" /* MyApp */], {}, {
                     links: []
-                })
+                }),
+                __WEBPACK_IMPORTED_MODULE_9_angularfire2__["a" /* AngularFireModule */].initializeApp(__WEBPACK_IMPORTED_MODULE_0__firebase_credentials__["a" /* FIREBASE_CONFIG */]),
+                __WEBPACK_IMPORTED_MODULE_10_angularfire2_database__["b" /* AngularFireDatabaseModule */]
             ],
-            bootstrap: [__WEBPACK_IMPORTED_MODULE_2_ionic_angular__["b" /* IonicApp */]],
+            bootstrap: [__WEBPACK_IMPORTED_MODULE_3_ionic_angular__["b" /* IonicApp */]],
             entryComponents: [
-                __WEBPACK_IMPORTED_MODULE_6__app_component__["a" /* MyApp */],
-                __WEBPACK_IMPORTED_MODULE_7__pages_home_home__["a" /* HomePage */]
+                __WEBPACK_IMPORTED_MODULE_7__app_component__["a" /* MyApp */],
+                __WEBPACK_IMPORTED_MODULE_8__pages_home_home__["a" /* HomePage */]
             ],
             providers: [
-                __WEBPACK_IMPORTED_MODULE_4__ionic_native_status_bar__["a" /* StatusBar */],
-                __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__["a" /* SplashScreen */],
-                __WEBPACK_IMPORTED_MODULE_8__ionic_native_fcm__["a" /* FCM */],
-                { provide: __WEBPACK_IMPORTED_MODULE_1__angular_core__["u" /* ErrorHandler */], useClass: __WEBPACK_IMPORTED_MODULE_2_ionic_angular__["c" /* IonicErrorHandler */] }
+                __WEBPACK_IMPORTED_MODULE_5__ionic_native_status_bar__["a" /* StatusBar */],
+                __WEBPACK_IMPORTED_MODULE_4__ionic_native_splash_screen__["a" /* SplashScreen */],
+                __WEBPACK_IMPORTED_MODULE_11__ionic_native_fcm__["a" /* FCM */],
+                __WEBPACK_IMPORTED_MODULE_12__services_Sharing_Service_SharingService_service__["a" /* SharingService */],
+                { provide: __WEBPACK_IMPORTED_MODULE_2__angular_core__["u" /* ErrorHandler */], useClass: __WEBPACK_IMPORTED_MODULE_3_ionic_angular__["c" /* IonicErrorHandler */] }
             ]
         })
     ], AppModule);
@@ -321,72 +309,7 @@ var AppModule = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 440:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MyApp; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_ionic_angular__ = __webpack_require__(101);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__ = __webpack_require__(262);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__ = __webpack_require__(260);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__pages_home_home__ = __webpack_require__(263);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_fcm__ = __webpack_require__(265);
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-
-var MyApp = /** @class */ (function () {
-    function MyApp(platform, statusBar, splashScreen, fcm) {
-        this.fcm = fcm;
-        this.rootPage = __WEBPACK_IMPORTED_MODULE_4__pages_home_home__["a" /* HomePage */];
-        platform.ready().then(function () {
-            //Notifications
-            fcm.subscribeToTopic('all');
-            fcm.getToken().then(function (token) {
-                console.log(token);
-            });
-            fcm.onNotification().subscribe(function (data) {
-                if (data.wasTapped) {
-                    console.log("Received in background");
-                }
-                else {
-                    console.log("Received in foreground");
-                }
-                ;
-            });
-            fcm.onTokenRefresh().subscribe(function (token) {
-                console.log(token);
-            });
-            //end notifications.
-            statusBar.styleDefault();
-            splashScreen.hide();
-        });
-    }
-    MyApp = __decorate([
-        Object(__WEBPACK_IMPORTED_MODULE_0__angular_core__["m" /* Component */])({template:/*ion-inline-start:"D:\FF\ALIS\src\app\app.html"*/'<ion-nav [root]="rootPage"></ion-nav>\n\n'/*ion-inline-end:"D:\FF\ALIS\src\app\app.html"*/
-        }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_1_ionic_angular__["f" /* Platform */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_status_bar__["a" /* StatusBar */], __WEBPACK_IMPORTED_MODULE_3__ionic_native_splash_screen__["a" /* SplashScreen */], __WEBPACK_IMPORTED_MODULE_5__ionic_native_fcm__["a" /* FCM */]])
-    ], MyApp);
-    return MyApp;
-}());
-
-//# sourceMappingURL=app.component.js.map
-
-/***/ }),
-
-/***/ 441:
+/***/ 428:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -401,7 +324,91 @@ var FIREBASE_CONFIG = {
 };
 //# sourceMappingURL=firebase.credentials.js.map
 
+/***/ }),
+
+/***/ 479:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MyApp; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__services_Sharing_Service_SharingService_service__ = __webpack_require__(158);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(112);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_status_bar__ = __webpack_require__(278);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_splash_screen__ = __webpack_require__(276);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages_home_home__ = __webpack_require__(279);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_fcm__ = __webpack_require__(303);
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+
+
+var MyApp = /** @class */ (function () {
+    function MyApp(platform, statusBar, splashScreen, fcm, Share) {
+        var _this = this;
+        this.fcm = fcm;
+        this.Share = Share;
+        this.rootPage = __WEBPACK_IMPORTED_MODULE_5__pages_home_home__["a" /* HomePage */];
+        //Notifications
+        fcm.subscribeToTopic('all');
+        fcm.getToken().then(function (token) {
+            console.log(token);
+            _this.Share.setToken(token);
+        });
+        fcm.onNotification().subscribe(function (data) {
+            if (data.wasTapped) {
+                console.log("Received in background");
+            }
+            else {
+                console.log("Received in foreground");
+            }
+            ;
+        });
+        fcm.onTokenRefresh().subscribe(function (token) {
+            console.log(token);
+        });
+        //end notifications.
+        platform.ready().then(function () {
+            statusBar.styleDefault();
+            splashScreen.hide();
+        });
+    }
+    MyApp = __decorate([
+        Object(__WEBPACK_IMPORTED_MODULE_1__angular_core__["m" /* Component */])({template:/*ion-inline-start:"D:\FF\ALIS\src\app\app.html"*/'<ion-nav [root]="rootPage"></ion-nav>\n\n'/*ion-inline-end:"D:\FF\ALIS\src\app\app.html"*/
+        }),
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_2_ionic_angular__["f" /* Platform */], __WEBPACK_IMPORTED_MODULE_3__ionic_native_status_bar__["a" /* StatusBar */], __WEBPACK_IMPORTED_MODULE_4__ionic_native_splash_screen__["a" /* SplashScreen */], __WEBPACK_IMPORTED_MODULE_6__ionic_native_fcm__["a" /* FCM */], __WEBPACK_IMPORTED_MODULE_0__services_Sharing_Service_SharingService_service__["a" /* SharingService */]])
+    ], MyApp);
+    return MyApp;
+}());
+
+//# sourceMappingURL=app.component.js.map
+
+/***/ }),
+
+/***/ 501:
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+
+/***/ 503:
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
 /***/ })
 
-},[266]);
+},[304]);
 //# sourceMappingURL=main.js.map
