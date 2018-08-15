@@ -10,24 +10,20 @@ import * as APIModule from 'apiai';
 })
 export class HomePage {
   @ViewChild(Content) content: Content;
-  showImage = true;
-  answers = [];
-  CurrentTime;
-  GreyText;
-  PurpleText;
-  chats = [];
+  chats = []; //User Message
+  answers = []; //ALIS Reply
+  CurrentTime = []; //Message's Sent Time
+  showImage = []; //array indicating there is a message or no
+  DisplayImage = []; //array containing the images
   Token = '';
   API_Agent: APIModule.Application;
+  
+  
+   ionViewDidLoad() {
+    console.log("Welcome To ALIS's Log !");
+   }
 
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService) {
-    var hours = new Date().getHours()
-    var minutes = new Date().getMinutes();
-    var ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12; // the hour '0' should be '12'
-    var minutesupdated = minutes < 10 ? '0' + minutes : minutes;
-    var strTime = hours + ':' + minutesupdated + ' ' + ampm;
-    this.CurrentTime = strTime;
 
     platform.ready().then(() => {
       this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
@@ -55,7 +51,16 @@ export class HomePage {
   }
 
   ask(question) {
-    this.answers.pop();
+    this.content.scrollToBottom();
+    var hours = new Date().getHours();
+    var minutes = new Date().getMinutes();
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    var minutesupdated = minutes < 10 ? '0' + minutes : minutes;
+    var strTime = hours + ':' + minutesupdated + ' ' + ampm;
+    this.CurrentTime.push(strTime);
+    var output = 'Message Recieved';
 
     this.API_Agent.textRequest(question, { sessionId: '0123456789' })
       .once('response', ({ result }) => {
@@ -74,6 +79,8 @@ export class HomePage {
                   this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('Name').val() } }, { sessionId: '0123456789' })
                     .once('response', ({ result: { fulfillment: { speech } } }) => {
                       console.log(speech + "😊");
+                      this.chats.push(question);
+                      this.answers.push(speech);
                     }).once('error', (error) => {
                       console.log(error);
                     }).end();
@@ -95,9 +102,7 @@ export class HomePage {
       }).once('error', (error) => {
         console.log(error);
       }).end();
-    this.GreyText = question;
-    this.chats.pop();
-    this.chats.push(question);
+
   }
 
   ADD_User_Name_and_Phone(Phone: string, Name: string) {
