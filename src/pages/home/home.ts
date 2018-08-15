@@ -15,14 +15,15 @@ export class HomePage {
   CurrentTime = []; //Message's Sent Time
   showImage = []; //array indicating there is a message or no
   DisplayImage = []; //array containing the images
-  tutorsData = [];
+  tutorsData= [];
   Token = '';
+  question: string;
   API_Agent: APIModule.Application;
-  
-  
-   ionViewDidLoad() {
+
+
+  ionViewDidLoad() {
     console.log("Welcome To ALIS's Log !");
-   }
+  }
 
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService) {
 
@@ -36,6 +37,7 @@ export class HomePage {
           this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('Name').val() } }, { sessionId: '0123456789' })
             .once('response', ({ result: { fulfillment: { speech } } }) => {
               console.log(speech + "😊");
+              this.answers.push(speech);
             }).once('error', (error) => {
               console.log(error);
             }).end();
@@ -43,6 +45,7 @@ export class HomePage {
           this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '0123456789' })
             .once('response', ({ result: { fulfillment: { speech } } }) => {
               console.log(speech + "😊");
+              this.answers.push(speech);
             }).once('error', (error) => {
               console.log(error);
             }).end();
@@ -52,6 +55,7 @@ export class HomePage {
   }
 
   ask(question) {
+    this.chats.push(this.question);
     this.content.scrollToBottom();
     var hours = new Date().getHours();
     var minutes = new Date().getMinutes();
@@ -63,7 +67,7 @@ export class HomePage {
     this.CurrentTime.push(strTime);
     var output = 'Message Recieved';
 
-    this.API_Agent.textRequest(question, { sessionId: '0123456789' })
+    this.API_Agent.textRequest(this.question, { sessionId: '0123456789' })
       .once('response', ({ result }) => {
         if (result.action == "SignIn.SignIn-custom") {
           this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
@@ -80,7 +84,7 @@ export class HomePage {
                   this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('Name').val() } }, { sessionId: '0123456789' })
                     .once('response', ({ result: { fulfillment: { speech } } }) => {
                       console.log(speech + "😊");
-                      this.chats.push(question);
+                      this.chats.push(this.question);
                       this.answers.push(speech);
                     }).once('error', (error) => {
                       console.log(error);
@@ -88,15 +92,18 @@ export class HomePage {
                   return true;
                 } else {
                   console.log("Sorry, I can't find your number. You can sign up again!😊");
+                  this.answers.push("Sorry, I can't find your number. You can sign up again!😊");
                 }
               })
             } else {
               console.log("I think you should sign up!😊");
+              this.answers.push("I think you should sign up!😊");
             }
           })
         } else if (result.action == "SignUp-Name-Phone") {
           this.ADD_User_Name_and_Phone(result.parameters["phone-number"], result.contexts[0].parameters["Name"]).then().catch();
           console.log(result.fulfillment.speech);
+          this.answers.push(result.fulfillment.speech);
         }
         else if (result.action == "needTutor") {
 
@@ -118,14 +125,16 @@ export class HomePage {
               console.log(this.tutorsData[0].name);
             })
         }
-        else {
+         else {
           console.log(result.fulfillment.speech);
+          this.answers.push(result.fulfillment.speech);
         }
       }).once('error', (error) => {
         console.log(error);
       }).end();
 
-  }
+      this.question = null;
+    }
 
   ADD_User_Name_and_Phone(Phone: string, Name: string) {
     return this.afDatabase.database.ref('/users').child(this.Token).update({

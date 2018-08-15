@@ -1,24 +1,27 @@
 <ion-header no-border>
-  <ion-navbar color="red">      
-    <ion-title >
+  <ion-navbar color="red">
+    <ion-title>
       <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>
       <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->
-      <img class ="logo" src="../assets/imgs/Purple-PNG.png" > 
+      <img class="logo" src="../assets/imgs/Purple-PNG.png">
     </ion-title>
   </ion-navbar>
 </ion-header>
 
 <ion-content no-bounce>
   <ion-list>
+    <ion-card text-wrap class="purple" *ngIf="answers?.length > 0">
+      <ion-item text-wrap class="purpletext"> {{answers[0]}}</ion-item>
+    </ion-card>
     <div *ngFor="let chat of chats; let i = index" no-lines>
-      <ion-card text-wrap class = "grey">
-        <ion-item text-wrap class = "greytext">{{chats[i]}}</ion-item>
-        <ion-label class = "greyclock">{{CurrentTime[i]}}</ion-label>     
+      <ion-card text-wrap class="grey">
+        <ion-item text-wrap class="greytext">{{chats[i]}}</ion-item>
+        <ion-label class="greyclock">{{CurrentTime[i]}}</ion-label>
       </ion-card>
-      <ion-card text-wrap class = "purple">
-        <ion-item text-wrap class = "purpletext"> {{answers[i]}}</ion-item>
-        <ion-label class = "purpleclock">{{CurrentTime[i]}}</ion-label>    
-      </ion-card> 
+      <ion-card text-wrap class="purple">
+        <ion-item text-wrap class="purpletext"> {{answers[i+1]}}</ion-item>
+        <ion-label class="purpleclock">{{CurrentTime[i]}}</ion-label>
+      </ion-card>
     </div>
   </ion-list>
 </ion-content>
