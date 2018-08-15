@@ -15,6 +15,7 @@ export class HomePage {
   CurrentTime = []; //Message's Sent Time
   showImage = []; //array indicating there is a message or no
   DisplayImage = []; //array containing the images
+  tutorsData = [];
   Token = '';
   API_Agent: APIModule.Application;
   
@@ -96,7 +97,28 @@ export class HomePage {
         } else if (result.action == "SignUp-Name-Phone") {
           this.ADD_User_Name_and_Phone(result.parameters["phone-number"], result.contexts[0].parameters["Name"]).then().catch();
           console.log(result.fulfillment.speech);
-        } else {
+        }
+        else if (result.action == "needTutor") {
+
+          var teachers = [];
+          var teacherDocsValues = ``;
+
+          var paramSubject = result.parameters.tutorSubject;
+          this.afDatabase.database.ref('/tutors').orderByChild('subject').equalTo(`${paramSubject.toLowerCase()}`)
+            .on('value', (snapshot) => {
+
+              snapshot.forEach((data) => {
+                teachers.push(data.val());
+              });
+
+              this.tutorsData = teachers;
+              console.log('teachers -->', this.tutorsData);
+
+              console.log(this.tutorsData[0].image);
+              console.log(this.tutorsData[0].name);
+            })
+        }
+        else {
           console.log(result.fulfillment.speech);
         }
       }).once('error', (error) => {
