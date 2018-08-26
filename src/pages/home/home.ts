@@ -15,7 +15,8 @@ export class HomePage {
   CurrentTime = []; //Message's Sent Time
   showImage = []; //array indicating there is a message or no
   DisplayImage = []; //array containing the images
-  tutorsData= [];
+  tutorsData = [];
+  Tutors = [];
   Token = '';
   question: string;
   API_Agent: APIModule.Application;
@@ -23,6 +24,10 @@ export class HomePage {
 
   ionViewDidLoad() {
     console.log("Welcome To ALIS's Log !");
+  }
+
+  display(){
+    document.getElementById("sending").innerText = "hi";
   }
 
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService) {
@@ -121,8 +126,20 @@ export class HomePage {
               this.tutorsData = teachers;
               console.log('teachers -->', this.tutorsData);
 
-              console.log(this.tutorsData[0].image);
-              console.log(this.tutorsData[0].name);
+              var i = 0;
+              var tutorsinfo = '';
+              for (i = 0 ; i < this.tutorsData.length ; i++)
+              {
+                console.log(this.tutorsData[i].image);
+                console.log(this.tutorsData[i].name);
+                console.log(this.tutorsData[i].salary);
+                console.log(this.tutorsData[i].subject);
+
+                this.Tutors.push(this.tutorsData[i].name); //for tutors drop down options
+
+                tutorsinfo += "Tutor Number " + i+1 + " Name is" + this.tutorsData[i].name + " of subject " + this.tutorsData[i].subject + " for " + this.tutorsData[i].salary + " L.E and image = "+ this.tutorsData[i].image + "\n \n";
+              }
+              this.answers.push(tutorsinfo);
             })
         }
          else {

@@ -14,7 +14,7 @@
       <ion-item text-wrap class="purpletext"> {{answers[0]}}</ion-item>
     </ion-card>
     <div *ngFor="let chat of chats; let i = index" no-lines>
-      <ion-card text-wrap class="grey">
+      <ion-card text-wrap class="grey" id = sending>
         <ion-item text-wrap class="greytext">{{chats[i]}}</ion-item>
         <ion-label class="greyclock">{{CurrentTime[i]}}</ion-label>
       </ion-card>
