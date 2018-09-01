@@ -10,6 +10,7 @@ import { HomePage } from '../pages/home/home';
 import { AngularFireModule } from 'angularfire2';
 import { AngularFireDatabaseModule } from 'angularfire2/database'
 import { FCM } from '@ionic-native/fcm';
+import { Contacts } from '@ionic-native/contacts';
 import { SharingService } from '../services/Sharing-Service/SharingService.service';
 
 @NgModule({
@@ -33,6 +34,7 @@ import { SharingService } from '../services/Sharing-Service/SharingService.servi
     StatusBar,
     SplashScreen,
     FCM,
+    Contacts,
     SharingService,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]

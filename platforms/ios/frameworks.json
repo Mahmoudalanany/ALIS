@@ -5,7 +5,8 @@
     "AudioToolbox.framework": 1,
     "libc++.tbd": 1,
     "libz.tbd": 3,
-    "AddressBook.framework": 1,
+    "AddressBook.framework": 2,
     "libsqlite3.0.tbd": 1,
-    "WebKit.framework": 1
+    "WebKit.framework": 1,
+    "AddressBookUI.framework": 1
 }

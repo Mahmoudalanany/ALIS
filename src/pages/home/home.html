@@ -7,14 +7,13 @@
     </ion-title>
   </ion-navbar>
 </ion-header>
-
 <ion-content no-bounce>
   <ion-list>
     <ion-card text-wrap class="purple" *ngIf="answers?.length > 0">
       <ion-item text-wrap class="purpletext"> {{answers[0]}}</ion-item>
     </ion-card>
     <div *ngFor="let chat of chats; let i = index" no-lines>
-      <ion-card text-wrap class="grey" id = sending>
+      <ion-card text-wrap class="grey">
         <ion-item text-wrap class="greytext">{{chats[i]}}</ion-item>
         <ion-label class="greyclock">{{CurrentTime[i]}}</ion-label>
       </ion-card>
@@ -28,7 +27,7 @@
 
 <ion-footer>
   <div class="flex-items" padding>
-    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message" onfocus ="this.question='';" clear=true clearInput=true clearOnEdit = true>
+    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">
       <button type="submit" class="button" ng-click="ask(question)"></button>
     </ion-input>
     <ion-icon (click)="ask(question)" class="send" name="send"></ion-icon>

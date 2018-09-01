@@ -27,6 +27,9 @@
     },
     "cordova-plugin-whitelist": {
       "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-contacts": {
+      "PACKAGE_NAME": "alis.app"
     }
   },
   "dependent_plugins": {}
