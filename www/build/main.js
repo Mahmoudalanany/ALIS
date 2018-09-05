@@ -116,8 +116,10 @@ var HomePage = /** @class */ (function () {
         this.showImage = []; //array indicating there is a message or no
         this.DisplayImage = []; //array containing the images
         this.tutorsData = [];
-        this.Tutors = [];
+        this.Tutors = ["empty"];
         this.items = [];
+        this.images = [];
+        this.need_tutor = 0;
         this.Token = '';
         console.log(this.GetDate_and_Time());
         // var dt = new Date("9/3/2018, 1:05 PM")
@@ -231,6 +233,8 @@ var HomePage = /** @class */ (function () {
         if (this.question == null) {
             return;
         }
+        this.items = ["hi", " hello", "try again", "exit", "close"];
+        this.need_tutor = 0;
         this.content.scrollToBottom();
         this.chat = this.question;
         this.Update_Time();
@@ -313,11 +317,12 @@ var HomePage = /** @class */ (function () {
                         console.log(_this.tutorsData[i - 1].name);
                         console.log(_this.tutorsData[i - 1].salary);
                         console.log(_this.tutorsData[i - 1].subject);
-                        _this.Tutors.push(_this.tutorsData[i - 1].name); //for tutors drop down options
-                        tutorsinfo += "Tutor Number " + i + " Name is " + _this.tutorsData[i - 1].name + " of subject " + _this.tutorsData[i - 1].subject + " for " + _this.tutorsData[i - 1].salary + " L.E and image = " + _this.tutorsData[i - 1].image + "\n \n";
+                        tutorsinfo = "Tutor Number " + i + " Name is " + _this.tutorsData[i - 1].name + " of subject " + _this.tutorsData[i - 1].subject + " for " + _this.tutorsData[i - 1].salary + " L.E \n";
+                        _this.Tutors.push(tutorsinfo);
+                        _this.images.push(_this.tutorsData[i - 1].image);
+                        console.log(tutorsinfo);
                     }
-                    console.log(tutorsinfo);
-                    _this.answer = tutorsinfo;
+                    _this.need_tutor = 1;
                 });
             }
             else if (result.action == "study_level") {
@@ -477,7 +482,6 @@ var HomePage = /** @class */ (function () {
         }).once('error', function (error) {
             console.log(error);
         }).end();
-        this.items = ["hi", " hello", "try again", "exit", "close"];
         this.question = null;
     };
     HomePage.prototype.addData = function (collection, child, nextChild, data) {
@@ -488,16 +492,15 @@ var HomePage = /** @class */ (function () {
     };
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_3__angular_core__["_8" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_4_ionic_angular__["a" /* Content */]),
-        __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["a" /* Content */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["a" /* Content */]) === "function" && _a || Object)
+        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["a" /* Content */])
     ], HomePage.prototype, "content", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_3__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n  <ion-navbar color="red">\n\n    <ion-title>\n\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n      <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n    </ion-title>\n\n  </ion-navbar>\n\n</ion-header>\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngIf="answer?.length > 0" no-lines>\n\n      <ion-card text-wrap class="grey">\n\n        <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n        <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n      <ion-card text-wrap class="purple">\n\n        <ion-item-sliding>\n\n          <ion-item text-wrap class="purpletext"> {{answer}}</ion-item>\n\n          <ion-item-options side="left">\n\n            <button ion-button (click)="favorite(item)">Favorite</button>\n\n            <button ion-button color="danger" (click)="share(item)">Share</button>\n\n          </ion-item-options>\n\n          <ion-item-options side="right">\n\n            <button ion-button (click)="unread(item)">Unread</button>\n\n          </ion-item-options>\n\n        </ion-item-sliding>\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n    </div>\n\n    <div class="options" no-lines *ngFor="let item of items;">\n\n      <button ion-button round (click)="question=item;ask()">{{item}}</button>\n\n    </div>\n\n  </ion-list>\n\n</ion-content>\n\n\n\n<ion-footer>\n\n  <div class="flex-items" padding>\n\n    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">\n\n      <button type="submit" class="button" ng-click="ask()"></button>\n\n    </ion-input>\n\n    <ion-icon (click)="ask()" class="send" name="send"></ion-icon>\n\n  </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n  <ion-navbar color="red">\n\n    <ion-title>\n\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n      <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n    </ion-title>\n\n  </ion-navbar>\n\n</ion-header>\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngIf="answer?.length > 0" no-lines>\n\n      <ion-card text-wrap class="grey">\n\n        <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n        <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>  \n\n      <ion-card text-wrap class="purple">\n\n        <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">\n\n          <ion-item *ngIf="need_tutor===0" text-wrap class="purpletext"> {{answer}}</ion-item>\n\n          <ion-item *ngIf="need_tutor===1" text-wrap class="purpletext"> {{tutor}} <img src="{{images[i]}}"></ion-item>\n\n          <ion-item-options side="right">\n\n            <button ion-button (click)="Reserve()">Reserve</button>\n\n          </ion-item-options>\n\n        </ion-item-sliding>      \n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>    \n\n      </ion-card>\n\n    </div>\n\n    <div class = "options" no-lines *ngFor="let item of items;">\n\n      <button ion-button round (click)="question=item;ask(item)">{{item}}</button>\n\n    </div>\n\n  </ion-list>\n\n</ion-content>\n\n\n\n<ion-footer>\n\n  <div class="flex-items" padding>\n\n    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">\n\n      <button type="submit" class="button" ng-click="ask(question)"></button>\n\n    </ion-input>\n\n    <ion-icon (click)="ask(question)" class="send" name="send"></ion-icon>\n\n  </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
         }),
-        __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["e" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["e" /* NavController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["f" /* Platform */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["f" /* Platform */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_3__angular_core__["M" /* NgZone */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__angular_core__["M" /* NgZone */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_5__node_modules_angularfire2_database__["a" /* AngularFireDatabase */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5__node_modules_angularfire2_database__["a" /* AngularFireDatabase */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_2__services_Sharing_Service_SharingService_service__["a" /* SharingService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__services_Sharing_Service_SharingService_service__["a" /* SharingService */]) === "function" && _f || Object, typeof (_g = typeof __WEBPACK_IMPORTED_MODULE_6__ionic_native_contacts__["a" /* Contacts */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_6__ionic_native_contacts__["a" /* Contacts */]) === "function" && _g || Object, typeof (_h = typeof __WEBPACK_IMPORTED_MODULE_1__ionic_native_network__["a" /* Network */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__ionic_native_network__["a" /* Network */]) === "function" && _h || Object, typeof (_j = typeof __WEBPACK_IMPORTED_MODULE_0__ionic_native_calendar__["a" /* Calendar */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__ionic_native_calendar__["a" /* Calendar */]) === "function" && _j || Object])
+        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_4_ionic_angular__["e" /* NavController */], __WEBPACK_IMPORTED_MODULE_4_ionic_angular__["f" /* Platform */], __WEBPACK_IMPORTED_MODULE_3__angular_core__["M" /* NgZone */], __WEBPACK_IMPORTED_MODULE_5__node_modules_angularfire2_database__["a" /* AngularFireDatabase */], __WEBPACK_IMPORTED_MODULE_2__services_Sharing_Service_SharingService_service__["a" /* SharingService */], __WEBPACK_IMPORTED_MODULE_6__ionic_native_contacts__["a" /* Contacts */], __WEBPACK_IMPORTED_MODULE_1__ionic_native_network__["a" /* Network */], __WEBPACK_IMPORTED_MODULE_0__ionic_native_calendar__["a" /* Calendar */]])
     ], HomePage);
     return HomePage;
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 }());
 
 //# sourceMappingURL=home.js.map

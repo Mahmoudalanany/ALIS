@@ -20,8 +20,10 @@ export class HomePage {
   showImage = []; //array indicating there is a message or no
   DisplayImage = []; //array containing the images
   tutorsData = [];
-  Tutors = [];
+  Tutors = ["empty"];
   items = [];
+  images = [];
+  need_tutor = 0;
   Token = '';
   question: string;
   API_Agent: APIModule.Application;
@@ -145,6 +147,8 @@ export class HomePage {
   }
   ask() {
     if (this.question == null) { return; }
+    this.items = ["hi", " hello", "try again", "exit", "close"];
+    this.need_tutor = 0;
     this.content.scrollToBottom();
     this.chat = this.question;
     this.Update_Time()
@@ -208,6 +212,8 @@ export class HomePage {
         }
         else if (result.action == "needTutor") {
 
+          
+
           var teachers = [];
           var teacherDocsValues = ``;
 
@@ -229,12 +235,13 @@ export class HomePage {
                 console.log(this.tutorsData[i - 1].salary);
                 console.log(this.tutorsData[i - 1].subject);
 
-                this.Tutors.push(this.tutorsData[i - 1].name); //for tutors drop down options
-
-                tutorsinfo += "Tutor Number " + i + " Name is " + this.tutorsData[i - 1].name + " of subject " + this.tutorsData[i - 1].subject + " for " + this.tutorsData[i - 1].salary + " L.E and image = " + this.tutorsData[i - 1].image + "\n \n";
+                tutorsinfo = "Tutor Number " + i + " Name is " + this.tutorsData[i - 1].name + " of subject " + this.tutorsData[i - 1].subject + " for " + this.tutorsData[i - 1].salary + " L.E \n";
+                this.Tutors.push(tutorsinfo);
+                this.images.push(this.tutorsData[i - 1].image);
+                console.log(tutorsinfo);
               }
-              console.log(tutorsinfo);
-              this.answer = tutorsinfo;
+              this.need_tutor = 1;
+
             })
         }
         //CAREER GUIDANCE UPDATE 
@@ -407,7 +414,6 @@ export class HomePage {
         console.log(error);
       }).end();
 
-    this.items = ["hi", " hello", "try again", "exit", "close"];
     this.question = null;
   }
 
