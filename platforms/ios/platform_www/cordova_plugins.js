@@ -162,6 +162,31 @@ module.exports = [
     "merges": [
       "Contact"
     ]
+  },
+  {
+    "id": "cordova-plugin-network-information.network",
+    "file": "plugins/cordova-plugin-network-information/www/network.js",
+    "pluginId": "cordova-plugin-network-information",
+    "clobbers": [
+      "navigator.connection",
+      "navigator.network.connection"
+    ]
+  },
+  {
+    "id": "cordova-plugin-network-information.Connection",
+    "file": "plugins/cordova-plugin-network-information/www/Connection.js",
+    "pluginId": "cordova-plugin-network-information",
+    "clobbers": [
+      "Connection"
+    ]
+  },
+  {
+    "id": "cordova-plugin-calendar.Calendar",
+    "file": "plugins/cordova-plugin-calendar/www/Calendar.js",
+    "pluginId": "cordova-plugin-calendar",
+    "clobbers": [
+      "Calendar"
+    ]
   }
 ];
 module.exports.metadata = 
@@ -174,7 +199,9 @@ module.exports.metadata =
   "cordova-plugin-ionic-webview": "2.0.1",
   "cordova-plugin-splashscreen": "5.0.2",
   "cordova-plugin-whitelist": "1.3.3",
-  "cordova-plugin-contacts": "3.0.1"
+  "cordova-plugin-contacts": "3.0.1",
+  "cordova-plugin-network-information": "2.0.1",
+  "cordova-plugin-calendar": "5.1.2"
 };
 // BOTTOM OF METADATA
 });

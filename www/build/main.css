@@ -25702,7 +25702,7 @@ page-home .grey {
   border-radius: 8px;
   color: #303030;
   width: 75%;
-  float: left;
+  margin-left: 10px;
 }
 
 page-home .purple {
@@ -25710,7 +25710,8 @@ page-home .purple {
   border-radius: 8px;
   color: #ffffff;
   width: 75%;
-  float: right;
+  margin-left: auto;
+  margin-right: 10px;
 }
 
 page-home .greytext {
@@ -25786,4 +25787,9 @@ page-home .input_message {
 
 page-home .footer {
   position: fixed;
+}
+
+page-home .options {
+  text-align: center;
+  display: inline-block;
 }

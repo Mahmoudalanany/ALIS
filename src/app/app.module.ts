@@ -1,3 +1,4 @@
+import { Network } from '@ionic-native/network';
 import { FIREBASE_CONFIG } from './firebase.credentials';
 import { BrowserModule } from '@angular/platform-browser';
 import { ErrorHandler, NgModule } from '@angular/core';
@@ -12,6 +13,7 @@ import { AngularFireDatabaseModule } from 'angularfire2/database'
 import { FCM } from '@ionic-native/fcm';
 import { Contacts } from '@ionic-native/contacts';
 import { SharingService } from '../services/Sharing-Service/SharingService.service';
+import { Calendar } from '@ionic-native/calendar';
 
 @NgModule({
   declarations: [
@@ -35,7 +37,9 @@ import { SharingService } from '../services/Sharing-Service/SharingService.servi
     SplashScreen,
     FCM,
     Contacts,
+    Network,
     SharingService,
+    Calendar,
     { provide: ErrorHandler, useClass: IonicErrorHandler }
   ]
 })

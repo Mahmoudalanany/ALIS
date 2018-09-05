@@ -19,8 +19,8 @@ page-home {
         background-color : #efefef;
         border-radius : 8px;
         color : #303030;
-        width : 75%;
-        float : left;       
+        width : 75%;;
+        margin-left:10px;
     }
 
     .purple{
@@ -28,7 +28,8 @@ page-home {
         border-radius : 8px;
         color : #ffffff;
         width : 75%;
-        float : right;     
+        margin-left:auto;
+        margin-right:10px;
     }
 
     .greytext{
@@ -101,6 +102,11 @@ page-home {
     .footer{
         position: fixed;
         //bottom: 5%;
+    }
+
+    .options{
+        text-align: center;
+        display: inline-block
     }
 
 }

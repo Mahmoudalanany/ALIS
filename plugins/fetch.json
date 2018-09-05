@@ -62,5 +62,21 @@
     },
     "is_top_level": true,
     "variables": {}
+  },
+  "cordova-plugin-network-information": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-network-information"
+    },
+    "is_top_level": true,
+    "variables": {}
+  },
+  "cordova-plugin-calendar": {
+    "source": {
+      "type": "registry",
+      "id": "cordova-plugin-calendar@5.1.2"
+    },
+    "is_top_level": true,
+    "variables": {}
   }
 }

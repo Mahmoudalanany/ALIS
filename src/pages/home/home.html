@@ -9,18 +9,27 @@
 </ion-header>
 <ion-content no-bounce>
   <ion-list>
-    <ion-card text-wrap class="purple" *ngIf="answers?.length > 0">
-      <ion-item text-wrap class="purpletext"> {{answers[0]}}</ion-item>
-    </ion-card>
-    <div *ngFor="let chat of chats; let i = index" no-lines>
+    <div *ngIf="answer?.length > 0" no-lines>
       <ion-card text-wrap class="grey">
-        <ion-item text-wrap class="greytext">{{chats[i]}}</ion-item>
-        <ion-label class="greyclock">{{CurrentTime[i]}}</ion-label>
+        <ion-item text-wrap class="greytext">{{chat}}</ion-item>
+        <ion-label class="greyclock">{{CurrentTime}}</ion-label>
       </ion-card>
       <ion-card text-wrap class="purple">
-        <ion-item text-wrap class="purpletext"> {{answers[i+1]}}</ion-item>
-        <ion-label class="purpleclock">{{CurrentTime[i]}}</ion-label>
+        <ion-item-sliding>
+          <ion-item text-wrap class="purpletext"> {{answer}}</ion-item>
+          <ion-item-options side="left">
+            <button ion-button (click)="favorite(item)">Favorite</button>
+            <button ion-button color="danger" (click)="share(item)">Share</button>
+          </ion-item-options>
+          <ion-item-options side="right">
+            <button ion-button (click)="unread(item)">Unread</button>
+          </ion-item-options>
+        </ion-item-sliding>
+        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>
       </ion-card>
+    </div>
+    <div class="options" no-lines *ngFor="let item of items;">
+      <button ion-button round (click)="question=item;ask()">{{item}}</button>
     </div>
   </ion-list>
 </ion-content>
@@ -28,8 +37,8 @@
 <ion-footer>
   <div class="flex-items" padding>
     <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">
-      <button type="submit" class="button" ng-click="ask(question)"></button>
+      <button type="submit" class="button" ng-click="ask()"></button>
     </ion-input>
-    <ion-icon (click)="ask(question)" class="send" name="send"></ion-icon>
+    <ion-icon (click)="ask()" class="send" name="send"></ion-icon>
   </div>
 </ion-footer>

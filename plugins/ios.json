@@ -30,6 +30,13 @@
     },
     "cordova-plugin-contacts": {
       "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-network-information": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-calendar": {
+      "CALENDAR_USAGE_DESCRIPTION": " ",
+      "PACKAGE_NAME": "alis.app"
     }
   },
   "dependent_plugins": {}
