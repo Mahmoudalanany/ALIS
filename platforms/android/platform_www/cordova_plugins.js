@@ -23,43 +23,11 @@ module.exports = [
     ]
   },
   {
-    "id": "cordova-plugin-device.device",
-    "file": "plugins/cordova-plugin-device/www/device.js",
-    "pluginId": "cordova-plugin-device",
+    "id": "cordova-plugin-calendar.Calendar",
+    "file": "plugins/cordova-plugin-calendar/www/Calendar.js",
+    "pluginId": "cordova-plugin-calendar",
     "clobbers": [
-      "device"
-    ]
-  },
-  {
-    "id": "cordova-plugin-fcm.FCMPlugin",
-    "file": "plugins/cordova-plugin-fcm/www/FCMPlugin.js",
-    "pluginId": "cordova-plugin-fcm",
-    "clobbers": [
-      "FCMPlugin"
-    ]
-  },
-  {
-    "id": "cordova-plugin-ionic-keyboard.keyboard",
-    "file": "plugins/cordova-plugin-ionic-keyboard/www/android/keyboard.js",
-    "pluginId": "cordova-plugin-ionic-keyboard",
-    "clobbers": [
-      "window.Keyboard"
-    ]
-  },
-  {
-    "id": "cordova-plugin-ionic-webview.IonicWebView",
-    "file": "plugins/cordova-plugin-ionic-webview/src/www/util.js",
-    "pluginId": "cordova-plugin-ionic-webview",
-    "clobbers": [
-      "Ionic.WebView"
-    ]
-  },
-  {
-    "id": "cordova-plugin-splashscreen.SplashScreen",
-    "file": "plugins/cordova-plugin-splashscreen/www/splashscreen.js",
-    "pluginId": "cordova-plugin-splashscreen",
-    "clobbers": [
-      "navigator.splashscreen"
+      "Calendar"
     ]
   },
   {
@@ -140,6 +108,38 @@ module.exports = [
     ]
   },
   {
+    "id": "cordova-plugin-device.device",
+    "file": "plugins/cordova-plugin-device/www/device.js",
+    "pluginId": "cordova-plugin-device",
+    "clobbers": [
+      "device"
+    ]
+  },
+  {
+    "id": "cordova-plugin-fcm.FCMPlugin",
+    "file": "plugins/cordova-plugin-fcm/www/FCMPlugin.js",
+    "pluginId": "cordova-plugin-fcm",
+    "clobbers": [
+      "FCMPlugin"
+    ]
+  },
+  {
+    "id": "cordova-plugin-ionic-keyboard.keyboard",
+    "file": "plugins/cordova-plugin-ionic-keyboard/www/android/keyboard.js",
+    "pluginId": "cordova-plugin-ionic-keyboard",
+    "clobbers": [
+      "window.Keyboard"
+    ]
+  },
+  {
+    "id": "cordova-plugin-ionic-webview.IonicWebView",
+    "file": "plugins/cordova-plugin-ionic-webview/src/www/util.js",
+    "pluginId": "cordova-plugin-ionic-webview",
+    "clobbers": [
+      "Ionic.WebView"
+    ]
+  },
+  {
     "id": "cordova-plugin-network-information.network",
     "file": "plugins/cordova-plugin-network-information/www/network.js",
     "pluginId": "cordova-plugin-network-information",
@@ -157,11 +157,11 @@ module.exports = [
     ]
   },
   {
-    "id": "cordova-plugin-calendar.Calendar",
-    "file": "plugins/cordova-plugin-calendar/www/Calendar.js",
-    "pluginId": "cordova-plugin-calendar",
+    "id": "cordova-plugin-splashscreen.SplashScreen",
+    "file": "plugins/cordova-plugin-splashscreen/www/splashscreen.js",
+    "pluginId": "cordova-plugin-splashscreen",
     "clobbers": [
-      "Calendar"
+      "navigator.splashscreen"
     ]
   }
 ];
@@ -169,15 +169,15 @@ module.exports.metadata =
 // TOP OF METADATA
 {
   "cordova-plugin-apiai": "1.7.4",
+  "cordova-plugin-calendar": "5.1.2",
+  "cordova-plugin-contacts": "3.0.1",
   "cordova-plugin-device": "2.0.2",
   "cordova-plugin-fcm": "2.1.2",
   "cordova-plugin-ionic-keyboard": "2.1.2",
   "cordova-plugin-ionic-webview": "2.0.1",
-  "cordova-plugin-splashscreen": "5.0.2",
-  "cordova-plugin-whitelist": "1.3.3",
-  "cordova-plugin-contacts": "3.0.1",
   "cordova-plugin-network-information": "2.0.1",
-  "cordova-plugin-calendar": "5.1.2"
+  "cordova-plugin-splashscreen": "5.0.2",
+  "cordova-plugin-whitelist": "1.3.3"
 };
 // BOTTOM OF METADATA
 });

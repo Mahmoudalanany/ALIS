@@ -10,6 +10,12 @@
     "cordova-plugin-apiai": {
       "PACKAGE_NAME": "alis.app"
     },
+    "cordova-plugin-calendar": {
+      "PACKAGE_NAME": "alis.app"
+    },
+    "cordova-plugin-contacts": {
+      "PACKAGE_NAME": "alis.app"
+    },
     "cordova-plugin-device": {
       "PACKAGE_NAME": "alis.app"
     },
@@ -22,19 +28,13 @@
     "cordova-plugin-ionic-webview": {
       "PACKAGE_NAME": "alis.app"
     },
+    "cordova-plugin-network-information": {
+      "PACKAGE_NAME": "alis.app"
+    },
     "cordova-plugin-splashscreen": {
       "PACKAGE_NAME": "alis.app"
     },
     "cordova-plugin-whitelist": {
-      "PACKAGE_NAME": "alis.app"
-    },
-    "cordova-plugin-contacts": {
-      "PACKAGE_NAME": "alis.app"
-    },
-    "cordova-plugin-network-information": {
-      "PACKAGE_NAME": "alis.app"
-    },
-    "cordova-plugin-calendar": {
       "PACKAGE_NAME": "alis.app"
     }
   },

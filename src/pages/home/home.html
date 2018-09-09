@@ -10,10 +10,6 @@
 <ion-content no-bounce>
   <ion-list>
     <div *ngIf="answer?.length > 0" no-lines>
-      <ion-card text-wrap class="grey">
-        <ion-item text-wrap class="greytext">{{chat}}</ion-item>
-        <ion-label class="greyclock">{{CurrentTime}}</ion-label>
-      </ion-card>  
       <ion-card text-wrap class="purple">
         <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">
           <ion-item *ngIf="need_tutor===0" text-wrap class="purpletext"> {{answer}}</ion-item>
@@ -21,21 +17,47 @@
           <ion-item-options side="right">
             <button ion-button (click)="Reserve()">Reserve</button>
           </ion-item-options>
-        </ion-item-sliding>      
-        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>    
+        </ion-item-sliding>
+        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>
+      </ion-card>
+      
+      <ion-card text-wrap class="grey">
+        <ion-item text-wrap class="greytext">{{chat}}</ion-item>
+        <ion-label class="greyclock">{{CurrentTime}}</ion-label>
       </ion-card>
     </div>
-    <div class = "options" no-lines *ngFor="let item of items;">
-      <button ion-button round (click)="question=item;ask(item)">{{item}}</button>
+    <div class="options" no-lines *ngFor="let item of items;">
+      <button ion-button round (click)="question=item;ask()">{{item}}</button>
     </div>
   </ion-list>
+  
+  
+  <!-- <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? 'rate' : 'light'" name="star"
+    (click)="rating(1)"></ion-icon>
+  <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? 'rate' : 'light'" name="star" (click)="rating(2)"></ion-icon>
+  <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? 'rate' : 'light'" name="star" (click)="rating(3)"></ion-icon>
+  <ion-icon class="rating" [color]="rated==4 ||rated==5? 'rate' : 'light'" name="star" (click)="rating(4)"></ion-icon>
+  <ion-icon class="rating" [color]="rated==5? 'rate' : 'light'" name="star" (click)="rating(5)"></ion-icon> -->
+  
+  
+  <!-- <ion-list>
+    <ion-item *ngFor="let Friend of Friends">
+      <ion-label>
+        <h2>{{Friend.Name}}</h2>
+        <ion-note>{{Friend.Phone}}</ion-note>
+      </ion-label>
+      <ion-checkbox [(ngModel)]="Friend.checked"></ion-checkbox>
+    </ion-item>
+  </ion-list>
+  <p *ngFor="let Friend of Friends">{{Friend.checked}}</p>
+  <button ion-button (click)="Invite()">Invite</button> -->
 </ion-content>
 
 <ion-footer>
   <div class="flex-items" padding>
     <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">
-      <button type="submit" class="button" ng-click="ask(question)"></button>
+      <button type="submit" class="button" ng-click="ask()"></button>
     </ion-input>
-    <ion-icon (click)="ask(question)" class="send" name="send"></ion-icon>
+    <ion-icon (click)="ask()" class="send" name="send"></ion-icon>
   </div>
 </ion-footer>
