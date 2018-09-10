@@ -19,10 +19,8 @@ export class HomePage {
   CurrentTime; //Message's Sent Time
   showImage = []; //array indicating there is a message or no
   DisplayImage = []; //array containing the images
-  tutorsData = [];
-  Tutors = ["empty"];
+  Tutors = [];
   items = [];
-  images = [];
   need_tutor = 0;
   Token = '';
   question: string;
@@ -39,13 +37,9 @@ export class HomePage {
   offline_alert: Alert;
 
   Friends = []
+  Current_Tutor;
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController) {
-    
     // console.log(this.GetDate_and_Time());
-    // var dt = new Date("9/3/2018, 1:05 PM")
-    // calendar.createEvent('English class',null,'Lesson 10',dt,dt).then(data=>{
-    //   console.log('7agazt');
-    // })
     if (!navigator.onLine) {
       this.offline_alert = this.alertCtrl.create({
         title: "You're offline",
@@ -177,7 +171,7 @@ export class HomePage {
     if (this.question == null) { return; }
     this.items = ["hi", " hello", "try again", "exit", "close"];
     this.need_tutor = 0;
-    this.Friends=[]
+    this.Friends = []
     this.content.scrollToBottom();
     this.chat = this.question;
     this.Update_Time()
@@ -275,37 +269,19 @@ export class HomePage {
             })
           }
           else if (result.action == "needTutor") {
-
-
-
-            var teachers = [];
-            var teacherDocsValues = ``;
-
-            var paramSubject = result.parameters.tutorSubject;
-            this.afDatabase.database.ref('/tutors').orderByChild('subject').equalTo(`${paramSubject.toLowerCase()}`)
-              .on('value', (snapshot) => {
-
-                snapshot.forEach((data) => {
-                  teachers.push(data.val());
-                });
-
-                this.tutorsData = teachers;
-                console.log('teachers -->', this.tutorsData);
-
-                var tutorsinfo = '';
-                for (var i = 1; i <= this.tutorsData.length; i++) {
-                  console.log(this.tutorsData[i - 1].image);
-                  console.log(this.tutorsData[i - 1].name);
-                  console.log(this.tutorsData[i - 1].salary);
-                  console.log(this.tutorsData[i - 1].subject);
-
-                  tutorsinfo = "Tutor Number " + i + " Name is " + this.tutorsData[i - 1].name + " of subject " + this.tutorsData[i - 1].subject + " for " + this.tutorsData[i - 1].salary + " L.E \n";
-                  this.Tutors.push(tutorsinfo);
-                  this.images.push(this.tutorsData[i - 1].image);
-                  console.log(tutorsinfo);
-                }
+            this.afDatabase.database.ref('/teachers').child(result.parameters.tutorSubject)
+              .once('value').then(snapshot1 => {
+                snapshot1.forEach(snapshot2 => {
+                  let tutor = {
+                    subject: result.parameters.tutorSubject,
+                    name: snapshot2.child('name').val(),
+                    cost: snapshot2.child('cost').val(),
+                    image: snapshot2.child('image').val(),
+                    lessons: snapshot2.child('lessons').val()
+                  }
+                  this.Tutors.push(tutor);
+                })
                 this.need_tutor = 1;
-
               })
           }
           //CAREER GUIDANCE UPDATE 
@@ -372,12 +348,12 @@ export class HomePage {
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getTanyaThanawyGrade') {
-
+            let gradeNum;
             if (result.parameters.tanyaPercentage !== '') {
-              var gradePercentage = result.parameters.tanyaPercentage;
-              var gradeNum = gradePercentage.slice(0, -1);
+              let gradePercentage = result.parameters.tanyaPercentage;
+              gradeNum = gradePercentage.slice(0, -1);
             } else if (result.parameters.tanyaNum !== '') {
-              var gradeNum = result.parameters.tanyaNum;
+              gradeNum = result.parameters.tanyaNum;
             }
             let data = { tanyaThanwyGrade: gradeNum };
             this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
@@ -385,12 +361,12 @@ export class HomePage {
 
             this.answer = result.fulfillment.speech;
           } else if (result.action == 'getTaltaThanawyGrade') {
-
+            let gradeNum;
             if (result.parameters.taltaPercentage !== '') {
-              var gradePercentage = result.parameters.taltaPercentage;
-              var gradeNum = gradePercentage.slice(0, -1);
+              let gradePercentage = result.parameters.taltaPercentage;
+              gradeNum = gradePercentage.slice(0, -1);
             } else if (result.parameters.taltaNum !== '') {
-              var gradeNum = result.parameters.taltaNum;
+              gradeNum = result.parameters.taltaNum;
             }
             let data = { taltaThanwyGrade: gradeNum };
             this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
@@ -398,28 +374,27 @@ export class HomePage {
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getSat1') {
-
+            let gradeNum;
             if (result.parameters.sat1Percentage !== '') {
-              var gradePercentage = result.parameters.sat1Percentage;
-              var gradeNum = gradePercentage.slice(0, -1);
+              let gradePercentage = result.parameters.sat1Percentage;
+              gradeNum = gradePercentage.slice(0, -1);
             }
             else if (result.parameters.sat1Num !== '') {
-              var gradeNum = result.parameters.sat1Num;
+              gradeNum = result.parameters.sat1Num;
             }
-            // var satGrades = [];
             let data = { sat1Grade: gradeNum };
             this.addData('/users', this.Token, 'satGrades', data).then().catch();
 
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getSat2') {
-
+            let gradeNum;
             if (result.parameters.sat2Percentage !== '') {
-              var gradePercentage = result.parameters.sat2Percentage;
-              var gradeNum = gradePercentage.slice(0, -1);
+              let gradePercentage = result.parameters.sat2Percentage;
+              gradeNum = gradePercentage.slice(0, -1);
             }
             else if (result.parameters.sat2Num !== '') {
-              var gradeNum = result.parameters.sat2Num;
+              gradeNum = result.parameters.sat2Num;
             }
             let data = { sat2Grade: gradeNum };
             this.addData('/users', this.Token, 'satGrades', data).then().catch();
@@ -470,6 +445,21 @@ export class HomePage {
             }
             this.answer = result.fulfillment.speech;
           }
+          // else if (result.action == 'getRatingNum') {
+          //   var rate = result.parameters.rate;
+
+          //   this.afDatabase.database.ref('users').child('lessonsRequests')
+          //   if (rate <= 5 && rate >= 1) {
+          //     var tutorRating = { tutorName: 'DummyValue', rating: rate }
+          //     let data = { tutorRating };
+          //     this.afDatabase.database.ref('users').child(this.Token).child('Rates').push(data);
+          //     this.answer = result.fulfillment.speech;
+          //   }
+          //   else {
+          //     this.answer = 'Please insert a valid rating';
+          //   }
+
+          // }
           else if (result.action == "Student_activity_name") {
             this.SU_name = result.parameters.Student_Activities;
             if (!this.SU_name) {
@@ -531,4 +521,20 @@ export class HomePage {
   //     console.log(this.Friends[index]);
   //   }
   // }
+
+  Tutor_Select(Tutor) {
+    this.Current_Tutor = Tutor
+    this.need_tutor = 2
+  }
+
+  Tutor_Reserve(i) {
+    let data = { subject: this.Current_Tutor.subject, name: this.Current_Tutor.name, slot: this.Current_Tutor.lessons[i].slot, cost: this.Current_Tutor.lessons[i].cost };
+    this.afDatabase.database.ref('users').child(this.Token).child('lessonsRequests').push(data);
+    var dt = new Date(this.Current_Tutor.lessons[i].slot)
+    this.calendar.createEventWithOptions(`${this.Current_Tutor.subject} class`, null, null, dt, dt, { 'firstReminderMinutes': 120 })
+    this.need_tutor = 0;
+    this.Current_Tutor = '';
+    this.Tutors = [];
+    this.answer = "I reserved you lesson! 😊";
+  }
 }
