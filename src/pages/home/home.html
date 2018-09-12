@@ -72,8 +72,8 @@
         <ion-label class="greyclock">{{CurrentTime}}</ion-label>
       </ion-card>
     </div>
-    <div class="options" no-lines *ngFor="let item of items;">
-      <button ion-button round (click)="question=item;ask()">{{item}}</button>
+    <div class="options" no-lines *ngFor="let option of options;">
+      <button ion-button round (click)="question=option;ask()">{{option}}</button>
     </div>
   </ion-list>
 

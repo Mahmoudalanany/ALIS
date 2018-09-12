@@ -21,7 +21,7 @@ export class HomePage {
   showImage = []; //array indicating there is a message or no
   DisplayImage = []; //array containing the images
   Tutors = [];
-  items = [];
+  options = [];
   need_tutor = 0;
   Token = '';
   question: string;
@@ -47,12 +47,13 @@ export class HomePage {
   SignedIn = false
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM) {
     // console.log(this.GetDate_and_Time());
+    this.offline_alert = this.alertCtrl.create({
+      title: "You're offline",
+      subTitle: "Alis can't reach you without internet connection",
+      enableBackdropDismiss: false
+    });
+    
     if (!navigator.onLine) {
-      this.offline_alert = this.alertCtrl.create({
-        title: "You're offline",
-        subTitle: "Alis can't reach you without internet connection",
-        enableBackdropDismiss: false
-      });
       this.offline_alert.present();
     }
 
@@ -76,9 +77,10 @@ export class HomePage {
       this.Update_Time()
       this.Alis_first = true
       if (this.Intent_type == "rating") {
-        this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: '0123456789' })
+        this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: '01234567890' })
           .once('response', ({ result: { fulfillment: { speech } } }) => {
             this.answer = speech;
+            this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.options = snapshot1.val() })
           }).once('error', (error) => {
             console.log(error);
           }).end();
@@ -86,7 +88,7 @@ export class HomePage {
       else if (this.Intent_type == "Welcome") {
         this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
           if (snapshot1.child(this.Token).exists()) {
-            this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: '0123456789' })
+            this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: '01234567890' })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
@@ -95,11 +97,12 @@ export class HomePage {
                 console.log(error);
               }).end();
           } else {
-            this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '0123456789' })
+            this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '01234567890' })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
-              }).once('error', (error) => {
+              this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.options = snapshot1.val() })
+          }).once('error', (error) => {
                 console.log(error);
               }).end();
           }
@@ -200,7 +203,7 @@ export class HomePage {
 
   ask() {
     if (this.question == null) { return; }
-    this.items = ["hi", " hello", "try again", "exit", "close"];
+    // this.options = ["hi", " hello", "try again", "exit", "close"];
     this.Alis_first = false
     this.need_tutor = 0;
     this.tutor_Feedback = false
@@ -226,7 +229,7 @@ export class HomePage {
       }
     }
     else {
-      this.API_Agent.textRequest(this.question, { sessionId: '0123456789' })
+      this.API_Agent.textRequest(this.question, { sessionId: '01234567890' })
         .once('response', ({ result }) => {
           if (result.action == "SignIn.SignIn-phone") {
             this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
@@ -242,7 +245,7 @@ export class HomePage {
                         child.remove();
                       });
                     }
-                    this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('First_name').val() } }, { sessionId: '0123456789' })
+                    this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('First_name').val() } }, { sessionId: '01234567890' })
                       .once('response', ({ result: { fulfillment: { speech } } }) => {
                         speech = speech + "😊";
                         this.answer = speech;
@@ -485,7 +488,7 @@ export class HomePage {
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getFeedback-yes' && this.SignedIn == true) {
-            this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: '0123456789' })
+            this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: '01234567890' })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
@@ -515,6 +518,7 @@ export class HomePage {
             console.log(result.fulfillment.speech);
             this.answer = result.fulfillment.speech;
           }
+          this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(snapshot1 => { this.options = snapshot1.val() })
         }).once('error', (error) => {
           console.log(error);
         }).end();
