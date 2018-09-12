@@ -18,13 +18,6 @@ export class MyApp {
         console.log(token);
         this.Share.setToken(token);
       })
-      fcm.onNotification().subscribe(data => {
-        if (data.wasTapped) {
-          console.log("Received in background");
-        } else {
-          console.log("Received in foreground");
-        };
-      })
       fcm.onTokenRefresh().subscribe(token => {
         console.log(token);
       });

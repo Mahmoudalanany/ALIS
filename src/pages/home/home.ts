@@ -1,3 +1,4 @@
+import { FCM } from '@ionic-native/fcm';
 import { Calendar } from '@ionic-native/calendar';
 import { Network } from '@ionic-native/network';
 import { SharingService } from './../../services/Sharing-Service/SharingService.service';
@@ -37,8 +38,14 @@ export class HomePage {
   offline_alert: Alert;
 
   Friends = []
+  Show_Friends = false
   Current_Tutor;
-  constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController) {
+  Intent_type = 'Welcome'
+  Intent_data;
+  tutor_Feedback = false;
+  Alis_first = false
+  SignedIn = false
+  constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM) {
     // console.log(this.GetDate_and_Time());
     if (!navigator.onLine) {
       this.offline_alert = this.alertCtrl.create({
@@ -49,31 +56,55 @@ export class HomePage {
       this.offline_alert.present();
     }
 
+    fcm.onNotification().subscribe(notification => {
+      this.SignedIn = true;
+      if (notification.wasTapped) {
+        console.log("Received in background");
+        this.Intent_type = notification.type
+        this.Intent_data = JSON.parse(notification.data)
+        console.log(this.Intent_data);
+      } else {
+        console.log("Received in foreground");
+      };
+    })
+
     platform.ready().then(() => {
       this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
       this.Token = this.Share.getToken();
       console.log("Initializing...");
       //sign in by token
       this.Update_Time()
-      this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
-        if (snapshot1.child(this.Token).exists()) {
-          this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: '0123456789' })
-            .once('response', ({ result: { fulfillment: { speech } } }) => {
-              speech = speech + "😊";
-              this.answer = speech;
-            }).once('error', (error) => {
-              console.log(error);
-            }).end();
-        } else {
-          this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '0123456789' })
-            .once('response', ({ result: { fulfillment: { speech } } }) => {
-              speech = speech + "😊";
-              this.answer = speech;
-            }).once('error', (error) => {
-              console.log(error);
-            }).end();
-        }
-      });
+      this.Alis_first = true
+      if (this.Intent_type == "rating") {
+        this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: '0123456789' })
+          .once('response', ({ result: { fulfillment: { speech } } }) => {
+            this.answer = speech;
+          }).once('error', (error) => {
+            console.log(error);
+          }).end();
+      }
+      else if (this.Intent_type == "Welcome") {
+        this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
+          if (snapshot1.child(this.Token).exists()) {
+            this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: '0123456789' })
+              .once('response', ({ result: { fulfillment: { speech } } }) => {
+                speech = speech + "😊";
+                this.answer = speech;
+                this.SignedIn = true;
+              }).once('error', (error) => {
+                console.log(error);
+              }).end();
+          } else {
+            this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '0123456789' })
+              .once('response', ({ result: { fulfillment: { speech } } }) => {
+                speech = speech + "😊";
+                this.answer = speech;
+              }).once('error', (error) => {
+                console.log(error);
+              }).end();
+          }
+        });
+      }
     })
   }
 
@@ -170,8 +201,12 @@ export class HomePage {
   ask() {
     if (this.question == null) { return; }
     this.items = ["hi", " hello", "try again", "exit", "close"];
+    this.Alis_first = false
     this.need_tutor = 0;
+    this.tutor_Feedback = false
+    this.rated = null
     this.Friends = []
+    this.Show_Friends = false
     this.content.scrollToBottom();
     this.chat = this.question;
     this.Update_Time()
@@ -193,7 +228,7 @@ export class HomePage {
     else {
       this.API_Agent.textRequest(this.question, { sessionId: '0123456789' })
         .once('response', ({ result }) => {
-          if (result.action == "SignIn.SignIn-custom") {
+          if (result.action == "SignIn.SignIn-phone") {
             this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
               if (snapshot1.exists()) {
                 let phonefound = false
@@ -211,6 +246,7 @@ export class HomePage {
                       .once('response', ({ result: { fulfillment: { speech } } }) => {
                         speech = speech + "😊";
                         this.answer = speech;
+                        this.SignedIn = true;
                       }).once('error', (error) => {
                         console.log(error);
                       }).end();
@@ -223,7 +259,8 @@ export class HomePage {
                 this.answer = "I think you should sign up!😊";
               }
             })
-          } else if (result.action == "SignUp-Name-Phone" && result.actionIncomplete == false) {
+          }
+          else if (result.action == "SignUp-Credentials" && result.actionIncomplete == false) {
             this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
               if (snapshot1.exists()) {
                 let phonefound = false
@@ -237,17 +274,19 @@ export class HomePage {
                   this.answer = "This number is already used"
                 }
                 else {
-                  let data = { First_name: result.contexts[0].parameters["First-name"], Last_name: result.contexts[0].parameters["Last-name"], Phone: result.parameters["phone-number"] };
+                  let data = { First_name: result.parameters["First-name"], Last_name: result.parameters["Last-name"], Phone: result.parameters["phone-number"] };
                   this.addData('/users', this.Token, null, data).then().catch();
                   this.answer = result.fulfillment.speech;
+                  this.SignedIn = true;
                 }
               }
             })
-          } else if (result.action == "Synchronize_Friends") {
+          }
+          else if (result.action == "Synchronize_Friends" && this.SignedIn == true) {
             this.SyncFriends();
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == "Show_Friends") {
+          else if (result.action == "Show_Friends" && this.SignedIn == true) {
             this.answer = result.fulfillment.speech;
             this.afDatabase.database.ref(`users/${this.Token}/Friends`).once('value').then(snapshot1 => {
               if (snapshot1.exists()) {
@@ -267,14 +306,16 @@ export class HomePage {
                 })
               }
             })
+            this.Show_Friends = true
           }
-          else if (result.action == "needTutor") {
+          else if (result.action == "needTutor" && this.SignedIn == true) {
             this.afDatabase.database.ref('/teachers').child(result.parameters.tutorSubject)
               .once('value').then(snapshot1 => {
                 snapshot1.forEach(snapshot2 => {
                   let tutor = {
                     subject: result.parameters.tutorSubject,
                     name: snapshot2.child('name').val(),
+                    phone: snapshot2.child('phone').val(),
                     cost: snapshot2.child('cost').val(),
                     image: snapshot2.child('image').val(),
                     lessons: snapshot2.child('lessons').val()
@@ -284,8 +325,7 @@ export class HomePage {
                 this.need_tutor = 1;
               })
           }
-          //CAREER GUIDANCE UPDATE 
-          else if (result.action == "study_level") {
+          else if (result.action == "study_level" && this.SignedIn == true) {
 
             if (result.parameters.study_level !== '') {
               let data = { studyLevel: result.parameters.study_level };
@@ -294,8 +334,7 @@ export class HomePage {
             console.log(result);
             this.answer = result.fulfillment.speech;
           }
-
-          else if (result.action == 'get_hobbies') {
+          else if (result.action == 'get_hobbies' && this.SignedIn == true) {
             if (result.parameters.hobbies.length > 0) {
               let data = { hobbies: result.parameters.hobbies };
               this.addData('/users', this.Token, null, data).then().catch();
@@ -305,49 +344,49 @@ export class HomePage {
 
             console.log(result);
           }
-          else if (result.action == 'father_job') {
+          else if (result.action == 'father_job' && this.SignedIn == true) {
             if (result.parameters.father_job !== '') {
               let data = { fatherJob: result.parameters.fatherJob };
               this.addData('/users', this.Token, null, data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'mother_job') {
+          else if (result.action == 'mother_job' && this.SignedIn == true) {
             if (result.parameters.mother_job !== '') {
               let data = { motherJob: result.parameters.motherJob };
               this.addData('/users', this.Token, null, data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'school_name') {
+          else if (result.action == 'school_name' && this.SignedIn == true) {
             if (result.parameters.school_name !== '') {
               let data = { schoolName: result.parameters.school_name };
               this.addData('/users', this.Token, null, data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getNational') {
+          else if (result.action == 'getNational' && this.SignedIn == true) {
             if (result.parameters.highSchoolDegree !== '') {
               let data = { highSchoolDegree: result.parameters.highSchoolDegree };
               this.addData('/users', this.Token, null, data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getSat') {
+          else if (result.action == 'getSat' && this.SignedIn == true) {
             if (result.parameters.highSchoolDegree !== '') {
               let data = { highSchoolDegree: result.parameters.highSchoolDegree };
               this.addData('/users', this.Token, null, data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIG') {
+          else if (result.action == 'getIG' && this.SignedIn == true) {
             if (result.parameters.highSchoolDegree !== '') {
               let data = { highSchoolDegree: result.parameters.highSchoolDegree };
               this.addData('/users', this.Token, null, data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getTanyaThanawyGrade') {
+          else if (result.action == 'getTanyaThanawyGrade' && this.SignedIn == true) {
             let gradeNum;
             if (result.parameters.tanyaPercentage !== '') {
               let gradePercentage = result.parameters.tanyaPercentage;
@@ -360,7 +399,7 @@ export class HomePage {
 
 
             this.answer = result.fulfillment.speech;
-          } else if (result.action == 'getTaltaThanawyGrade') {
+          } else if (result.action == 'getTaltaThanawyGrade' && this.SignedIn == true) {
             let gradeNum;
             if (result.parameters.taltaPercentage !== '') {
               let gradePercentage = result.parameters.taltaPercentage;
@@ -373,7 +412,7 @@ export class HomePage {
 
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getSat1') {
+          else if (result.action == 'getSat1' && this.SignedIn == true) {
             let gradeNum;
             if (result.parameters.sat1Percentage !== '') {
               let gradePercentage = result.parameters.sat1Percentage;
@@ -387,7 +426,7 @@ export class HomePage {
 
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getSat2') {
+          else if (result.action == 'getSat2' && this.SignedIn == true) {
             let gradeNum;
             if (result.parameters.sat2Percentage !== '') {
               let gradePercentage = result.parameters.sat2Percentage;
@@ -401,7 +440,7 @@ export class HomePage {
 
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIGArabicGrade') {
+          else if (result.action == 'getIGArabicGrade' && this.SignedIn == true) {
             if (result.parameters.arabicIG_Grade !== '') {
               let data = { arabicGrade: result.parameters.arabicIG_Grade };
 
@@ -409,7 +448,7 @@ export class HomePage {
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIGEnglishGrade') {
+          else if (result.action == 'getIGEnglishGrade' && this.SignedIn == true) {
             console.log(result);
             if (result.parameters.englishIG_Grade !== '') {
               let data = { englishGrade: result.parameters.englishIG_Grade };
@@ -417,50 +456,45 @@ export class HomePage {
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIGMathGrade') {
+          else if (result.action == 'getIGMathGrade' && this.SignedIn == true) {
             if (result.parameters.mathIG_Grade !== '') {
               let data = { mathGrade: result.parameters.mathIG_Grade };
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIGChemistryGrade') {
+          else if (result.action == 'getIGChemistryGrade' && this.SignedIn == true) {
             if (result.parameters.chemistryIG_Grade !== '') {
               let data = { chemistryGrade: result.parameters.chemistryIG_Grade };
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIGPhysicsGrade') {
+          else if (result.action == 'getIGPhysicsGrade' && this.SignedIn == true) {
             if (result.parameters.physicsIG_Grade !== '') {
               let data = { chemistryGrade: result.parameters.physicsIG_Grade };
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIGBiologyGrade') {
+          else if (result.action == 'getIGBiologyGrade' && this.SignedIn == true) {
             if (result.parameters.biologyIG_Grade !== '') {
               let data = { chemistryGrade: result.parameters.biologyIG_Grade };
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          // else if (result.action == 'getRatingNum') {
-          //   var rate = result.parameters.rate;
-
-          //   this.afDatabase.database.ref('users').child('lessonsRequests')
-          //   if (rate <= 5 && rate >= 1) {
-          //     var tutorRating = { tutorName: 'DummyValue', rating: rate }
-          //     let data = { tutorRating };
-          //     this.afDatabase.database.ref('users').child(this.Token).child('Rates').push(data);
-          //     this.answer = result.fulfillment.speech;
-          //   }
-          //   else {
-          //     this.answer = 'Please insert a valid rating';
-          //   }
-
-          // }
-          else if (result.action == "Student_activity_name") {
+          else if (result.action == 'getFeedback-yes' && this.SignedIn == true) {
+            this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: '0123456789' })
+              .once('response', ({ result: { fulfillment: { speech } } }) => {
+                speech = speech + "😊";
+                this.answer = speech;
+                this.tutor_Feedback = true
+              }).once('error', (error) => {
+                console.log(error);
+              }).end();
+          }
+          else if (result.action == "Student_activity_name" && this.SignedIn == true) {
             this.SU_name = result.parameters.Student_Activities;
             if (!this.SU_name) {
               this.answer = result.fulfillment.speech;
@@ -473,6 +507,9 @@ export class HomePage {
               this.filling_form = true;
               this.end_of_form = false;
             }
+          }
+          else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && this.SignedIn == false) {
+            this.answer = "I think you should sign in!😊"
           }
           else {
             console.log(result.fulfillment.speech);
@@ -512,8 +549,11 @@ export class HomePage {
   }
 
   rating(x) {
-    console.log(x);
     this.rated = x;
+    let data = {}
+    data[this.Intent_data.phone] = this.rated
+    this.addData('/users', this.Token, 'Ratings', data).then().catch();
+    this.answer = "Thanks for your Feedback😊"
   }
 
   // Invite(){
@@ -528,13 +568,13 @@ export class HomePage {
   }
 
   Tutor_Reserve(i) {
-    let data = { subject: this.Current_Tutor.subject, name: this.Current_Tutor.name, slot: this.Current_Tutor.lessons[i].slot, cost: this.Current_Tutor.lessons[i].cost };
+    let data = { subject: this.Current_Tutor.subject, name: this.Current_Tutor.name, phone: this.Current_Tutor.phone, slot: this.Current_Tutor.lessons[i].slot, cost: this.Current_Tutor.lessons[i].cost };
     this.afDatabase.database.ref('users').child(this.Token).child('lessonsRequests').push(data);
     var dt = new Date(this.Current_Tutor.lessons[i].slot)
     this.calendar.createEventWithOptions(`${this.Current_Tutor.subject} class`, null, null, dt, dt, { 'firstReminderMinutes': 120 })
     this.need_tutor = 0;
     this.Current_Tutor = '';
     this.Tutors = [];
-    this.answer = "I reserved you lesson! 😊";
+    this.answer = "I reserved your lesson! 😊";
   }
 }
