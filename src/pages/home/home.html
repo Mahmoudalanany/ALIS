@@ -1,5 +1,5 @@
 <ion-header no-border>
-  <ion-navbar color="red">
+  <ion-navbar>
     <ion-title>
       <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>
       <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->
@@ -7,6 +7,7 @@
     </ion-title>
   </ion-navbar>
 </ion-header>
+
 <ion-content no-bounce>
   <ion-list>
     <div *ngIf="answer?.length > 0" no-lines>
@@ -52,17 +53,30 @@
           <ion-icon class="rating" [color]="rated==5? 'rate' : 'light'" name="star" (click)="rating(5)"></ion-icon>
         </div>
 
+        <div *ngIf="date == true">
+          <ion-item>
+            <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="Study_date"></ion-datetime>
+          </ion-item>
+          <button ion-button clear block (click)="question=Study_date;ask()">Choose Time</button>
+        </div>
+
+        <div *ngIf="time == true">
+          <ion-item>
+            <ion-datetime displayFormat="h:m A" placeholder="h:m A" [(ngModel)]="Study_time"></ion-datetime>
+          </ion-item>
+          <button ion-button clear block (click)="question=Study_time;ask()">Choose friends</button>
+        </div>
+
         <ion-list *ngIf="Show_Friends == true">
           <ion-item *ngFor="let Friend of Friends">
             <ion-label>
               <h2>{{Friend.Name}}</h2>
-              <ion-note>{{Friend.Phone}}</ion-note>
+              <p>{{Friend.Phone}}</p>
             </ion-label>
-            <ion-checkbox [(ngModel)]="Friend.checked"></ion-checkbox>
+            <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>
           </ion-item>
         </ion-list>
-        <!-- <p *ngFor="let Friend of Friends">{{Friend.checked}}</p>
-        <button ion-button (click)="Invite()">Invite</button> -->
+        <button ion-button *ngIf="Select_Friends == true" (click)="Invite()">Invite to study group</button>
 
         <ion-label class="purpleclock">{{CurrentTime}}</ion-label>
       </ion-card>
@@ -72,21 +86,18 @@
         <ion-label class="greyclock">{{CurrentTime}}</ion-label>
       </ion-card>
     </div>
+
+
     <div class="options" no-lines *ngFor="let option of options;">
       <button ion-button round (click)="question=option;ask()">{{option}}</button>
     </div>
+
   </ion-list>
-
-
-
-
 </ion-content>
 
 <ion-footer>
   <div class="flex-items" padding>
-    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">
-      <button type="submit" class="button" ng-click="ask()"></button>
-    </ion-input>
-    <ion-icon (click)="ask()" class="send" name="send"></ion-icon>
+    <ion-input [(ngModel)]="question" class="input_message" placeholder="Type A Message"></ion-input>
+    <ion-icon name="send" class="send" (click)="ask()"></ion-icon>
   </div>
 </ion-footer>

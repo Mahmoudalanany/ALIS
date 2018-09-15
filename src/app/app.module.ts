@@ -14,6 +14,7 @@ import { FCM } from '@ionic-native/fcm';
 import { Contacts } from '@ionic-native/contacts';
 import { SharingService } from '../services/Sharing-Service/SharingService.service';
 import { Calendar } from '@ionic-native/calendar';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { Calendar } from '@ionic-native/calendar';
     TypingModule,
     IonicModule.forRoot(MyApp),
     AngularFireModule.initializeApp(FIREBASE_CONFIG),
-    AngularFireDatabaseModule
+    AngularFireDatabaseModule,
+    HttpClientModule
   ],
   bootstrap: [IonicApp],
   entryComponents: [

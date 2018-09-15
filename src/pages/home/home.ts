@@ -8,6 +8,9 @@ import { AngularFireDatabase } from '../../../node_modules/angularfire2/database
 import { Contacts } from '@ionic-native/contacts';
 import * as APIModule from 'apiai';
 import { Subscription } from 'rxjs';
+import { HttpClient, HttpHeaders } from '../../../node_modules/@angular/common/http';
+
+
 
 @Component({
   selector: 'page-home',
@@ -39,20 +42,27 @@ export class HomePage {
 
   Friends = []
   Show_Friends = false
+  Select_Friends = false
   Current_Tutor;
   Intent_type = 'Welcome'
   Intent_data;
   tutor_Feedback = false;
   Alis_first = false
   SignedIn = false
-  constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM) {
+  date = false
+  time = false
+  Study_date;
+  Study_time;
+  Notification_data;
+  constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM, private http: HttpClient) {
     // console.log(this.GetDate_and_Time());
+
     this.offline_alert = this.alertCtrl.create({
       title: "You're offline",
       subTitle: "Alis can't reach you without internet connection",
       enableBackdropDismiss: false
     });
-    
+
     if (!navigator.onLine) {
       this.offline_alert.present();
     }
@@ -66,6 +76,8 @@ export class HomePage {
         console.log(this.Intent_data);
       } else {
         console.log("Received in foreground");
+        console.log(notification);
+
       };
     })
 
@@ -101,8 +113,8 @@ export class HomePage {
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
-              this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.options = snapshot1.val() })
-          }).once('error', (error) => {
+                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.options = snapshot1.val() })
+              }).once('error', (error) => {
                 console.log(error);
               }).end();
           }
@@ -187,7 +199,7 @@ export class HomePage {
           if (snapshot1.exists()) {
             snapshot1.forEach((snapshot2) => {
               for (let index = 0; index < numbers.length; index++) {
-                if (snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
+                if (snapshot2.child('Phone').val() !== snapshot1.child(this.Token).child('Phone').val() && snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
                   numbers[index].Found = true
                   friends.push(numbers[index].Phone)
                   let data = { Friends: friends };
@@ -202,14 +214,19 @@ export class HomePage {
   }
 
   ask() {
-    if (this.question == null) { return; }
-    // this.options = ["hi", " hello", "try again", "exit", "close"];
+    if (this.question == undefined || this.question == null || this.question.trim() == '') {
+      this.question = null;
+      return;
+    }
     this.Alis_first = false
     this.need_tutor = 0;
     this.tutor_Feedback = false
     this.rated = null
     this.Friends = []
     this.Show_Friends = false
+    this.Select_Friends = false
+    this.date = false
+    this.time = false
     this.content.scrollToBottom();
     this.chat = this.question;
     this.Update_Time()
@@ -231,6 +248,8 @@ export class HomePage {
     else {
       this.API_Agent.textRequest(this.question, { sessionId: '01234567890' })
         .once('response', ({ result }) => {
+          console.log(result);
+
           if (result.action == "SignIn.SignIn-phone") {
             this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
               if (snapshot1.exists()) {
@@ -299,8 +318,7 @@ export class HomePage {
                       if (snapshot2_2.child('Phone').val() == snapshot2.val()) {
                         let Friend = {
                           Name: snapshot2_2.child('First_name').val() + " " + snapshot2_2.child('Last_name').val(),
-                          Phone: snapshot2.val(),
-                          checked: false
+                          Phone: snapshot2_2.child('Phone').val(),
                         }
                         this.Friends.push(Friend)
                       }
@@ -402,7 +420,8 @@ export class HomePage {
 
 
             this.answer = result.fulfillment.speech;
-          } else if (result.action == 'getTaltaThanawyGrade' && this.SignedIn == true) {
+          }
+          else if (result.action == 'getTaltaThanawyGrade' && this.SignedIn == true) {
             let gradeNum;
             if (result.parameters.taltaPercentage !== '') {
               let gradePercentage = result.parameters.taltaPercentage;
@@ -511,6 +530,100 @@ export class HomePage {
               this.end_of_form = false;
             }
           }
+          else if (result.action == "Study_group" && this.SignedIn == true) {
+            this.answer = result.fulfillment.speech;
+            if (result.actionIncomplete == true) {
+              if (result.parameters["place"] !== "" && result.parameters["date"] == "") {
+                this.date = true
+              }
+              else if (result.parameters["place"] !== "" && result.parameters["date"] !== "" && result.parameters["time"] == "") {
+                this.time = true
+              }
+            }
+            else {
+              result.parameters["date"] = new Date(result.parameters["date"]).toLocaleDateString();
+              result.parameters["time"] = [(parseInt(this.Study_time.split(":")["0"]) > 12) ? parseInt(this.Study_time.split(":")["0"]) - 12 : (parseInt(this.Study_time.split(":")["0"]) == 0) ? "12" : parseInt(this.Study_time.split(":")["0"]).toString(), this.Study_time.split(":")["1"]].join(":") + ((parseInt(this.Study_time.split(":")["0"]) > 12) ? " PM" : " AM");
+              this.afDatabase.database.ref(`users/${this.Token}/Friends`).once('value').then(snapshot1 => {
+                if (snapshot1.exists()) {
+                  snapshot1.forEach(snapshot2 => {
+                    this.afDatabase.database.ref('users').once('value').then(snapshot2_1 => {
+                      snapshot2_1.forEach(snapshot2_2 => {
+                        if (snapshot2_2.child('Phone').val() == snapshot2.val()) {
+                          let Friend = {
+                            Token: snapshot2_2.key,
+                            Name: snapshot2_2.child('First_name').val() + " " + snapshot2_2.child('Last_name').val(),
+                            Phone: snapshot2_2.child('Phone').val(),
+                            checked: false
+                          }
+                          this.Friends.push(Friend)
+                        }
+                      })
+                    })
+                  })
+                }
+              })
+              this.Show_Friends = true
+              this.Select_Friends = true
+              this.afDatabase.database.ref("users").child(this.Token).once('value').then(snapshot1 => {
+                if (snapshot1.exists()) {
+                  this.Notification_data = {
+                    Title: "Study Group",
+                    Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} is inviting you to a study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`
+                  }
+                }
+              })
+            }
+          }
+          // else if (result.action == "Interviews_Scheduling" && this.SignedIn == true) {
+          //   this.SU_name = result.parameters.Student_activities;
+          //   let string_to_split = result.parameters.start_time;
+          //   string_to_split.split("/");
+          //   let start_time = string_to_split[0];
+          //   let end_time = string_to_split[1];
+          //   let day = new Date(result.parameters.day).toLocaleDateString();
+          //   let duration = result.parameters.duration;
+          //   if (result.actionIncomplete == "true") {
+          //     console.log('tamam');
+          //     this.answer = result.fulfillment.speech;
+          //   }
+
+          //   else {
+          //     while (start_time < end_time) {
+          //       this.add_interview_slots("" + day, "" + start_time);
+          //       start_time = this.addTimes('' + start_time, '' + duration);
+          //       console.log(start_time);
+          //     }
+          //     this.answer = result.fulfillment.speech;
+          //   }
+          // }
+          // else if (result.action == "show_applicants" && this.SignedIn == true) {
+          //   this.SU_name = result.parameters.su_name;
+          //   if (!this.SU_name) {
+          //     this.answer=result.fulfillment.speech;
+          //   }
+          //   else {
+          //     let applicants = [];
+          //     this.afDatabase.database.ref('/' + this.SU_name + "_applicants").orderByKey()
+          //       .once('value', (snapshot) => {
+          //         snapshot.forEach((data) => {
+          //           applicants.push(data.val());
+          //         });
+          //         //show applicants to the interviewer 
+          //       });
+          //   }
+          // }
+          // //waiting notification containing student activity name
+          // else if (result.action == "show_interview_slots" && this.SignedIn == true) {
+          //   //you shoud previously have the student activity name 
+          //   let slots = [];
+          //   this.afDatabase.database.ref('/' + this.SU_name + "_interviews").orderByKey()
+          //     .once('value', (snapshot) => {
+          //       snapshot.forEach((data) => {
+          //         slots.push(data.val());
+          //       });
+          //       //show the applicant the interview slots
+          //     });
+          // }
           else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && this.SignedIn == false) {
             this.answer = "I think you should sign in!😊"
           }
@@ -560,11 +673,16 @@ export class HomePage {
     this.answer = "Thanks for your Feedback😊"
   }
 
-  // Invite(){
-  //   for (let index = 0; index < this.Friends.length; index++) {
-  //     console.log(this.Friends[index]);
-  //   }
-  // }
+  Invite() {
+    this.Friends.forEach(Friend => {
+      if (Friend.checked == true) {
+        this.sendNotification(Friend.Token)
+      }
+    })
+    this.Show_Friends = false
+    this.Select_Friends = false
+    this.answer = "I invited them to your study group! 😊"
+  }
 
   Tutor_Select(Tutor) {
     this.Current_Tutor = Tutor
@@ -581,4 +699,63 @@ export class HomePage {
     this.Tutors = [];
     this.answer = "I reserved your lesson! 😊";
   }
+
+  sendNotification(Token) {
+    let payload = {
+      "notification": {
+        "title": this.Notification_data.Title,
+        "body": this.Notification_data.Body,
+        "sound": "enabled",
+        "click_action": "FCM_PLUGIN_ACTIVITY",
+        "icon": "drawable-hdpi-icon"
+      },
+      "data": {
+        "type": "Welcome",
+        "data": JSON.stringify({})
+      },
+      "to": Token,
+    }
+    let options = new HttpHeaders().set('Content-Type', 'application/json');
+    this.http.post("https://fcm.googleapis.com/fcm/send", payload, {
+      headers: options.set('Authorization', 'key=AAAAKAxjJwY:APA91bEfWiPXewKlIjvQy1kU5jEqZtBZWw6rWRQOBIesv3bmDzzExIQmOJhyZ_jgubS9T90k-XA7wTt-v8KxZwsRXf8MXCwO-oUPdJ3L7-XabAK3xsPAm8klUSRrBXnXF89fCl4t2_AXxFiLwkQahoeju1GWCYglYQ'),
+    }).subscribe();
+  }
+
+  // add_interview_slots(day: string, Time: string) {
+  //   this.afDatabase.database.ref('/' + this.SU_name + "_interviews").push({
+  //     day,
+  //     empty_full: "empty",
+  //     time: Time
+  //   });
+  // }
+
+  // addTimes(startTime, endTime) {
+  //   var times = [0, 0, 0]
+  //   var max = times.length
+  //   var a = (startTime || '').split(':')
+  //   var b = (endTime || '').split(':')
+  //   // normalize time values
+  //   for (var i = 0; i < max; i++) {
+  //     a[i] = isNaN(parseInt(a[i])) ? 0 : parseInt(a[i])
+  //     b[i] = isNaN(parseInt(b[i])) ? 0 : parseInt(b[i])
+  //   }
+  //   // store time values
+  //   for (var i = 0; i < max; i++) {
+  //     times[i] = a[i] + b[i]
+  //   }
+  //   var hours = times[0]
+  //   var minutes = times[1]
+  //   var seconds = times[2]
+  //   if (seconds >= 60) {
+  //     var m = (seconds / 60) << 0
+  //     minutes += m
+  //     seconds -= 60 * m
+  //   }
+  //   if (minutes >= 60) {
+  //     var h = (minutes / 60) << 0
+  //     hours += h
+  //     minutes -= 60 * h
+  //   }
+  //   return ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2)
+  // }
 }

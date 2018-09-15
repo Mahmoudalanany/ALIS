@@ -54,7 +54,7 @@ webpackEmptyAsyncContext.id = 197;
 
 /***/ }),
 
-/***/ 240:
+/***/ 241:
 /***/ (function(module, exports) {
 
 function webpackEmptyAsyncContext(req) {
@@ -67,25 +67,26 @@ function webpackEmptyAsyncContext(req) {
 webpackEmptyAsyncContext.keys = function() { return []; };
 webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
 module.exports = webpackEmptyAsyncContext;
-webpackEmptyAsyncContext.id = 240;
+webpackEmptyAsyncContext.id = 241;
 
 /***/ }),
 
-/***/ 282:
+/***/ 283:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return HomePage; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__ = __webpack_require__(159);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__ = __webpack_require__(283);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__ = __webpack_require__(284);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__ = __webpack_require__(198);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__ = __webpack_require__(158);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_ionic_angular__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__ = __webpack_require__(284);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__ = __webpack_require__(295);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_apiai__ = __webpack_require__(499);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__ = __webpack_require__(285);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__ = __webpack_require__(296);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_apiai__ = __webpack_require__(500);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8_apiai___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_8_apiai__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__ = __webpack_require__(309);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -104,8 +105,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
 var HomePage = /** @class */ (function () {
-    function HomePage(navCtrl, platform, ngZone, afDatabase, Share, contacts, network, calendar, alertCtrl, fcm) {
+    function HomePage(navCtrl, platform, ngZone, afDatabase, Share, contacts, network, calendar, alertCtrl, fcm, http) {
+        // console.log(this.GetDate_and_Time());
         var _this = this;
         this.navCtrl = navCtrl;
         this.platform = platform;
@@ -117,6 +120,7 @@ var HomePage = /** @class */ (function () {
         this.calendar = calendar;
         this.alertCtrl = alertCtrl;
         this.fcm = fcm;
+        this.http = http;
         this.showImage = []; //array indicating there is a message or no
         this.DisplayImage = []; //array containing the images
         this.Tutors = [];
@@ -129,11 +133,13 @@ var HomePage = /** @class */ (function () {
         this.end_of_form = false;
         this.Friends = [];
         this.Show_Friends = false;
+        this.Select_Friends = false;
         this.Intent_type = 'Welcome';
         this.tutor_Feedback = false;
         this.Alis_first = false;
         this.SignedIn = false;
-        // console.log(this.GetDate_and_Time());
+        this.date = false;
+        this.time = false;
         this.offline_alert = this.alertCtrl.create({
             title: "You're offline",
             subTitle: "Alis can't reach you without internet connection",
@@ -152,6 +158,7 @@ var HomePage = /** @class */ (function () {
             }
             else {
                 console.log("Received in foreground");
+                console.log(notification);
             }
             ;
         });
@@ -266,7 +273,7 @@ var HomePage = /** @class */ (function () {
                 if (snapshot1.exists()) {
                     snapshot1.forEach(function (snapshot2) {
                         for (var index = 0; index < numbers.length; index++) {
-                            if (snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
+                            if (snapshot2.child('Phone').val() !== snapshot1.child(_this.Token).child('Phone').val() && snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
                                 numbers[index].Found = true;
                                 friends.push(numbers[index].Phone);
                                 var data = { Friends: friends };
@@ -281,16 +288,19 @@ var HomePage = /** @class */ (function () {
     };
     HomePage.prototype.ask = function () {
         var _this = this;
-        if (this.question == null) {
+        if (this.question == undefined || this.question == null || this.question.trim() == '') {
+            this.question = null;
             return;
         }
-        // this.options = ["hi", " hello", "try again", "exit", "close"];
         this.Alis_first = false;
         this.need_tutor = 0;
         this.tutor_Feedback = false;
         this.rated = null;
         this.Friends = [];
         this.Show_Friends = false;
+        this.Select_Friends = false;
+        this.date = false;
+        this.time = false;
         this.content.scrollToBottom();
         this.chat = this.question;
         this.Update_Time();
@@ -312,6 +322,7 @@ var HomePage = /** @class */ (function () {
             this.API_Agent.textRequest(this.question, { sessionId: '01234567890' })
                 .once('response', function (_a) {
                 var result = _a.result;
+                console.log(result);
                 if (result.action == "SignIn.SignIn-phone") {
                     _this.afDatabase.database.ref('/users').once('value').then(function (snapshot1) {
                         if (snapshot1.exists()) {
@@ -382,8 +393,7 @@ var HomePage = /** @class */ (function () {
                                         if (snapshot2_2.child('Phone').val() == snapshot2.val()) {
                                             var Friend = {
                                                 Name: snapshot2_2.child('First_name').val() + " " + snapshot2_2.child('Last_name').val(),
-                                                Phone: snapshot2.val(),
-                                                checked: false
+                                                Phone: snapshot2_2.child('Phone').val(),
                                             };
                                             _this.Friends.push(Friend);
                                         }
@@ -589,6 +599,50 @@ var HomePage = /** @class */ (function () {
                         _this.end_of_form = false;
                     }
                 }
+                else if (result.action == "Study_group" && _this.SignedIn == true) {
+                    _this.answer = result.fulfillment.speech;
+                    if (result.actionIncomplete == true) {
+                        if (result.parameters["place"] !== "" && result.parameters["date"] == "") {
+                            _this.date = true;
+                        }
+                        else if (result.parameters["place"] !== "" && result.parameters["date"] !== "" && result.parameters["time"] == "") {
+                            _this.time = true;
+                        }
+                    }
+                    else {
+                        result.parameters["date"] = new Date(result.parameters["date"]).toLocaleDateString();
+                        result.parameters["time"] = [(parseInt(_this.Study_time.split(":")["0"]) > 12) ? parseInt(_this.Study_time.split(":")["0"]) - 12 : (parseInt(_this.Study_time.split(":")["0"]) == 0) ? "12" : parseInt(_this.Study_time.split(":")["0"]).toString(), _this.Study_time.split(":")["1"]].join(":") + ((parseInt(_this.Study_time.split(":")["0"]) > 12) ? " PM" : " AM");
+                        _this.afDatabase.database.ref("users/" + _this.Token + "/Friends").once('value').then(function (snapshot1) {
+                            if (snapshot1.exists()) {
+                                snapshot1.forEach(function (snapshot2) {
+                                    _this.afDatabase.database.ref('users').once('value').then(function (snapshot2_1) {
+                                        snapshot2_1.forEach(function (snapshot2_2) {
+                                            if (snapshot2_2.child('Phone').val() == snapshot2.val()) {
+                                                var Friend = {
+                                                    Token: snapshot2_2.key,
+                                                    Name: snapshot2_2.child('First_name').val() + " " + snapshot2_2.child('Last_name').val(),
+                                                    Phone: snapshot2_2.child('Phone').val(),
+                                                    checked: false
+                                                };
+                                                _this.Friends.push(Friend);
+                                            }
+                                        });
+                                    });
+                                });
+                            }
+                        });
+                        _this.Show_Friends = true;
+                        _this.Select_Friends = true;
+                        _this.afDatabase.database.ref("users").child(_this.Token).once('value').then(function (snapshot1) {
+                            if (snapshot1.exists()) {
+                                _this.Notification_data = {
+                                    Title: "Study Group",
+                                    Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " is inviting you to a study group on " + result.parameters["date"] + " at " + result.parameters["time"] + " in " + result.parameters["place"]
+                                };
+                            }
+                        });
+                    }
+                }
                 else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && _this.SignedIn == false) {
                     _this.answer = "I think you should sign in!😊";
                 }
@@ -633,11 +687,17 @@ var HomePage = /** @class */ (function () {
         this.addData('/users', this.Token, 'Ratings', data).then().catch();
         this.answer = "Thanks for your Feedback😊";
     };
-    // Invite(){
-    //   for (let index = 0; index < this.Friends.length; index++) {
-    //     console.log(this.Friends[index]);
-    //   }
-    // }
+    HomePage.prototype.Invite = function () {
+        var _this = this;
+        this.Friends.forEach(function (Friend) {
+            if (Friend.checked == true) {
+                _this.sendNotification(Friend.Token);
+            }
+        });
+        this.Show_Friends = false;
+        this.Select_Friends = false;
+        this.answer = "I invited them to your study group! 😊";
+    };
     HomePage.prototype.Tutor_Select = function (Tutor) {
         this.Current_Tutor = Tutor;
         this.need_tutor = 2;
@@ -652,30 +712,51 @@ var HomePage = /** @class */ (function () {
         this.Tutors = [];
         this.answer = "I reserved your lesson! 😊";
     };
+    HomePage.prototype.sendNotification = function (Token) {
+        var payload = {
+            "notification": {
+                "title": this.Notification_data.Title,
+                "body": this.Notification_data.Body,
+                "sound": "enabled",
+                "click_action": "FCM_PLUGIN_ACTIVITY",
+                "icon": "drawable-hdpi-icon"
+            },
+            "data": {
+                "type": "Welcome",
+                "data": JSON.stringify({})
+            },
+            "to": Token,
+        };
+        var options = new __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__["c" /* HttpHeaders */]().set('Content-Type', 'application/json');
+        this.http.post("https://fcm.googleapis.com/fcm/send", payload, {
+            headers: options.set('Authorization', 'key=AAAAKAxjJwY:APA91bEfWiPXewKlIjvQy1kU5jEqZtBZWw6rWRQOBIesv3bmDzzExIQmOJhyZ_jgubS9T90k-XA7wTt-v8KxZwsRXf8MXCwO-oUPdJ3L7-XabAK3xsPAm8klUSRrBXnXF89fCl4t2_AXxFiLwkQahoeju1GWCYglYQ'),
+        }).subscribe();
+    };
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["_8" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["b" /* Content */]),
-        __metadata("design:type", __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["b" /* Content */])
+        __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["b" /* Content */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["b" /* Content */]) === "function" && _a || Object)
     ], HomePage.prototype, "content", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n  <ion-navbar color="red">\n\n    <ion-title>\n\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n      <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n    </ion-title>\n\n  </ion-navbar>\n\n</ion-header>\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngIf="answer?.length > 0" no-lines>\n\n      <!-- <ion-card text-wrap class="purple">\n\n        <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">\n\n          <ion-item *ngIf="need_tutor == 0" text-wrap class="purpletext"> {{answer}}</ion-item>\n\n          <ion-item *ngIf="need_tutor == 1" text-wrap class="purpletext"> {{tutor}} <img src="{{images[i]}}"></ion-item>\n\n          <ion-item-options side="right">\n\n            <button ion-button (click)="Reserve()">Reserve</button>\n\n          </ion-item-options>\n\n        </ion-item-sliding>\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card> -->\n\n      <ion-card text-wrap class="purple">\n\n        <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n\n\n        <ion-list *ngIf="need_tutor == 1">\n\n          <ion-item *ngFor="let Tutor of Tutors; let i = index">\n\n            <ion-thumbnail item-start>\n\n              <img src={{Tutor.image}}>\n\n            </ion-thumbnail>\n\n            <h2>{{Tutor.name}}</h2>\n\n            <p>{{Tutor.phone}}</p>\n\n            <ion-icon name="arrow-dropright" (click)="Tutor_Select(Tutor)" item-end></ion-icon>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-list *ngIf="need_tutor == 2">\n\n          <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index">\n\n            <h2>{{lesson.slot}}</h2>\n\n            <p>{{lesson.cost}}</p>\n\n            <ion-icon name="arrow-dropright" (click)="Tutor_Reserve(i)" item-end></ion-icon>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <div *ngIf="tutor_Feedback == true">\n\n          <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n\n            name="star" (click)="rating(1)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n            (click)="rating(2)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(3)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n\n        </div>\n\n\n\n        <ion-list *ngIf="Show_Friends == true">\n\n          <ion-item *ngFor="let Friend of Friends">\n\n            <ion-label>\n\n              <h2>{{Friend.Name}}</h2>\n\n              <ion-note>{{Friend.Phone}}</ion-note>\n\n            </ion-label>\n\n            <ion-checkbox [(ngModel)]="Friend.checked"></ion-checkbox>\n\n          </ion-item>\n\n        </ion-list>\n\n        <!-- <p *ngFor="let Friend of Friends">{{Friend.checked}}</p>\n\n        <button ion-button (click)="Invite()">Invite</button> -->\n\n\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n\n\n      <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n\n        <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n        <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n    </div>\n\n    <div class="options" no-lines *ngFor="let option of options;">\n\n      <button ion-button round (click)="question=option;ask()">{{option}}</button>\n\n    </div>\n\n  </ion-list>\n\n\n\n\n\n\n\n\n\n</ion-content>\n\n\n\n<ion-footer>\n\n  <div class="flex-items" padding>\n\n    <ion-input [(ngModel)]="question" name="question" class="input_message" placeholder="Type A Message">\n\n      <button type="submit" class="button" ng-click="ask()"></button>\n\n    </ion-input>\n\n    <ion-icon (click)="ask()" class="send" name="send"></ion-icon>\n\n  </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n  <ion-navbar>\n\n    <ion-title>\n\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n      <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n    </ion-title>\n\n  </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngIf="answer?.length > 0" no-lines>\n\n      <!-- <ion-card text-wrap class="purple">\n\n        <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">\n\n          <ion-item *ngIf="need_tutor == 0" text-wrap class="purpletext"> {{answer}}</ion-item>\n\n          <ion-item *ngIf="need_tutor == 1" text-wrap class="purpletext"> {{tutor}} <img src="{{images[i]}}"></ion-item>\n\n          <ion-item-options side="right">\n\n            <button ion-button (click)="Reserve()">Reserve</button>\n\n          </ion-item-options>\n\n        </ion-item-sliding>\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card> -->\n\n      <ion-card text-wrap class="purple">\n\n        <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n\n\n        <ion-list *ngIf="need_tutor == 1">\n\n          <ion-item *ngFor="let Tutor of Tutors; let i = index">\n\n            <ion-thumbnail item-start>\n\n              <img src={{Tutor.image}}>\n\n            </ion-thumbnail>\n\n            <h2>{{Tutor.name}}</h2>\n\n            <p>{{Tutor.phone}}</p>\n\n            <ion-icon name="arrow-dropright" (click)="Tutor_Select(Tutor)" item-end></ion-icon>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-list *ngIf="need_tutor == 2">\n\n          <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index">\n\n            <h2>{{lesson.slot}}</h2>\n\n            <p>{{lesson.cost}}</p>\n\n            <ion-icon name="arrow-dropright" (click)="Tutor_Reserve(i)" item-end></ion-icon>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <div *ngIf="tutor_Feedback == true">\n\n          <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n\n            name="star" (click)="rating(1)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n            (click)="rating(2)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(3)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n\n        </div>\n\n\n\n        <div *ngIf="date == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="Study_date"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_date;ask()">Choose Time</button>\n\n        </div>\n\n\n\n        <div *ngIf="time == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="h:m A" placeholder="h:m A" [(ngModel)]="Study_time"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_time;ask()">Choose friends</button>\n\n        </div>\n\n\n\n        <ion-list *ngIf="Show_Friends == true">\n\n          <ion-item *ngFor="let Friend of Friends">\n\n            <ion-label>\n\n              <h2>{{Friend.Name}}</h2>\n\n              <p>{{Friend.Phone}}</p>\n\n            </ion-label>\n\n            <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n\n          </ion-item>\n\n        </ion-list>\n\n        <button ion-button *ngIf="Select_Friends == true" (click)="Invite()">Invite to study group</button>\n\n\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n\n\n      <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n\n        <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n        <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n    </div>\n\n\n\n\n\n    <div class="options" no-lines *ngFor="let option of options;">\n\n      <button ion-button round (click)="question=option;ask()">{{option}}</button>\n\n    </div>\n\n\n\n  </ion-list>\n\n</ion-content>\n\n\n\n<ion-footer>\n\n  <div class="flex-items" padding>\n\n    <ion-input [(ngModel)]="question" class="input_message" placeholder="Type A Message"></ion-input>\n\n    <ion-icon name="send" class="send" (click)="ask()"></ion-icon>\n\n  </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
         }),
-        __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["f" /* NavController */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["g" /* Platform */], __WEBPACK_IMPORTED_MODULE_4__angular_core__["M" /* NgZone */], __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__["a" /* AngularFireDatabase */], __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__["a" /* SharingService */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__["a" /* Contacts */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__["a" /* Network */], __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__["a" /* Calendar */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__["a" /* FCM */]])
+        __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["f" /* NavController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["f" /* NavController */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["g" /* Platform */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["g" /* Platform */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__angular_core__["M" /* NgZone */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_core__["M" /* NgZone */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__["a" /* AngularFireDatabase */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__["a" /* AngularFireDatabase */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__["a" /* SharingService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__["a" /* SharingService */]) === "function" && _f || Object, typeof (_g = typeof __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__["a" /* Contacts */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__["a" /* Contacts */]) === "function" && _g || Object, typeof (_h = typeof __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__["a" /* Network */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__["a" /* Network */]) === "function" && _h || Object, typeof (_j = typeof __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__["a" /* Calendar */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__["a" /* Calendar */]) === "function" && _j || Object, typeof (_k = typeof __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["a" /* AlertController */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["a" /* AlertController */]) === "function" && _k || Object, typeof (_l = typeof __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__["a" /* FCM */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__["a" /* FCM */]) === "function" && _l || Object, typeof (_m = typeof __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__["a" /* HttpClient */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__["a" /* HttpClient */]) === "function" && _m || Object])
     ], HomePage);
     return HomePage;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
 }());
 
 //# sourceMappingURL=home.js.map
 
 /***/ }),
 
-/***/ 308:
+/***/ 310:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(309);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(430);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__ = __webpack_require__(311);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__app_module__ = __webpack_require__(432);
 
 
 Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* platformBrowserDynamic */])().bootstrapModule(__WEBPACK_IMPORTED_MODULE_1__app_module__["a" /* AppModule */]);
@@ -683,33 +764,35 @@ Object(__WEBPACK_IMPORTED_MODULE_0__angular_platform_browser_dynamic__["a" /* pl
 
 /***/ }),
 
-/***/ 430:
+/***/ 432:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppModule; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__ionic_native_network__ = __webpack_require__(198);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__firebase_credentials__ = __webpack_require__(438);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_platform_browser__ = __webpack_require__(50);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__firebase_credentials__ = __webpack_require__(440);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_platform_browser__ = __webpack_require__(52);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_ionic_angular__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_splash_screen__ = __webpack_require__(280);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_status_bar__ = __webpack_require__(281);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_ng_typing__ = __webpack_require__(481);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__app_component__ = __webpack_require__(482);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__pages_home_home__ = __webpack_require__(282);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_angularfire2__ = __webpack_require__(291);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_angularfire2_database__ = __webpack_require__(284);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__ionic_native_splash_screen__ = __webpack_require__(281);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_status_bar__ = __webpack_require__(282);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7_ng_typing__ = __webpack_require__(482);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__app_component__ = __webpack_require__(483);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__pages_home_home__ = __webpack_require__(283);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10_angularfire2__ = __webpack_require__(292);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11_angularfire2_database__ = __webpack_require__(285);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__ionic_native_fcm__ = __webpack_require__(159);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__ionic_native_contacts__ = __webpack_require__(295);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__ionic_native_contacts__ = __webpack_require__(296);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__services_Sharing_Service_SharingService_service__ = __webpack_require__(158);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__ionic_native_calendar__ = __webpack_require__(283);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__ionic_native_calendar__ = __webpack_require__(284);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__angular_common_http__ = __webpack_require__(309);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+
 
 
 
@@ -742,7 +825,8 @@ var AppModule = /** @class */ (function () {
                     links: []
                 }),
                 __WEBPACK_IMPORTED_MODULE_10_angularfire2__["a" /* AngularFireModule */].initializeApp(__WEBPACK_IMPORTED_MODULE_1__firebase_credentials__["a" /* FIREBASE_CONFIG */]),
-                __WEBPACK_IMPORTED_MODULE_11_angularfire2_database__["b" /* AngularFireDatabaseModule */]
+                __WEBPACK_IMPORTED_MODULE_11_angularfire2_database__["b" /* AngularFireDatabaseModule */],
+                __WEBPACK_IMPORTED_MODULE_16__angular_common_http__["b" /* HttpClientModule */]
             ],
             bootstrap: [__WEBPACK_IMPORTED_MODULE_4_ionic_angular__["c" /* IonicApp */]],
             entryComponents: [
@@ -768,7 +852,7 @@ var AppModule = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 438:
+/***/ 440:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -785,7 +869,7 @@ var FIREBASE_CONFIG = {
 
 /***/ }),
 
-/***/ 482:
+/***/ 483:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -793,9 +877,9 @@ var FIREBASE_CONFIG = {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__services_Sharing_Service_SharingService_service__ = __webpack_require__(158);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_ionic_angular__ = __webpack_require__(114);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_status_bar__ = __webpack_require__(281);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_splash_screen__ = __webpack_require__(280);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages_home_home__ = __webpack_require__(282);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__ionic_native_status_bar__ = __webpack_require__(282);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__ionic_native_splash_screen__ = __webpack_require__(281);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__pages_home_home__ = __webpack_require__(283);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__ionic_native_fcm__ = __webpack_require__(159);
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -846,19 +930,19 @@ var MyApp = /** @class */ (function () {
 
 /***/ }),
 
-/***/ 504:
+/***/ 505:
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ }),
 
-/***/ 506:
+/***/ 507:
 /***/ (function(module, exports) {
 
 /* (ignored) */
 
 /***/ })
 
-},[308]);
+},[310]);
 //# sourceMappingURL=main.js.map
