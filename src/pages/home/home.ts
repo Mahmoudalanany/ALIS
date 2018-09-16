@@ -9,7 +9,8 @@ import { Contacts } from '@ionic-native/contacts';
 import * as APIModule from 'apiai';
 import { Subscription } from 'rxjs';
 import { HttpClient, HttpHeaders } from '../../../node_modules/@angular/common/http';
-
+import { Slides } from 'ionic-angular';
+const uuidv1 = require('uuid/v1');
 
 
 @Component({
@@ -18,14 +19,18 @@ import { HttpClient, HttpHeaders } from '../../../node_modules/@angular/common/h
 })
 export class HomePage {
   @ViewChild(Content) content: Content;
+  @ViewChild(Slides) slides: Slides;
+  limit: number = 60;
+  truncating = true;
+  
   chat; //User Message
   answer; //ALIS Reply
   CurrentTime; //Message's Sent Time
-  showImage = []; //array indicating there is a message or no
-  DisplayImage = []; //array containing the images
   Tutors = [];
+  universities = [];
   options = [];
   need_tutor = 0;
+  need_universty = 0;
   Token = '';
   question: string;
   SU_name: string;
@@ -36,6 +41,7 @@ export class HomePage {
   end_of_form = false;
   rated;
   API_Agent: APIModule.Application;
+  uuid;
   connected: Subscription;
   disconnected: Subscription;
   offline_alert: Alert;
@@ -55,8 +61,6 @@ export class HomePage {
   Study_time;
   Notification_data;
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM, private http: HttpClient) {
-    // console.log(this.GetDate_and_Time());
-
     this.offline_alert = this.alertCtrl.create({
       title: "You're offline",
       subTitle: "Alis can't reach you without internet connection",
@@ -83,13 +87,12 @@ export class HomePage {
 
     platform.ready().then(() => {
       this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
+      this.uuid = uuidv1()
       this.Token = this.Share.getToken();
-      console.log("Initializing...");
-      //sign in by token
       this.Update_Time()
       this.Alis_first = true
       if (this.Intent_type == "rating") {
-        this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: '01234567890' })
+        this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: this.uuid })
           .once('response', ({ result: { fulfillment: { speech } } }) => {
             this.answer = speech;
             this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.options = snapshot1.val() })
@@ -100,7 +103,7 @@ export class HomePage {
       else if (this.Intent_type == "Welcome") {
         this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
           if (snapshot1.child(this.Token).exists()) {
-            this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: '01234567890' })
+            this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
@@ -109,7 +112,7 @@ export class HomePage {
                 console.log(error);
               }).end();
           } else {
-            this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: '01234567890' })
+            this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
@@ -149,7 +152,7 @@ export class HomePage {
   GetDate_and_Time() {
     var d = new Date(),
       date = [(d.getMonth() + 1), d.getDate(), d.getFullYear()].join("/"),
-      time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), d.getMinutes()].join(":"),
+      time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"),
       ampm = (d.getHours() < 12) ? "AM" : "PM"
     return { 'Date': date, 'Time': time, 'AMPM': ampm };
   }
@@ -246,7 +249,7 @@ export class HomePage {
       }
     }
     else {
-      this.API_Agent.textRequest(this.question, { sessionId: '01234567890' })
+      this.API_Agent.textRequest(this.question, { sessionId: this.uuid })
         .once('response', ({ result }) => {
           console.log(result);
 
@@ -264,7 +267,7 @@ export class HomePage {
                         child.remove();
                       });
                     }
-                    this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('First_name').val() } }, { sessionId: '01234567890' })
+                    this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('First_name').val() } }, { sessionId: this.uuid })
                       .once('response', ({ result: { fulfillment: { speech } } }) => {
                         speech = speech + "😊";
                         this.answer = speech;
@@ -332,6 +335,7 @@ export class HomePage {
           else if (result.action == "needTutor" && this.SignedIn == true) {
             this.afDatabase.database.ref('/teachers').child(result.parameters.tutorSubject)
               .once('value').then(snapshot1 => {
+                let tutors = []
                 snapshot1.forEach(snapshot2 => {
                   let tutor = {
                     subject: result.parameters.tutorSubject,
@@ -341,8 +345,9 @@ export class HomePage {
                     image: snapshot2.child('image').val(),
                     lessons: snapshot2.child('lessons').val()
                   }
-                  this.Tutors.push(tutor);
+                  tutors.push(tutor);
                 })
+                this.Tutors = tutors;
                 this.need_tutor = 1;
               })
           }
@@ -507,7 +512,7 @@ export class HomePage {
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getFeedback-yes' && this.SignedIn == true) {
-            this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: '01234567890' })
+            this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
@@ -574,6 +579,24 @@ export class HomePage {
               })
             }
           }
+          else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
+            this.afDatabase.database.ref('/universtes').child(result.parameters.country)
+              .once('value').then(snapshot1 => {
+
+                snapshot1.forEach(snapshot2 => {
+
+                  let university = {
+                    country: result.parameters.country,
+                    location: snapshot2.child('location').val(),
+                    image: snapshot2.child('img_url').val(),
+                    description: snapshot2.child('description').val(),
+                    universtyName: snapshot2.child('name').val()
+                  }
+                  this.universities.push(university);
+                })
+                this.need_universty = 1;
+              })
+          }
           // else if (result.action == "Interviews_Scheduling" && this.SignedIn == true) {
           //   this.SU_name = result.parameters.Student_activities;
           //   let string_to_split = result.parameters.start_time;
@@ -624,7 +647,7 @@ export class HomePage {
           //       //show the applicant the interview slots
           //     });
           // }
-          else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && this.SignedIn == false) {
+          else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && result.action !== "SignUp-Credentials" && this.SignedIn == false) {
             this.answer = "I think you should sign in!😊"
           }
           else {
@@ -719,6 +742,11 @@ export class HomePage {
     this.http.post("https://fcm.googleapis.com/fcm/send", payload, {
       headers: options.set('Authorization', 'key=AAAAKAxjJwY:APA91bEfWiPXewKlIjvQy1kU5jEqZtBZWw6rWRQOBIesv3bmDzzExIQmOJhyZ_jgubS9T90k-XA7wTt-v8KxZwsRXf8MXCwO-oUPdJ3L7-XabAK3xsPAm8klUSRrBXnXF89fCl4t2_AXxFiLwkQahoeju1GWCYglYQ'),
     }).subscribe();
+  }
+
+  nextSlide() {
+    this.slides.lockSwipes(false);
+    this.slides.slideNext();
   }
 
   // add_interview_slots(day: string, Time: string) {

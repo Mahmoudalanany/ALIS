@@ -10,7 +10,13 @@
 
 <ion-content no-bounce>
   <ion-list>
-    <div *ngIf="answer?.length > 0" no-lines>
+    <div no-lines>
+    <!-- <div *ngIf="answer?.length > 0" no-lines> -->
+      <ion-card *ngIf="Alis_first == false" text-wrap class="grey">
+        <ion-item text-wrap class="greytext">{{chat}}</ion-item>
+        <ion-label class="greyclock">{{CurrentTime}}</ion-label>
+      </ion-card>
+
       <!-- <ion-card text-wrap class="purple">
         <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">
           <ion-item *ngIf="need_tutor == 0" text-wrap class="purpletext"> {{answer}}</ion-item>
@@ -78,26 +84,53 @@
         </ion-list>
         <button ion-button *ngIf="Select_Friends == true" (click)="Invite()">Invite to study group</button>
 
+          <div class="options">
+        <div class="options" no-lines *ngFor="let option of options;" text-center>
+          <button class = "optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>
+        </div>
+      </div>
+        <br>
+
         <ion-label class="purpleclock">{{CurrentTime}}</ion-label>
       </ion-card>
 
-      <ion-card *ngIf="Alis_first == false" text-wrap class="grey">
-        <ion-item text-wrap class="greytext">{{chat}}</ion-item>
-        <ion-label class="greyclock">{{CurrentTime}}</ion-label>
-      </ion-card>
     </div>
-
-
-    <div class="options" no-lines *ngFor="let option of options;">
-      <button ion-button round (click)="question=option;ask()">{{option}}</button>
-    </div>
-
+    
   </ion-list>
+<ion-card *ngIf="need_universty == 1">
+    <ion-slides>
+      <ion-slide *ngFor="let slide of universities">
+        <ion-toolbar>
+          <ion-buttons end>
+            <button ion-button color="primary" (click)="nextSlide()">Next</button>
+          </ion-buttons>
+        </ion-toolbar>
+        <img src="{{slide.image}}" class="slide-image" />
+        <h1 class="slide-title">{{slide.universtyName}}</h1>
+        <h6><b>Location:</b>{{slide.location}}</h6>
+
+       
+          <p *ngIf="slide.description.length <= limit">{{slide.description}}</p>
+
+          <div *ngIf="truncating && slide.description.length > limit" text-wrap>
+            {{slide.description | slice:0:100}}
+            <button ion-button small (click)="truncating = false">show more</button>
+          </div>
+          <div *ngIf="!truncating && slide.description.length > limit" text-wrap>
+            {{slide.description}}
+            <button ion-button small (click)="truncating = true">show less</button>
+          </div>
+       
+      </ion-slide>
+    </ion-slides>
+  </ion-card>
 </ion-content>
 
 <ion-footer>
   <div class="flex-items" padding>
-    <ion-input [(ngModel)]="question" class="input_message" placeholder="Type A Message"></ion-input>
-    <ion-icon name="send" class="send" (click)="ask()"></ion-icon>
+    <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>
+    <button class="circularbutton" ion-button icon-only (click)="ask()">
+   <ion-icon name="send" class="send" ></ion-icon>
+  	</button>
   </div>
 </ion-footer>

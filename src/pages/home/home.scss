@@ -19,7 +19,7 @@ page-home {
         background-color : #efefef;
         border-radius : 8px;
         color : #303030;
-        width : 75%;;
+        width : fit-content;
         margin-left:10px;
     }
 
@@ -51,16 +51,16 @@ page-home {
     .greyclock{
         float : right !important;
         text-align: right !important;
-        font-size : 9px;
-        font-weight:bold;
+        font-size : 5px;
+        //font-weight:bold;
         color: #a2a2a2;
     }
 
     .purpleclock{
         float : right !important;
         text-align: right !important;
-        font-size : 9px;
-        font-weight:bold;
+        font-size : 5px;
+        //font-weight:bold;
         color: #efefef;
     }
 
@@ -86,21 +86,39 @@ page-home {
         background-color: #fff;
     }
 
-    .icon{
-        font-size: 50px;
-        opacity: 0.5;
-        padding-left: 40px;
-        align-self: center;
+	.circularbutton{
+        color: white;
+        background-color: #603CD7;
+
+        font-size: 40px;
+    	size: 40px;
+        //width: fit-content;
+        width: 40px;
+        height: 40px;
+          margin-top:-5px;
+           margin-bottom:-5px;
+        border-radius: 100px;
+        margin-right:-10px;
     }
 
     .send{
-        color: #603CD7;
-        font-size: 30px;
+        color: white;
+        font-size: 20px;
     }
 
     .input_message{
-        border: 1px solid #603CD7;
-        border-radius: 15px; 
+        border: 1px solid #DCDCDC;
+        border-radius: 40px; 
+        margin-top:-5px;
+        margin-bottom:-5px;
+        margin-right:5px;
+        margin-left:-5px;
+        height:40px;
+        padding-left:5px;
+        padding-top:auto;
+		padding-bottom:auto;
+
+
     }
 
     .footer{
@@ -109,15 +127,32 @@ page-home {
     }
 
     .options{
-        text-align: center;
-        display: inline-block
+        display: inline-block !important;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center !important;
+        overflow: auto;
+    }
+
+    .optionbutton{
+        color: white;
+        border-color: #ffffff;
+        margin-left: 5pt;
+        margin-top: auto;
+        margin-bottom: 5pt;
+        font-size: 12px;
+        height: 40px;
+        width:fit-content;
+        overflow: auto;
+        float : right !important;
+        border-width: 1.5px;
     }
 
     .rating{
-        padding: 1%;
+        //padding: 1%;
         margin-left: auto;
         margin-right: auto; 
         display : inline-block;
         font-size: 35px;
-     }
+    }
 }
