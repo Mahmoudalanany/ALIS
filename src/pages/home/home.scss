@@ -4,7 +4,7 @@ page-home {
 
     .scroll-content{
         padding-bottom: 0 !important;
-     }
+    }
 
     .logo{
         display: block;
@@ -20,7 +20,8 @@ page-home {
         border-radius : 8px;
         color : #303030;
         width : fit-content;
-        margin-left:10px;
+        margin-left:auto;
+        margin-right:10px;
     }
 
     .purple{
@@ -28,8 +29,8 @@ page-home {
         border-radius : 8px;
         color : #ffffff;
         width : 75%;
-        margin-left:auto;
-        margin-right:10px;
+        margin-left:10px;
+        margin-right:auto;
     }
 
     .greytext{
@@ -38,6 +39,8 @@ page-home {
         float: left;
         font-family: "Avenir Next LT Pro" !important;
         font-size: 12px; 
+        margin-top: -5 px;
+        margin-bottom: -5 px;
     }
 
     .purpletext{
@@ -46,6 +49,8 @@ page-home {
         float: left;
         font-family: "Avenir Next LT Pro" !important;
         font-size: 12px; 
+        margin-top: -5 px;
+        margin-bottom: -5 px;
     }
 
     .greyclock{
@@ -54,6 +59,8 @@ page-home {
         font-size : 5px;
         //font-weight:bold;
         color: #a2a2a2;
+        margin-top: 0;
+        margin-bottom: 0;
     }
 
     .purpleclock{
@@ -62,6 +69,8 @@ page-home {
         font-size : 5px;
         //font-weight:bold;
         color: #efefef;
+        margin-top: 0;
+        margin-bottom: 0;
     }
 
     .inputText{
@@ -86,17 +95,17 @@ page-home {
         background-color: #fff;
     }
 
-	.circularbutton{
+    .circularbutton{
         color: white;
         background-color: #603CD7;
 
         font-size: 40px;
-    	size: 40px;
+        size: 40px;
         //width: fit-content;
         width: 40px;
         height: 40px;
-          margin-top:-5px;
-           margin-bottom:-5px;
+        margin-top:-5px;
+        margin-bottom:-5px;
         border-radius: 100px;
         margin-right:-10px;
     }
@@ -116,11 +125,22 @@ page-home {
         height:40px;
         padding-left:5px;
         padding-top:auto;
-		padding-bottom:auto;
-
-
+        padding-bottom:auto;
     }
 
+
+    .abovefooter {
+        position: bottom;
+        min-height: 150px;
+        padding: auto;
+    }
+
+    .abovefooter-content {
+        position: bottom;
+        bottom: 0;
+        left: 0;
+    }
+    
     .footer{
         position: fixed;
         //bottom: 5%;
@@ -135,8 +155,13 @@ page-home {
     }
 
     .optionbutton{
-        color: white;
-        border-color: #ffffff;
+       
+       // border: none;
+        background-color:  #ffffff;
+        color: #303030;
+        border-color:    #fdfdfd;
+        border: 0.5px;
+        box-shadow: 0px 1.5px 5px #A5A5A5;
         margin-left: 5pt;
         margin-top: auto;
         margin-bottom: 5pt;
@@ -155,4 +180,54 @@ page-home {
         display : inline-block;
         font-size: 35px;
     }
+
+    .description{
+        color: black !important;
+        align-content: center;
+        text-align: center;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        font-weight: bolder;
+    }
+
+    .descriptioncard{
+        font-size : 12px;
+        color: black !important;
+        align-content: left;
+        text-align: left;
+        float : left;
+        padding : 5px;
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+
+    .nextbutton{
+        color : #8a25d3;
+        font-size : 12px;
+    }
+    .ion-slides {
+        height:200px;
+    }
+    .slider-slides{
+        display: flex;
+        flex-direction: row;
+        height:auto;
+    }
+
+    .morelessbutton{
+        background-color:  #ffffff;
+        color: #303030;
+        border-color:    #fdfdfd;
+        border: 0px;
+        font-size: 12px;
+        width:fit-content;
+        overflow: auto;
+        float : right !important;
+        border-width: 0px;
+    }
+
+    .slide-image{
+        overflow: hidden;
+    }
+
 }

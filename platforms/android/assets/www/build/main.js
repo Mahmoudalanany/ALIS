@@ -316,6 +316,8 @@ var HomePage = /** @class */ (function () {
             this.question = null;
             return;
         }
+        this.answer = "Alis is typing...";
+        this.need_universty = 0;
         this.Alis_first = false;
         this.need_tutor = 0;
         this.tutor_Feedback = false;
@@ -679,6 +681,19 @@ var HomePage = /** @class */ (function () {
                     }
                 }
                 else if (result.action == "Study_group_Invitation-yes" && _this.SignedIn == true) {
+                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
+                        _this.Notification_data = {
+                            Title: "Study Group",
+                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has accepted to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
+                            type: "Study_group_Reply",
+                            data: JSON.stringify({
+                                Date: _this.Intent_data["Date"],
+                                Time: _this.Intent_data["Time"],
+                                Place: _this.Intent_data["Place"],
+                                Study_Token: _this.Intent_data["Study_Token"]
+                            })
+                        };
+                    });
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Phone").once('value').then(function (MyPhone) {
                         _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
                             if (snapshot1.exists()) {
@@ -691,24 +706,24 @@ var HomePage = /** @class */ (function () {
                             }
                         });
                     });
-                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
-                        _this.Notification_data = {
-                            Title: "Study Group",
-                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has accepted to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
-                            type: "Study_group_Reply",
-                            data: JSON.stringify({
-                                'Date': _this.Intent_data["Date"],
-                                'Time': _this.Intent_data["Time"],
-                                'Place': _this.Intent_data["Place"],
-                                Study_Token: _this.Intent_data["Study_Token"]
-                            })
-                        };
-                    });
                     console.log(_this.Notification_data, _this.Intent_data["Creator"]);
                     _this.sendNotification(_this.Intent_data["Creator"]);
                     _this.answer = result.fulfillment.speech;
                 }
                 else if (result.action == "Study_group_Invitation-no" && _this.SignedIn == true) {
+                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
+                        _this.Notification_data = {
+                            Title: "Study Group",
+                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has refused to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
+                            type: "Study_group_Reply",
+                            data: JSON.stringify({
+                                Date: _this.Intent_data["Date"],
+                                Time: _this.Intent_data["Time"],
+                                Place: _this.Intent_data["Place"],
+                                Study_Token: _this.Intent_data["Study_Token"]
+                            })
+                        };
+                    });
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Phone").once('value').then(function (MyPhone) {
                         _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
                             if (snapshot1.exists()) {
@@ -720,19 +735,6 @@ var HomePage = /** @class */ (function () {
                                 });
                             }
                         });
-                    });
-                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
-                        _this.Notification_data = {
-                            Title: "Study Group",
-                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has refused to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
-                            type: "Study_group_Reply",
-                            data: JSON.stringify({
-                                'Date': _this.Intent_data["Date"],
-                                'Time': _this.Intent_data["Time"],
-                                'Place': _this.Intent_data["Place"],
-                                Study_Token: _this.Intent_data["Study_Token"]
-                            })
-                        };
                     });
                     console.log(_this.Notification_data, _this.Intent_data["Creator"]);
                     _this.sendNotification(_this.Intent_data["Creator"]);

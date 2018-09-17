@@ -244,6 +244,8 @@ export class HomePage {
       this.question = null;
       return;
     }
+    this.answer = "Alis is typing...";
+    this.need_universty = 0;
     this.Alis_first = false
     this.need_tutor = 0;
     this.tutor_Feedback = false
@@ -612,19 +614,6 @@ export class HomePage {
             }
           }
           else if (result.action == "Study_group_Invitation-yes" && this.SignedIn == true) {
-            this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
-              this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
-                if (snapshot1.exists()) {
-                  snapshot1.forEach(snapshot2 => {
-                    let PhoneKey = snapshot2.child(`Study groups/${this.Intent_data["Study_Token"]}/People/${MyPhone.val()}`)
-                    if (snapshot2.key !== this.Token && PhoneKey.exists()) {
-                      PhoneKey.ref.set("Joining")
-                    }
-                  })
-                }
-              })
-            })
-
             this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
               this.Notification_data = {
                 Title: "Study Group",
@@ -638,24 +627,25 @@ export class HomePage {
                 })
               }
             })
-            console.log(this.Notification_data, this.Intent_data["Creator"]);
-            this.sendNotification(this.Intent_data["Creator"])
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
+
             this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
               this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
                 if (snapshot1.exists()) {
                   snapshot1.forEach(snapshot2 => {
                     let PhoneKey = snapshot2.child(`Study groups/${this.Intent_data["Study_Token"]}/People/${MyPhone.val()}`)
                     if (snapshot2.key !== this.Token && PhoneKey.exists()) {
-                      PhoneKey.ref.set("Not joining")
+                      PhoneKey.ref.set("Joining")
                     }
                   })
                 }
               })
             })
 
+            console.log(this.Notification_data, this.Intent_data["Creator"]);
+            this.sendNotification(this.Intent_data["Creator"])
+            this.answer = result.fulfillment.speech;
+          }
+          else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
             this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
               this.Notification_data = {
                 Title: "Study Group",
@@ -669,6 +659,20 @@ export class HomePage {
                 })
               }
             })
+            
+            this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
+              this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
+                if (snapshot1.exists()) {
+                  snapshot1.forEach(snapshot2 => {
+                    let PhoneKey = snapshot2.child(`Study groups/${this.Intent_data["Study_Token"]}/People/${MyPhone.val()}`)
+                    if (snapshot2.key !== this.Token && PhoneKey.exists()) {
+                      PhoneKey.ref.set("Not joining")
+                    }
+                  })
+                }
+              })
+            })
+
             console.log(this.Notification_data, this.Intent_data["Creator"]);
             this.sendNotification(this.Intent_data["Creator"])
             this.answer = result.fulfillment.speech;
