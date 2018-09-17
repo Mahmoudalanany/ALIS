@@ -597,7 +597,8 @@ export class HomePage {
             }
           }
           else if (result.action == "Study_group_Invitation-yes" && this.SignedIn == true) {
-            
+            this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/${this.Intent_data["Phone"]}`).update("Joining")
+            this.answer = result.fulfillment.speech;
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/universtes').child(result.parameters.country)
