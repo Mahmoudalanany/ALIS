@@ -60,11 +60,9 @@ export class HomePage {
   Study_date;
   Study_time;
   Notification_data;
+  Study_People = [];
+  Show_Study = false
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM, private http: HttpClient) {
-    let test = {}
-    test["zeft"] = { betnegan: "5araaa" }
-    console.log(test);
-
     this.offline_alert = this.alertCtrl.create({
       title: "You're offline",
       subTitle: "Alis can't reach you without internet connection",
@@ -99,31 +97,7 @@ export class HomePage {
 
       this.Update_Time()
       this.Alis_first = true
-      if (this.Intent_type == "rating") {
-        this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: this.uuid })
-          .once('response', ({ result: { fulfillment: { speech } } }) => {
-            this.answer = speech;
-            this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.options = snapshot1.val() })
-          }).once('error', (error) => {
-            console.log(error);
-          }).end();
-      }
-      else if (this.Intent_type == "Study_group_Invitation") {
-        this.API_Agent.eventRequest({ name: "Study_group_Invitation", data: { 'Name': this.Intent_data["Name"], 'Date': this.Intent_data["Date"], 'Time': this.Intent_data["Time"], 'Place': this.Intent_data["Place"] } }, { sessionId: this.uuid })
-          .once('response', ({ result: { fulfillment: { speech } } }) => {
-            this.answer = speech;
-            this.SignedIn = true;
-          }).once('error', (error) => {
-            console.log(error);
-          }).end();
-      }
-      else if (this.Intent_type == "Study_group_Reply") {
-        this.answer = `Here are the people in the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`
-        this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
-          console.log(snapshot1.val());
-        })
-      }
-      else if (this.Intent_type == "Welcome") {
+      if (this.Intent_type == "Welcome") {
         this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
           if (snapshot1.child(this.Token).exists()) {
             this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: this.uuid })
@@ -145,6 +119,68 @@ export class HomePage {
               }).end();
           }
         });
+      }
+      else if (this.Intent_type == "rating") {
+        this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: this.uuid })
+          .once('response', ({ result: { fulfillment: { speech } } }) => {
+            this.answer = speech;
+            this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.options = snapshot1.val() })
+          }).once('error', (error) => {
+            console.log(error);
+          }).end();
+      }
+      else if (this.Intent_type == "Study_group_Invitation") {
+        this.API_Agent.eventRequest({ name: "Study_group_Invitation", data: { 'Name': this.Intent_data["Name"], 'Date': this.Intent_data["Date"], 'Time': this.Intent_data["Time"], 'Place': this.Intent_data["Place"] } }, { sessionId: this.uuid })
+          .once('response', ({ result: { fulfillment: { speech } } }) => {
+            this.answer = speech;
+            this.SignedIn = true;
+            this.Show_Study = true;
+            this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
+              snapshot1.forEach(snapshot2 => {
+                let Study_Person = {};
+                this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
+                  snapshot3.forEach(snapshot4 => {
+                    if (snapshot4.child("Phone").val() == snapshot2.key) {
+                      Study_Person = {
+                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                        Status: snapshot2.val()
+                      }
+                      this.Study_People.push(Study_Person)
+                    }
+                  })
+                })
+              })
+            })
+            console.log(this.Study_People);
+          }).once('error', (error) => {
+            console.log(error);
+          }).end();
+      }
+      else if (this.Intent_type == "Study_group_Reply") {
+        this.API_Agent.eventRequest({ name: "Study_group_Invitation", data: { 'Name': this.Intent_data["Name"], 'Date': this.Intent_data["Date"], 'Time': this.Intent_data["Time"], 'Place': this.Intent_data["Place"] } }, { sessionId: this.uuid })
+          .once('response', ({ result: { fulfillment: { speech } } }) => {
+            this.answer = `Here are the people in the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`
+            this.SignedIn = true;
+            this.Show_Study = true;
+            this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
+              snapshot1.forEach(snapshot2 => {
+                let Study_Person = {};
+                this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
+                  snapshot3.forEach(snapshot4 => {
+                    if (snapshot4.child("Phone").val() == snapshot2.key) {
+                      Study_Person = {
+                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                        Status: snapshot2.val()
+                      }
+                      this.Study_People.push(Study_Person)
+                    }
+                  })
+                })
+              })
+            })
+          }).once('error', (error) => {
+            console.log(error);
+          }).end();
       }
     })
   }
@@ -255,6 +291,9 @@ export class HomePage {
     this.Select_Friends = false
     this.date = false
     this.time = false
+    this.Study_People = []
+    this.Show_Study = false;
+
     this.content.scrollToBottom();
     this.chat = this.question;
     this.Update_Time()
@@ -276,8 +315,6 @@ export class HomePage {
     else {
       this.API_Agent.textRequest(this.question, { sessionId: this.uuid })
         .once('response', ({ result }) => {
-          console.log(result);
-
           if (result.action == "SignIn.SignIn-phone") {
             this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
               if (snapshot1.exists()) {
@@ -614,20 +651,6 @@ export class HomePage {
             }
           }
           else if (result.action == "Study_group_Invitation-yes" && this.SignedIn == true) {
-            this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
-              this.Notification_data = {
-                Title: "Study Group",
-                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has accepted to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
-                type: "Study_group_Reply",
-                data: JSON.stringify({
-                  Date: this.Intent_data["Date"],
-                  Time: this.Intent_data["Time"],
-                  Place: this.Intent_data["Place"],
-                  Study_Token: this.Intent_data["Study_Token"]
-                })
-              }
-            })
-
             this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
               this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
                 if (snapshot1.exists()) {
@@ -641,15 +664,10 @@ export class HomePage {
               })
             })
 
-            console.log(this.Notification_data, this.Intent_data["Creator"]);
-            this.sendNotification(this.Intent_data["Creator"])
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
             this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
               this.Notification_data = {
                 Title: "Study Group",
-                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has refused to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
+                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has accepted to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
                 type: "Study_group_Reply",
                 data: JSON.stringify({
                   Date: this.Intent_data["Date"],
@@ -658,8 +676,13 @@ export class HomePage {
                   Study_Token: this.Intent_data["Study_Token"]
                 })
               }
+              console.log(this.Notification_data, this.Intent_data["Creator"]);
+              this.sendNotification(this.Intent_data["Creator"])
+              this.answer = result.fulfillment.speech;
+
             })
-            
+          }
+          else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
             this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
               this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
                 if (snapshot1.exists()) {
@@ -673,9 +696,22 @@ export class HomePage {
               })
             })
 
-            console.log(this.Notification_data, this.Intent_data["Creator"]);
-            this.sendNotification(this.Intent_data["Creator"])
-            this.answer = result.fulfillment.speech;
+            this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
+              this.Notification_data = {
+                Title: "Study Group",
+                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has refused to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
+                type: "Study_group_Reply",
+                data: JSON.stringify({
+                  Date: this.Intent_data["Date"],
+                  Time: this.Intent_data["Time"],
+                  Place: this.Intent_data["Place"],
+                  Study_Token: this.Intent_data["Study_Token"]
+                })
+              }
+              console.log(this.Notification_data, this.Intent_data["Creator"]);
+              this.sendNotification(this.Intent_data["Creator"])
+              this.answer = result.fulfillment.speech;
+            })
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/universtes').child(result.parameters.country)
