@@ -628,16 +628,17 @@ export class HomePage {
             this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
               this.Notification_data = {
                 Title: "Study Group",
-                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has accepted to join the study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`,
+                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has accepted to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
                 type: "Study_group_Reply",
                 data: JSON.stringify({
-                  Date: `${result.parameters["date"]}`,
-                  Time: `${result.parameters["time"]}`,
-                  Place: `${result.parameters["place"]}`,
+                  'Date': this.Intent_data["Date"],
+                  'Time': this.Intent_data["Time"],
+                  'Place': this.Intent_data["Place"],
                   Study_Token: this.Intent_data["Study_Token"]
                 })
               }
             })
+            console.log(this.Notification_data,this.Intent_data["Creator"]);
             this.sendNotification(this.Intent_data["Creator"])
             this.answer = result.fulfillment.speech;
           }
@@ -658,16 +659,17 @@ export class HomePage {
             this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
               this.Notification_data = {
                 Title: "Study Group",
-                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has refused to join the study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`,
+                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has refused to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
                 type: "Study_group_Reply",
                 data: JSON.stringify({
-                  Date: `${result.parameters["date"]}`,
-                  Time: `${result.parameters["time"]}`,
-                  Place: `${result.parameters["place"]}`,
+                  'Date': this.Intent_data["Date"],
+                  'Time': this.Intent_data["Time"],
+                  'Place': this.Intent_data["Place"],
                   Study_Token: this.Intent_data["Study_Token"]
                 })
               }
             })
+            console.log(this.Notification_data,this.Intent_data["Creator"]);
             this.sendNotification(this.Intent_data["Creator"])
             this.answer = result.fulfillment.speech;
           }
