@@ -22,7 +22,7 @@ export class HomePage {
   @ViewChild(Slides) slides: Slides;
   limit: number = 60;
   truncating = true;
-  
+
   chat; //User Message
   answer; //ALIS Reply
   CurrentTime; //Message's Sent Time
@@ -96,6 +96,15 @@ export class HomePage {
           .once('response', ({ result: { fulfillment: { speech } } }) => {
             this.answer = speech;
             this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.options = snapshot1.val() })
+          }).once('error', (error) => {
+            console.log(error);
+          }).end();
+      }
+      else if (this.Intent_type == "Study_group_Invitation") {
+        this.API_Agent.eventRequest({ name: "Study_group_Invitation" }, { sessionId: this.uuid })
+          .once('response', ({ result: { fulfillment: { speech } } }) => {
+            this.answer = speech;
+            this.SignedIn = true;
           }).once('error', (error) => {
             console.log(error);
           }).end();
@@ -535,7 +544,7 @@ export class HomePage {
               this.end_of_form = false;
             }
           }
-          else if (result.action == "Study_group" && this.SignedIn == true) {
+          else if (result.action == "Study_group_Creation" && this.SignedIn == true) {
             this.answer = result.fulfillment.speech;
             if (result.actionIncomplete == true) {
               if (result.parameters["place"] !== "" && result.parameters["date"] == "") {
@@ -543,6 +552,7 @@ export class HomePage {
               }
               else if (result.parameters["place"] !== "" && result.parameters["date"] !== "" && result.parameters["time"] == "") {
                 this.time = true
+                this.SyncFriends()
               }
             }
             else {
@@ -573,11 +583,21 @@ export class HomePage {
                 if (snapshot1.exists()) {
                   this.Notification_data = {
                     Title: "Study Group",
-                    Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} is inviting you to a study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`
+                    Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} is inviting you to a study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`,
+                    type: "Study_group_Invitation",
+                    data: {
+                      Name: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()}`,
+                      Date: `${result.parameters["date"]}`,
+                      Time: `${result.parameters["time"]}`,
+                      Place: `${result.parameters["place"]}`
+                    }
                   }
                 }
               })
             }
+          }
+          else if (result.action == "Study_group_Invitation-yes" && this.SignedIn == true) {
+            
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/universtes').child(result.parameters.country)
@@ -697,14 +717,55 @@ export class HomePage {
   }
 
   Invite() {
+    let group = {}
+    let tempFriends = []
     this.Friends.forEach(Friend => {
       if (Friend.checked == true) {
-        this.sendNotification(Friend.Token)
+        tempFriends.push(Friend)
+        group[Friend.Phone] = "Pending"
       }
     })
-    this.Show_Friends = false
-    this.Select_Friends = false
-    this.answer = "I invited them to your study group! 😊"
+    if (tempFriends !== []) {
+      this.Show_Friends = false
+      this.Select_Friends = false
+      var group_key;
+      var group_data = this.Notification_data.data;
+
+      this.afDatabase.database.ref(`users/${this.Token}`).child("Study groups").once('value').then(snapshot1 => {
+        group["Name"] = group_data["Name"]
+        group["Date"] = group_data["Date"]
+        group["Time"] = group_data["Time"]
+        group["Place"] = group_data["Place"]
+        group_key = snapshot1.ref.push(group).key
+        this.Notification_data.data["Study_Token"] = group_key
+        this.Notification_data.data = JSON.stringify(this.Notification_data.data)
+      }).then(() => {
+
+        tempFriends.forEach(tempFriendPrimary => {
+          let group = {}
+          tempFriends.forEach(tempFriendSecondary => {
+            if (tempFriendPrimary.Token !== tempFriendSecondary.Token) {
+              group[tempFriendSecondary.Phone] = "Pending"
+            }
+          })
+          this.afDatabase.database.ref(`users/${this.Token}`).child("Phone").once('value').then(snapshot2 => {
+            group[snapshot2.val()] = "Joining"
+          })
+          this.afDatabase.database.ref(`users/${tempFriendPrimary.Token}`).child("Study groups").once('value').then(snapshot1 => {
+            group["Name"] = group_data["Name"]
+            group["Date"] = group_data["Date"]
+            group["Time"] = group_data["Time"]
+            group["Place"] = group_data["Place"]
+            snapshot1.child(group_key).ref.update(group)
+          })
+          this.sendNotification(tempFriendPrimary.Token)
+        })
+      })
+      this.answer = "I invited your selected friends to the study group!😊"
+    }
+    else {
+      this.answer = "Please invite at least 1 of your friends"
+    }
   }
 
   Tutor_Select(Tutor) {
@@ -733,8 +794,8 @@ export class HomePage {
         "icon": "drawable-hdpi-icon"
       },
       "data": {
-        "type": "Welcome",
-        "data": JSON.stringify({})
+        "type": this.Notification_data.type,
+        "data": this.Notification_data.data
       },
       "to": Token,
     }
