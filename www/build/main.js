@@ -170,6 +170,8 @@ var HomePage = /** @class */ (function () {
             _this.API_Agent = __WEBPACK_IMPORTED_MODULE_8_apiai__("7327b7cfa4a144a0b3924da4f9b375b9");
             _this.uuid = uuidv1();
             _this.Token = _this.Share.getToken();
+            // this.relevantMajors();
+            // this.showMajors();
             _this.Update_Time();
             _this.Alis_first = true;
             if (_this.Intent_type == "rating") {
@@ -183,7 +185,7 @@ var HomePage = /** @class */ (function () {
                 }).end();
             }
             else if (_this.Intent_type == "Study_group_Invitation") {
-                _this.API_Agent.eventRequest({ name: "Study_group_Invitation" }, { sessionId: _this.uuid })
+                _this.API_Agent.eventRequest({ name: "Study_group_Invitation", data: { 'Name': _this.Intent_data["Name"], 'Date': _this.Intent_data["Date"], 'Time': _this.Intent_data["Time"], 'Place': _this.Intent_data["Place"] } }, { sessionId: _this.uuid })
                     .once('response', function (_a) {
                     var speech = _a.result.fulfillment.speech;
                     _this.answer = speech;
@@ -817,6 +819,111 @@ var HomePage = /** @class */ (function () {
     HomePage.prototype.nextSlide = function () {
         this.slides.lockSwipes(false);
         this.slides.slideNext();
+    };
+    HomePage.prototype.editDistance = function (s1, s2) {
+        var costs = new Array();
+        for (var i = 0; i <= s1.length; i++) {
+            var lastValue = i;
+            for (var j = 0; j <= s2.length; j++) {
+                if (i == 0)
+                    costs[j] = j;
+                else {
+                    if (j > 0) {
+                        var newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+            }
+            if (i > 0)
+                costs[s2.length] = lastValue;
+        }
+        return costs[s2.length];
+    };
+    HomePage.prototype.similarity = function (s1, s2) {
+        var longer = s1;
+        var shorter = s2;
+        if (s1.length < s2.length) {
+            longer = s2;
+            shorter = s1;
+        }
+        var longerLength = longer.length;
+        if (longerLength == 0) {
+            return 1.0;
+        }
+        return (longerLength - this.editDistance(longer, shorter)) / parseFloat(longerLength);
+    };
+    HomePage.prototype.similarnumber = function (a, b) {
+        var z;
+        if (a < b) {
+            z = a;
+            a = b;
+            b = z;
+        }
+        var diff = a - b;
+        if (diff == 0) {
+            return 1;
+        }
+        else if (diff > 0 && diff <= 0.2) {
+            return 0.8;
+        }
+        else if (diff > 0.2 && diff <= 0.5) {
+            return 0.5;
+        }
+        else if (diff > 0.5 && diff <= 0.7) {
+            return 0.3;
+        }
+        else if (diff > 0.7 && diff <= 1) {
+            return 0.1;
+        }
+        else {
+            return 0;
+        }
+    };
+    HomePage.prototype.relevantMajors = function () {
+        var _this = this;
+        var userschool;
+        var usergrade;
+        //retreive old data
+        this.afDatabase.database.ref("/users").child(this.Token).once("value").then(function (snapshot) {
+            console.log("currentuser");
+            userschool = snapshot.child("School").val();
+            usergrade = snapshot.child("Grade").val();
+            _this.afDatabase.database.ref("/Old Users").once("value").then(function (snapshot1) {
+                snapshot1.forEach(function (snapshot2) {
+                    var schoolname = snapshot2.child("SchoolName").val();
+                    var schoolgrade = snapshot2.child("Grade").val();
+                    var Major = snapshot2.child("Major").val();
+                    var MatchedCases = 0;
+                    var schoolSimilarity = _this.similarity(userschool, schoolname) * 100;
+                    if (schoolSimilarity > 0) {
+                        MatchedCases++;
+                    }
+                    var gradeSimilarity = _this.similarnumber(usergrade, schoolgrade) * 100;
+                    if (gradeSimilarity > 0) {
+                        MatchedCases++;
+                    }
+                    var totalPercent = schoolSimilarity + gradeSimilarity;
+                    var rank = MatchedCases * totalPercent;
+                    console.log("This users matched cases = " + MatchedCases + " with percentage " + totalPercent + " and rank " + rank);
+                    if (rank > 0) {
+                        var data = {};
+                        data[Major] = rank;
+                        _this.addData('/users', _this.Token, 'PossibleMajors', data).then().catch();
+                    }
+                });
+            });
+        });
+    };
+    HomePage.prototype.showMajors = function () {
+        console.log("Prinitng the Majors");
+        this.afDatabase.database.ref("/users").child(this.Token).child("PossibleMajors").once("value").then(function (snapshot1) {
+            snapshot1.forEach(function (snapshot2) {
+                console.log("Major = " + snapshot2.key + " of rank " + snapshot2.val());
+            });
+        });
     };
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["_8" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["b" /* Content */]),

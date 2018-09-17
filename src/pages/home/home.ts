@@ -61,6 +61,7 @@ export class HomePage {
   Study_time;
   Notification_data;
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM, private http: HttpClient) {
+
     this.offline_alert = this.alertCtrl.create({
       title: "You're offline",
       subTitle: "Alis can't reach you without internet connection",
@@ -90,6 +91,9 @@ export class HomePage {
       this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
       this.uuid = uuidv1()
       this.Token = this.Share.getToken();
+      // this.relevantMajors();
+      // this.showMajors();
+
       this.Update_Time()
       this.Alis_first = true
       if (this.Intent_type == "rating") {
@@ -102,7 +106,7 @@ export class HomePage {
           }).end();
       }
       else if (this.Intent_type == "Study_group_Invitation") {
-        this.API_Agent.eventRequest({ name: "Study_group_Invitation" }, { sessionId: this.uuid })
+        this.API_Agent.eventRequest({ name: "Study_group_Invitation", data: { 'Name': this.Intent_data["Name"], 'Date': this.Intent_data["Date"], 'Time': this.Intent_data["Time"], 'Place': this.Intent_data["Place"] } }, { sessionId: this.uuid })
           .once('response', ({ result: { fulfillment: { speech } } }) => {
             this.answer = speech;
             this.SignedIn = true;
@@ -810,6 +814,109 @@ export class HomePage {
   nextSlide() {
     this.slides.lockSwipes(false);
     this.slides.slideNext();
+  }
+
+  editDistance(s1, s2) {
+    var costs = new Array();
+    for (var i = 0; i <= s1.length; i++) {
+      var lastValue = i;
+      for (var j = 0; j <= s2.length; j++) {
+        if (i == 0)
+          costs[j] = j;
+        else {
+          if (j > 0) {
+            var newValue = costs[j - 1];
+            if (s1.charAt(i - 1) != s2.charAt(j - 1))
+              newValue = Math.min(Math.min(newValue, lastValue),
+                costs[j]) + 1;
+            costs[j - 1] = lastValue;
+            lastValue = newValue;
+          }
+        }
+      }
+      if (i > 0)
+        costs[s2.length] = lastValue;
+    }
+    return costs[s2.length];
+  }
+
+  similarity(s1, s2) {
+    var longer = s1;
+    var shorter = s2;
+    if (s1.length < s2.length) {
+      longer = s2;
+      shorter = s1;
+    }
+    var longerLength = longer.length;
+    if (longerLength == 0) {
+      return 1.0;
+    }
+    return (longerLength - this.editDistance(longer, shorter)) / parseFloat(longerLength);
+  }
+
+  similarnumber(a, b) {
+    let z;
+    if (a < b) {
+      z = a;
+      a = b;
+      b = z;
+    }
+    var diff = a - b;
+    if (diff == 0) { return 1; }
+    else if (diff > 0 && diff <= 0.2) { return 0.8; }
+    else if (diff > 0.2 && diff <= 0.5) { return 0.5; }
+    else if (diff > 0.5 && diff <= 0.7) { return 0.3; }
+    else if (diff > 0.7 && diff <= 1) { return 0.1; }
+    else { return 0; }
+  }
+
+  relevantMajors() {
+    let userschool;
+    let usergrade;
+    //retreive old data
+    this.afDatabase.database.ref("/users").child(this.Token).once("value").then(snapshot => {
+      console.log("currentuser");
+      userschool = snapshot.child("School").val();
+      usergrade = snapshot.child("Grade").val();
+
+      this.afDatabase.database.ref("/Old Users").once("value").then(snapshot1 => {
+        snapshot1.forEach(snapshot2 => {
+
+          let schoolname = snapshot2.child("SchoolName").val();
+          let schoolgrade = snapshot2.child("Grade").val();
+          let Major = snapshot2.child("Major").val();
+
+          let MatchedCases = 0;
+
+          let schoolSimilarity = this.similarity(userschool, schoolname) * 100;
+          if (schoolSimilarity > 0) { MatchedCases++; }
+
+          let gradeSimilarity = this.similarnumber(usergrade, schoolgrade) * 100;
+          if (gradeSimilarity > 0) { MatchedCases++; }
+
+          let totalPercent = schoolSimilarity + gradeSimilarity;
+
+          let rank = MatchedCases * totalPercent;
+
+          console.log("This users matched cases = " + MatchedCases + " with percentage " + totalPercent + " and rank " + rank);
+
+          if (rank > 0) {
+            let data = {};
+            data[Major] = rank;
+            this.addData('/users', this.Token, 'PossibleMajors', data).then().catch();
+          }
+        })
+      })
+    })
+  }
+
+  showMajors() {
+    console.log("Prinitng the Majors");
+    this.afDatabase.database.ref("/users").child(this.Token).child("PossibleMajors").once("value").then(snapshot1 => {
+      snapshot1.forEach(snapshot2 => {
+        console.log("Major = " + snapshot2.key + " of rank " + snapshot2.val());
+      })
+    })
   }
 
   // add_interview_slots(day: string, Time: string) {
