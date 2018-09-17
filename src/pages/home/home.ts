@@ -346,7 +346,7 @@ export class HomePage {
             })
             this.Show_Friends = true
           }
-          else if (result.action == "needTutor" && this.SignedIn == true) {
+          else if (result.action == "needTutor" && result.parameters.tutorSubject != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/teachers').child(result.parameters.tutorSubject)
               .once('value').then(snapshot1 => {
                 let tutors = []
@@ -602,7 +602,18 @@ export class HomePage {
             }
           }
           else if (result.action == "Study_group_Invitation-yes" && this.SignedIn == true) {
-            this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/${this.Intent_data["Phone"]}`).update("Joining")
+            this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
+              this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
+                if (snapshot1.exists()) {
+                  snapshot1.forEach(snapshot2 => {
+                    let PhoneKey = snapshot2.child(`Study groups/${this.Intent_data["Study_Token"]}/${MyPhone.val()}`)
+                    if (snapshot2.key !== this.Token && PhoneKey.exists()) {
+                      PhoneKey.ref.set("Joining")
+                    }
+                  })
+                }
+              })
+            })
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {

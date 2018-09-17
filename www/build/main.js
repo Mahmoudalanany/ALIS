@@ -419,7 +419,7 @@ var HomePage = /** @class */ (function () {
                     });
                     _this.Show_Friends = true;
                 }
-                else if (result.action == "needTutor" && _this.SignedIn == true) {
+                else if (result.action == "needTutor" && result.parameters.tutorSubject != '' && _this.SignedIn == true) {
                     _this.afDatabase.database.ref('/teachers').child(result.parameters.tutorSubject)
                         .once('value').then(function (snapshot1) {
                         var tutors = [];
@@ -669,7 +669,18 @@ var HomePage = /** @class */ (function () {
                     }
                 }
                 else if (result.action == "Study_group_Invitation-yes" && _this.SignedIn == true) {
-                    _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + _this.Intent_data["Study_Token"] + "/" + _this.Intent_data["Phone"]).update("Joining");
+                    _this.afDatabase.database.ref("users/" + _this.Token + "/Phone").once('value').then(function (MyPhone) {
+                        _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
+                            if (snapshot1.exists()) {
+                                snapshot1.forEach(function (snapshot2) {
+                                    var PhoneKey = snapshot2.child("Study groups/" + _this.Intent_data["Study_Token"] + "/" + MyPhone.val());
+                                    if (snapshot2.key !== _this.Token && PhoneKey.exists()) {
+                                        PhoneKey.ref.set("Joining");
+                                    }
+                                });
+                            }
+                        });
+                    });
                     _this.answer = result.fulfillment.speech;
                 }
                 else if (result.action == "showUniversities" && result.parameters.country != '' && _this.SignedIn == true) {

@@ -143,8 +143,6 @@ var HomePage = /** @class */ (function () {
         this.SignedIn = false;
         this.date = false;
         this.time = false;
-        this.relevantMajors();
-        this.showMajors();
         this.offline_alert = this.alertCtrl.create({
             title: "You're offline",
             subTitle: "Alis can't reach you without internet connection",
@@ -172,6 +170,8 @@ var HomePage = /** @class */ (function () {
             _this.API_Agent = __WEBPACK_IMPORTED_MODULE_8_apiai__("7327b7cfa4a144a0b3924da4f9b375b9");
             _this.uuid = uuidv1();
             _this.Token = _this.Share.getToken();
+            // this.relevantMajors();
+            // this.showMajors();
             _this.Update_Time();
             _this.Alis_first = true;
             if (_this.Intent_type == "rating") {
@@ -419,7 +419,7 @@ var HomePage = /** @class */ (function () {
                     });
                     _this.Show_Friends = true;
                 }
-                else if (result.action == "needTutor" && _this.SignedIn == true) {
+                else if (result.action == "needTutor" && result.parameters.tutorSubject != '' && _this.SignedIn == true) {
                     _this.afDatabase.database.ref('/teachers').child(result.parameters.tutorSubject)
                         .once('value').then(function (snapshot1) {
                         var tutors = [];
@@ -669,7 +669,16 @@ var HomePage = /** @class */ (function () {
                     }
                 }
                 else if (result.action == "Study_group_Invitation-yes" && _this.SignedIn == true) {
-                    _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + _this.Intent_data["Study_Token"] + "/" + _this.Intent_data["Phone"]).update("Joining");
+                    _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
+                        if (snapshot1.exists()) {
+                            snapshot1.forEach(function (snapshot2) {
+                                var myPhone = snapshot2.child("Study groups").child("" + _this.Intent_data["Study_Token"]).child("" + _this.Intent_data["Phone"]);
+                                if (snapshot2.key !== _this.Token && myPhone.exists()) {
+                                    myPhone.ref.set("Joining");
+                                }
+                            });
+                        }
+                    });
                     _this.answer = result.fulfillment.speech;
                 }
                 else if (result.action == "showUniversities" && result.parameters.country != '' && _this.SignedIn == true) {
