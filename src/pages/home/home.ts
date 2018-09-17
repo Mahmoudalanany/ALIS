@@ -77,6 +77,7 @@ export class HomePage {
         console.log("Received in background");
         this.Intent_type = notification.type
         this.Intent_data = JSON.parse(notification.data)
+        console.log(this.Intent_type);
         console.log(this.Intent_data);
       } else {
         console.log("Received in foreground");
