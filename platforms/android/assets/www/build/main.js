@@ -694,16 +694,17 @@ var HomePage = /** @class */ (function () {
                     _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
                         _this.Notification_data = {
                             Title: "Study Group",
-                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has accepted to join the study group on " + result.parameters["date"] + " at " + result.parameters["time"] + " in " + result.parameters["place"],
+                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has accepted to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
                             type: "Study_group_Reply",
                             data: JSON.stringify({
-                                Date: "" + result.parameters["date"],
-                                Time: "" + result.parameters["time"],
-                                Place: "" + result.parameters["place"],
+                                'Date': _this.Intent_data["Date"],
+                                'Time': _this.Intent_data["Time"],
+                                'Place': _this.Intent_data["Place"],
                                 Study_Token: _this.Intent_data["Study_Token"]
                             })
                         };
                     });
+                    console.log(_this.Notification_data, _this.Intent_data["Creator"]);
                     _this.sendNotification(_this.Intent_data["Creator"]);
                     _this.answer = result.fulfillment.speech;
                 }
@@ -723,16 +724,17 @@ var HomePage = /** @class */ (function () {
                     _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
                         _this.Notification_data = {
                             Title: "Study Group",
-                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has refused to join the study group on " + result.parameters["date"] + " at " + result.parameters["time"] + " in " + result.parameters["place"],
+                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has refused to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
                             type: "Study_group_Reply",
                             data: JSON.stringify({
-                                Date: "" + result.parameters["date"],
-                                Time: "" + result.parameters["time"],
-                                Place: "" + result.parameters["place"],
+                                'Date': _this.Intent_data["Date"],
+                                'Time': _this.Intent_data["Time"],
+                                'Place': _this.Intent_data["Place"],
                                 Study_Token: _this.Intent_data["Study_Token"]
                             })
                         };
                     });
+                    console.log(_this.Notification_data, _this.Intent_data["Creator"]);
                     _this.sendNotification(_this.Intent_data["Creator"]);
                     _this.answer = result.fulfillment.speech;
                 }
