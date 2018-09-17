@@ -639,6 +639,7 @@ export class HomePage {
               }
             })
             this.sendNotification(this.Intent_data["Creator"])
+            this.Notification_data = {}
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
@@ -669,6 +670,7 @@ export class HomePage {
               }
             })
             this.sendNotification(this.Intent_data["Creator"])
+            this.Notification_data = {}
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
@@ -810,7 +812,7 @@ export class HomePage {
         group["Time"] = group_data["Time"]
         group["Place"] = group_data["Place"]
         group_key = snapshot1.ref.push(group).key
-        snapshot1.ref.update({ People: group_people })
+        snapshot1.child(group_key).ref.update({ People: group_people })
         this.Notification_data.data["Study_Token"] = group_key
         this.Notification_data.data = JSON.stringify(this.Notification_data.data)
       }).then(() => {
@@ -834,6 +836,7 @@ export class HomePage {
             snapshot1.child(group_key).ref.update({ People: group_people })
           })
           this.sendNotification(tempFriendPrimary.Token)
+          this.Notification_data = {}
         })
       })
       this.answer = "I invited your selected friends to the study group!😊"
