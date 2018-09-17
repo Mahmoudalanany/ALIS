@@ -623,25 +623,23 @@ export class HomePage {
                   })
                 }
               })
-            }).then(() => {
-              this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
-                if (snapshot1.exists()) {
-                  this.Notification_data = {
-                    Title: "Study Group",
-                    Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has accepted to join the study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`,
-                    type: "Study_group_Reply",
-                    data: {
-                      Date: `${result.parameters["date"]}`,
-                      Time: `${result.parameters["time"]}`,
-                      Place: `${result.parameters["place"]}`,
-                      Study_Token: this.Intent_data["Study_Token"]
-                    }
-                  }
-                }
-              })
-              this.sendNotification(this.Intent_data["Creator"])
-              this.answer = result.fulfillment.speech;
             })
+
+            this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
+              this.Notification_data = {
+                Title: "Study Group",
+                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has accepted to join the study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`,
+                type: "Study_group_Reply",
+                data: JSON.stringify({
+                  Date: `${result.parameters["date"]}`,
+                  Time: `${result.parameters["time"]}`,
+                  Place: `${result.parameters["place"]}`,
+                  Study_Token: this.Intent_data["Study_Token"]
+                })
+              }
+            })
+            this.sendNotification(this.Intent_data["Creator"])
+            this.answer = result.fulfillment.speech;
           }
           else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
             this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
@@ -655,25 +653,23 @@ export class HomePage {
                   })
                 }
               })
-            }).then(() => {
-              this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
-                if (snapshot1.exists()) {
-                  this.Notification_data = {
-                    Title: "Study Group",
-                    Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has refused to join the study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`,
-                    type: "Study_group_Reply",
-                    data: {
-                      Date: `${result.parameters["date"]}`,
-                      Time: `${result.parameters["time"]}`,
-                      Place: `${result.parameters["place"]}`,
-                      Study_Token: this.Intent_data["Study_Token"]
-                    }
-                  }
-                }
-              })
-              this.sendNotification(this.Intent_data["Creator"])
-              this.answer = result.fulfillment.speech;
             })
+
+            this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
+              this.Notification_data = {
+                Title: "Study Group",
+                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has refused to join the study group on ${result.parameters["date"]} at ${result.parameters["time"]} in ${result.parameters["place"]}`,
+                type: "Study_group_Reply",
+                data: JSON.stringify({
+                  Date: `${result.parameters["date"]}`,
+                  Time: `${result.parameters["time"]}`,
+                  Place: `${result.parameters["place"]}`,
+                  Study_Token: this.Intent_data["Study_Token"]
+                })
+              }
+            })
+            this.sendNotification(this.Intent_data["Creator"])
+            this.answer = result.fulfillment.speech;
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/universtes').child(result.parameters.country)
