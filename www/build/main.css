@@ -28073,7 +28073,6 @@ page-home .circularbutton {
   color: white;
   background-color: #603CD7;
   font-size: 40px;
-  size: 40px;
   width: 40px;
   height: 40px;
   margin-top: -5px;
@@ -28084,7 +28083,8 @@ page-home .circularbutton {
 
 page-home .send {
   color: white;
-  font-size: 20px;
+  font-size: 25px;
+  margin-right: -4px;
 }
 
 page-home .input_message {
@@ -28213,4 +28213,17 @@ page-home .morelessbutton {
 
 page-home .slide-image {
   overflow: hidden;
+}
+
+page-home .select_button {
+  color: white;
+  background-color: #603CD7;
+  width: 25px;
+  border-radius: 100px;
+}
+
+page-home .select_icon {
+  color: white;
+  font-size: 30px;
+  margin-right: -3px;
 }

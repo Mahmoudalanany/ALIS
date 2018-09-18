@@ -1,9 +1,9 @@
 import http from 'http'
 import * as admin from 'firebase-admin'
 
-let serviceAccount = require("./alis-ac07d-firebase-adminsdk-uj1w9-2ae6dcdcb6.json");
+// let serviceAccount = require();
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert("./alis-ac07d-firebase-adminsdk-uj1w9-2ae6dcdcb6.json"),
     databaseURL: "https://alis-ac07d.firebaseio.com"
 });
 
@@ -14,8 +14,10 @@ http.createServer(function (req, res) {
         console.log(Current_serverDate_and_Time.Date + "  " + Current_serverDate_and_Time.Time + "  " + Current_serverDate_and_Time.AMPM);
         if (Current_serverDate_and_Time.Time.split(":")["1"] != serverDate_and_Time.Time.split(":")["1"]) {
             serverDate_and_Time = Current_serverDate_and_Time
-            let dateTime = `${serverDate_and_Time.Date}, ${serverDate_and_Time.Time} ${serverDate_and_Time.AMPM}`;
-            compareTimeAndNotify(dateTime);
+            let date = `${serverDate_and_Time.Date}`;
+            let time = `${serverDate_and_Time.Time} ${serverDate_and_Time.AMPM}`;
+            Tutor_Feedback(date, time);
+            Study_Feedback(date, time);
         }
     }, 1000)
 }).listen(8080);
@@ -29,7 +31,6 @@ function GetDate_and_Time() {
 }
 
 function sendNotification(token, info) {
-    var data = JSON.stringify({ tutorName: info.tutorName, subject: info.subject, phone: info.phone });
     const payload = {
         "notification": {
             "title": info.title,
@@ -40,7 +41,7 @@ function sendNotification(token, info) {
         },
         "data": {
             "type": info.type,
-            "data": data
+            "data": info.data
         }
     }
     return admin.messaging().sendToDevice(token, payload)
@@ -52,31 +53,60 @@ function sendNotification(token, info) {
         });
 }
 
-function compareTimeAndNotify(dateTime) {
+function Tutor_Feedback(date, time) {
     admin.database().ref('/users').once('value').then(snapshot1 => {
         snapshot1.forEach(snapshot2 => {
             if (snapshot2.child('lessonsRequests').exists()) {
-                let tokenKey = snapshot2.key;
-                snapshot2.child('lessonsRequests').forEach(snapshot3_slot => {
-                    if (dateTime == snapshot3_slot.child('slot').val()) {
-                        let tutor_rated = false
-                        snapshot2.forEach(snapshot3_phone => {
-                            if (snapshot3_phone.child(snapshot3_slot.child('phone').val()).exists()) {
-                                tutor_rated = true
-                                return
-                            }
-                        })
-                        if (tutor_rated == false) {
+                snapshot2.child('lessonsRequests').forEach(snapshot3_lesson => {
+                    if (date == snapshot3_lesson.child('slot/date').val() && time == snapshot3_lesson.child('slot/end_time').val()) {
+                        if (!snapshot2.child(`Ratings/${snapshot3_lesson.child('phone').val()}`).exists()) {
+                            snapshot2.child(`Ratings/${snapshot3_lesson.child('phone').val()}`).ref.set(0)
                             let info = {
                                 title: 'Tutor rating!',
-                                body: `What's your rating for ${snapshot3_slot.child('name').val()}?`,
-                                type: 'rating',
-                                tutorName: snapshot3_slot.child('name').val(),
-                                subject: snapshot3_slot.child('subject').val(),
-                                phone: snapshot3_slot.child('phone').val()
+                                body: `What's your rating for ${snapshot3_lesson.child('name').val()}?`,
+                                type: 'Rating',
+                                data: JSON.stringify({
+                                    tutorName: snapshot3_lesson.child('name').val(),
+                                    subject: snapshot3_lesson.child('subject').val(),
+                                    phone: snapshot3_lesson.child('phone').val()
+                                })
                             }
-                            sendNotification(tokenKey, info)
+                            sendNotification(snapshot2.key, info)
                         }
+                    }
+                    else if (`${date}, ${time}` == snapshot3_lesson.child('slot/reminder').val()) {
+                        let info = {
+                            title: 'Lesson reminder!',
+                            body: `You have ${snapshot3_lesson.child('subject').val()} lesson with ${snapshot3_lesson.child('name').val()} on ${snapshot3_lesson.child('slot/date').val()} at ${snapshot3_lesson.child('slot/start_time').val()} in ${snapshot3_lesson.child('place').val()}`,
+                            type: 'Welcome',
+                            data: JSON.stringify({})
+                        }
+                        sendNotification(tokenKey, info)
+                    }
+                });
+            }
+        })
+    });
+}
+
+function Study_Feedback(date, time) {
+    admin.database().ref('/users').once('value').then(snapshot1 => {
+        snapshot1.forEach(snapshot2 => {
+            if (snapshot2.child('Study groups').exists()) {
+                snapshot2.child('Study groups').forEach(snapshot3_study => {
+                    if (`${date}, ${time}` == snapshot3_study.child('Reminder').val()) {
+                        let info = {
+                            title: 'Study group reminder!',
+                            body: `You have a study group on ${snapshot3_study.child('Date').val()} at ${snapshot3_study.child('Time').val()} in ${snapshot3_study.child('Place').val()}`,
+                            type: 'Study_group_Reply',
+                            data: JSON.stringify({
+                                Date: `${snapshot3_study.child('Date').val()}`,
+                                Time: `${snapshot3_study.child('Time').val()}`,
+                                Place: `${snapshot3_study.child('Place').val()}`,
+                                Study_Token: snapshot3_study.key
+                            })
+                        }
+                        sendNotification(snapshot2.key, info)
                     }
                 });
             }

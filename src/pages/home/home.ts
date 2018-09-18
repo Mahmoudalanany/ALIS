@@ -20,8 +20,8 @@ const uuidv1 = require('uuid/v1');
 export class HomePage {
   @ViewChild(Content) content: Content;
   @ViewChild(Slides) slides: Slides;
-  limit: number = 60;
-  truncating = true;
+  // limit: number = 60;
+  // truncating = true;
 
   chat; //User Message
   answer; //ALIS Reply
@@ -104,6 +104,7 @@ export class HomePage {
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
                 this.answer = speech;
+                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.options = snapshot1.val() })
                 this.SignedIn = true;
               }).once('error', (error) => {
                 console.log(error);
@@ -120,7 +121,7 @@ export class HomePage {
           }
         });
       }
-      else if (this.Intent_type == "rating") {
+      else if (this.Intent_type == "Rating") {
         this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: this.uuid })
           .once('response', ({ result: { fulfillment: { speech } } }) => {
             this.answer = speech;
@@ -151,36 +152,30 @@ export class HomePage {
                 })
               })
             })
-            console.log(this.Study_People);
           }).once('error', (error) => {
             console.log(error);
           }).end();
       }
       else if (this.Intent_type == "Study_group_Reply") {
-        this.API_Agent.eventRequest({ name: "Study_group_Invitation", data: { 'Name': this.Intent_data["Name"], 'Date': this.Intent_data["Date"], 'Time': this.Intent_data["Time"], 'Place': this.Intent_data["Place"] } }, { sessionId: this.uuid })
-          .once('response', ({ result: { fulfillment: { speech } } }) => {
-            this.answer = `Here are the people in the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`
-            this.SignedIn = true;
-            this.Show_Study = true;
-            this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
-              snapshot1.forEach(snapshot2 => {
-                let Study_Person = {};
-                this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
-                  snapshot3.forEach(snapshot4 => {
-                    if (snapshot4.child("Phone").val() == snapshot2.key) {
-                      Study_Person = {
-                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                        Status: snapshot2.val()
-                      }
-                      this.Study_People.push(Study_Person)
-                    }
-                  })
-                })
+        this.answer = `Here are the people in the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`
+        this.SignedIn = true;
+        this.Show_Study = true;
+        this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
+          snapshot1.forEach(snapshot2 => {
+            let Study_Person = {};
+            this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
+              snapshot3.forEach(snapshot4 => {
+                if (snapshot4.child("Phone").val() == snapshot2.key) {
+                  Study_Person = {
+                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                    Status: snapshot2.val()
+                  }
+                  this.Study_People.push(Study_Person)
+                }
               })
             })
-          }).once('error', (error) => {
-            console.log(error);
-          }).end();
+          })
+        })
       }
     })
   }
@@ -218,7 +213,7 @@ export class HomePage {
 
   Update_Time() {
     var d = new Date(),
-      time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), d.getMinutes()].join(":"),
+      time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"),
       ampm = (d.getHours() < 12) ? "AM" : "PM"
     this.CurrentTime = time + ' ' + ampm;
   }
@@ -301,7 +296,6 @@ export class HomePage {
 
     if (this.filling_form) {
       if (this.end_of_form) {
-        console.log("ay hary");
         this.filling_form = false;
         this.q_num = 1;
         this.answer = "okay now you're done";
@@ -403,7 +397,6 @@ export class HomePage {
                     subject: result.parameters.tutorSubject,
                     name: snapshot2.child('name').val(),
                     phone: snapshot2.child('phone').val(),
-                    cost: snapshot2.child('cost').val(),
                     image: snapshot2.child('image').val(),
                     lessons: snapshot2.child('lessons').val()
                   }
@@ -414,12 +407,10 @@ export class HomePage {
               })
           }
           else if (result.action == "study_level" && this.SignedIn == true) {
-
             if (result.parameters.study_level !== '') {
               let data = { studyLevel: result.parameters.study_level };
               this.addData('/users', this.Token, null, data).then().catch();
             }
-            console.log(result);
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'get_hobbies' && this.SignedIn == true) {
@@ -427,10 +418,7 @@ export class HomePage {
               let data = { hobbies: result.parameters.hobbies };
               this.addData('/users', this.Token, null, data).then().catch();
             }
-
             this.answer = result.fulfillment.speech;
-
-            console.log(result);
           }
           else if (result.action == 'father_job' && this.SignedIn == true) {
             if (result.parameters.father_job !== '') {
@@ -484,8 +472,6 @@ export class HomePage {
             }
             let data = { tanyaThanwyGrade: gradeNum };
             this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
-
-
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getTaltaThanawyGrade' && this.SignedIn == true) {
@@ -498,7 +484,6 @@ export class HomePage {
             }
             let data = { taltaThanwyGrade: gradeNum };
             this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
-
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getSat1' && this.SignedIn == true) {
@@ -512,7 +497,6 @@ export class HomePage {
             }
             let data = { sat1Grade: gradeNum };
             this.addData('/users', this.Token, 'satGrades', data).then().catch();
-
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getSat2' && this.SignedIn == true) {
@@ -526,19 +510,16 @@ export class HomePage {
             }
             let data = { sat2Grade: gradeNum };
             this.addData('/users', this.Token, 'satGrades', data).then().catch();
-
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getIGArabicGrade' && this.SignedIn == true) {
             if (result.parameters.arabicIG_Grade !== '') {
               let data = { arabicGrade: result.parameters.arabicIG_Grade };
-
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
             }
             this.answer = result.fulfillment.speech;
           }
           else if (result.action == 'getIGEnglishGrade' && this.SignedIn == true) {
-            console.log(result);
             if (result.parameters.englishIG_Grade !== '') {
               let data = { englishGrade: result.parameters.englishIG_Grade };
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
@@ -663,7 +644,6 @@ export class HomePage {
                 }
               })
             })
-
             this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
               this.Notification_data = {
                 Title: "Study Group",
@@ -676,10 +656,8 @@ export class HomePage {
                   Study_Token: this.Intent_data["Study_Token"]
                 })
               }
-              console.log(this.Notification_data, this.Intent_data["Creator"]);
               this.sendNotification(this.Intent_data["Creator"])
               this.answer = result.fulfillment.speech;
-
             })
           }
           else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
@@ -695,7 +673,6 @@ export class HomePage {
                 }
               })
             })
-
             this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
               this.Notification_data = {
                 Title: "Study Group",
@@ -708,7 +685,6 @@ export class HomePage {
                   Study_Token: this.Intent_data["Study_Token"]
                 })
               }
-              console.log(this.Notification_data, this.Intent_data["Creator"]);
               this.sendNotification(this.Intent_data["Creator"])
               this.answer = result.fulfillment.speech;
             })
@@ -716,9 +692,7 @@ export class HomePage {
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/universtes').child(result.parameters.country)
               .once('value').then(snapshot1 => {
-
                 snapshot1.forEach(snapshot2 => {
-
                   let university = {
                     country: result.parameters.country,
                     location: snapshot2.child('location').val(),
@@ -785,7 +759,6 @@ export class HomePage {
             this.answer = "I think you should sign in!😊"
           }
           else {
-            console.log(result.fulfillment.speech);
             this.answer = result.fulfillment.speech;
           }
           this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(snapshot1 => { this.options = snapshot1.val() })
@@ -793,7 +766,6 @@ export class HomePage {
           console.log(error);
         }).end();
     }
-
     this.question = null;
   }
 
@@ -810,7 +782,6 @@ export class HomePage {
         this.answer = snapshot.val();
       }
       else {
-        console.log("ending");
         this.end_of_form = true;
       }
     });
@@ -844,13 +815,12 @@ export class HomePage {
       this.Select_Friends = false
       var group_key;
       var group_data = this.Notification_data.data;
-
       this.afDatabase.database.ref(`users/${this.Token}/Study groups`).once('value').then(snapshot1 => {
         let group = {}
-        group["Name"] = group_data["Name"]
         group["Date"] = group_data["Date"]
         group["Time"] = group_data["Time"]
         group["Place"] = group_data["Place"]
+        group["Reminder"] = this.Make_Reminder(`${group_data["Date"]}, ${group_data["Time"]}`, 24)
         group_key = snapshot1.ref.push(group).key
         snapshot1.child(group_key).ref.update({ People: group_people })
         this.Notification_data.data["Study_Token"] = group_key
@@ -868,10 +838,10 @@ export class HomePage {
           })
           this.afDatabase.database.ref(`users/${tempFriendPrimary.Token}`).child("Study groups").once('value').then(snapshot1 => {
             let group = {}
-            group["Name"] = group_data["Name"]
             group["Date"] = group_data["Date"]
             group["Time"] = group_data["Time"]
             group["Place"] = group_data["Place"]
+            group["Reminder"] = this.Make_Reminder(`${group_data["Date"]}, ${group_data["Time"]}`, 24)
             snapshot1.child(group_key).ref.update(group)
             snapshot1.child(group_key).ref.update({ People: group_people })
           })
@@ -891,14 +861,35 @@ export class HomePage {
   }
 
   Tutor_Reserve(i) {
-    let data = { subject: this.Current_Tutor.subject, name: this.Current_Tutor.name, phone: this.Current_Tutor.phone, slot: this.Current_Tutor.lessons[i].slot, cost: this.Current_Tutor.lessons[i].cost };
+    let data = {
+      subject: this.Current_Tutor.subject,
+      name: this.Current_Tutor.name,
+      phone: this.Current_Tutor.phone,
+      slot: {
+        date: this.Current_Tutor.lessons[i].slot.date,
+        start_time: this.Current_Tutor.lessons[i].slot.start_time,
+        end_time: this.Current_Tutor.lessons[i].slot.end_time,
+        reminder: this.Make_Reminder(`${this.Current_Tutor.lessons[i].slot.date}, ${this.Current_Tutor.lessons[i].slot.start_time}`, 24)
+      },
+      place: this.Current_Tutor.lessons[i].place,
+      cost: this.Current_Tutor.lessons[i].cost
+    };
     this.afDatabase.database.ref('users').child(this.Token).child('lessonsRequests').push(data);
-    var dt = new Date(this.Current_Tutor.lessons[i].slot)
-    this.calendar.createEventWithOptions(`${this.Current_Tutor.subject} class`, null, null, dt, dt, { 'firstReminderMinutes': 120 })
+    var dt = new Date(this.Make_Reminder(`${this.Current_Tutor.lessons[i].slot.date}, ${this.Current_Tutor.lessons[i].slot.start_time}`, 24))
+    this.calendar.createEventWithOptions(`${this.Current_Tutor.subject} class`, null, null, dt, dt, { 'firstReminderMinutes': 0 })
     this.need_tutor = 0;
     this.Current_Tutor = '';
     this.Tutors = [];
     this.answer = "I reserved your lesson! 😊";
+  }
+
+  Make_Reminder(datetime, hours) {
+    let reminder = new Date(datetime)
+    reminder.setHours(reminder.getHours() - hours)
+    let date = reminder.toLocaleDateString()
+    let time = [(reminder.getHours() > 12) ? reminder.getHours() - 12 : (reminder.getHours() == 0) ? "12" : reminder.getHours(), (reminder.getMinutes() < 10) ? '0' + reminder.getMinutes() : reminder.getMinutes()].join(":")
+    let ampm = (reminder.getHours() < 12) ? "AM" : "PM"
+    return `${date}, ${time} ${ampm}`
   }
 
   sendNotification(Token) {
@@ -984,33 +975,22 @@ export class HomePage {
   relevantMajors() {
     let userschool;
     let usergrade;
-    //retreive old data
     this.afDatabase.database.ref("/users").child(this.Token).once("value").then(snapshot => {
-      console.log("currentuser");
       userschool = snapshot.child("School").val();
       usergrade = snapshot.child("Grade").val();
-
       this.afDatabase.database.ref("/Old Users").once("value").then(snapshot1 => {
         snapshot1.forEach(snapshot2 => {
-
           let schoolname = snapshot2.child("SchoolName").val();
           let schoolgrade = snapshot2.child("Grade").val();
           let Major = snapshot2.child("Major").val();
-
           let MatchedCases = 0;
-
           let schoolSimilarity = this.similarity(userschool, schoolname) * 100;
           if (schoolSimilarity > 0) { MatchedCases++; }
-
           let gradeSimilarity = this.similarnumber(usergrade, schoolgrade) * 100;
           if (gradeSimilarity > 0) { MatchedCases++; }
-
           let totalPercent = schoolSimilarity + gradeSimilarity;
-
           let rank = MatchedCases * totalPercent;
-
           console.log("This users matched cases = " + MatchedCases + " with percentage " + totalPercent + " and rank " + rank);
-
           if (rank > 0) {
             let data = {};
             data[Major] = rank;

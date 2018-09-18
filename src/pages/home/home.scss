@@ -98,9 +98,7 @@ page-home {
     .circularbutton{
         color: white;
         background-color: #603CD7;
-
         font-size: 40px;
-        size: 40px;
         //width: fit-content;
         width: 40px;
         height: 40px;
@@ -112,7 +110,8 @@ page-home {
 
     .send{
         color: white;
-        font-size: 20px;
+        font-size: 25px;
+        margin-right:-4px;
     }
 
     .input_message{
@@ -228,6 +227,19 @@ page-home {
 
     .slide-image{
         overflow: hidden;
+    }
+
+    .select_button{
+        color: white;
+        background-color: #603CD7;
+        width: 25px;
+        border-radius: 100px;
+    }
+
+    .select_icon{
+        color: white;
+        font-size: 30px;
+        margin-right:-3px;
     }
 
 }

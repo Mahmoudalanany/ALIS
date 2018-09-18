@@ -30,21 +30,29 @@
         <ion-item text-wrap class="purpletext">{{answer}}</ion-item>
 
         <ion-list *ngIf="need_tutor == 1">
-          <ion-item *ngFor="let Tutor of Tutors; let i = index">
+          <ion-item *ngFor="let Tutor of Tutors; let i = index" style="border-bottom: 1px solid purple;">
             <ion-thumbnail item-start>
               <img src={{Tutor.image}}>
             </ion-thumbnail>
-            <h2>{{Tutor.name}}</h2>
+            <h2><i>{{Tutor.name}}</i></h2>
             <p>{{Tutor.phone}}</p>
-            <ion-icon name="arrow-dropright" (click)="Tutor_Select(Tutor)" item-end></ion-icon>
+            <button class="select_button" ion-button icon-only (click)="Tutor_Select(Tutor)" item-end>
+              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>
+            </button>
           </ion-item>
         </ion-list>
 
         <ion-list *ngIf="need_tutor == 2">
-          <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index">
-            <h2>{{lesson.slot}}</h2>
+          <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">
+            <h2><i>Slot</i></h2>
+            <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>
+            <h2><i>Place</i></h2>
+            <p>{{lesson.place}}</p>
+            <h2><i>Cost</i></h2>
             <p>{{lesson.cost}}</p>
-            <ion-icon name="arrow-dropright" (click)="Tutor_Reserve(i)" item-end></ion-icon>
+            <button class="select_button" ion-button icon-only (click)="Tutor_Reserve(i)" item-end>
+              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>
+            </button>
           </ion-item>
         </ion-list>
 
@@ -73,15 +81,15 @@
         </div>
 
         <ion-list *ngIf="Show_Friends == true">
-          <ion-item *ngFor="let Friend of Friends">
+          <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">
             <ion-label>
-              <h2>{{Friend.Name}}</h2>
-              <p>{{Friend.Phone}}</p>
+              <h2><i>{{Friend.Name}}:</i></h2>
             </ion-label>
+            <p item-end>{{Friend.Phone}}</p>
             <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>
           </ion-item>
         </ion-list>
-        <button ion-button *ngIf="Select_Friends == true" (click)="Invite()">Invite to study group</button>
+        <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>
 
         <ion-card *ngIf="need_universty == 1">
           <ion-slides class="slider-slide">
@@ -114,11 +122,9 @@
         </ion-card>
 
         <ion-list *ngIf="Show_Study == true">
-          <ion-item *ngFor="let Study_Person of Study_People">
-            <ion-label>
-              <h2>{{Study_Person.Name}}</h2>
-              <p>{{Study_Person.Status}}</p>
-            </ion-label>
+          <ion-item *ngFor="let Study_Person of Study_People" style="border-bottom: 1px solid purple;">
+            <h2><i>{{Study_Person.Name}}:</i></h2>
+            <p item-end>{{Study_Person.Status}}</p>
           </ion-item>
         </ion-list>
 
