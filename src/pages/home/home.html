@@ -30,7 +30,7 @@
         <ion-item text-wrap class="purpletext">{{answer}}</ion-item>
 
         <ion-list *ngIf="need_tutor == 1">
-          <ion-item *ngFor="let Tutor of Tutors; let i = index" style="border-bottom: 1px solid purple;">
+          <ion-item *ngFor="let Tutor of Tutors" style="border-bottom: 1px solid purple;">
             <ion-thumbnail item-start>
               <img src={{Tutor.image}}>
             </ion-thumbnail>
@@ -80,6 +80,25 @@
           <button ion-button clear block (click)="question=Study_time;ask()">Choose friends</button>
         </div>
 
+        <ion-list *ngIf="Show_groups == 1">
+          <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">
+            <h2><i>{{Group.Place}}</i></h2>
+            <p>{{Group.Date}}, {{Group.Time}}</p>
+            <button class="select_button" ion-button icon-only (click)="Group_Select(Group)" item-end>
+              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>
+            </button>
+          </ion-item>
+        </ion-list>
+
+        <ion-list *ngIf="Show_groups == 2">
+          <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">
+            <h2><i>{{Study_Person.Person.Name}}:</i></h2>
+            <p item-end>{{Study_Person.Person.Status}}</p>
+          </ion-item>
+        </ion-list>
+        <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>
+        <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>
+
         <ion-list *ngIf="Show_Friends == true">
           <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">
             <ion-label>
@@ -120,13 +139,6 @@
             </ion-slide>
           </ion-slides>
         </ion-card>
-
-        <ion-list *ngIf="Show_Study == true">
-          <ion-item *ngFor="let Study_Person of Study_People" style="border-bottom: 1px solid purple;">
-            <h2><i>{{Study_Person.Name}}:</i></h2>
-            <p item-end>{{Study_Person.Status}}</p>
-          </ion-item>
-        </ion-list>
 
         <ion-label class="purpleclock">{{CurrentTime}}</ion-label>
       </ion-card>

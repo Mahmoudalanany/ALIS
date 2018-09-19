@@ -141,8 +141,10 @@ var HomePage = /** @class */ (function () {
         this.SignedIn = false;
         this.date = false;
         this.time = false;
-        this.Study_People = [];
-        this.Show_Study = false;
+        this.Current_Group = [];
+        this.Study_Groups = [];
+        this.Show_groups = 0;
+        this.Select_Groups = false;
         this.offline_alert = this.alertCtrl.create({
             title: "You're offline",
             subTitle: "Alis can't reach you without internet connection",
@@ -217,7 +219,7 @@ var HomePage = /** @class */ (function () {
                     var speech = _a.result.fulfillment.speech;
                     _this.answer = speech;
                     _this.SignedIn = true;
-                    _this.Show_Study = true;
+                    _this.Show_groups = 2;
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + _this.Intent_data["Study_Token"] + "/People").once('value').then(function (snapshot1) {
                         snapshot1.forEach(function (snapshot2) {
                             var Study_Person = {};
@@ -225,10 +227,13 @@ var HomePage = /** @class */ (function () {
                                 snapshot3.forEach(function (snapshot4) {
                                     if (snapshot4.child("Phone").val() == snapshot2.key) {
                                         Study_Person = {
-                                            Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                                            Status: snapshot2.val()
+                                            Person: {
+                                                Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                                Status: snapshot2.val()
+                                            },
+                                            Study_Token: _this.Intent_data["Study_Token"]
                                         };
-                                        _this.Study_People.push(Study_Person);
+                                        _this.Current_Group.push(Study_Person);
                                     }
                                 });
                             });
@@ -241,7 +246,7 @@ var HomePage = /** @class */ (function () {
             else if (_this.Intent_type == "Study_group_Reply") {
                 _this.answer = "Here are the people in the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"];
                 _this.SignedIn = true;
-                _this.Show_Study = true;
+                _this.Show_groups = 2;
                 _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + _this.Intent_data["Study_Token"] + "/People").once('value').then(function (snapshot1) {
                     snapshot1.forEach(function (snapshot2) {
                         var Study_Person = {};
@@ -249,10 +254,13 @@ var HomePage = /** @class */ (function () {
                             snapshot3.forEach(function (snapshot4) {
                                 if (snapshot4.child("Phone").val() == snapshot2.key) {
                                     Study_Person = {
-                                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                                        Status: snapshot2.val()
+                                        Person: {
+                                            Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                            Status: snapshot2.val()
+                                        },
+                                        Study_Token: _this.Intent_data["Study_Token"]
                                     };
-                                    _this.Study_People.push(Study_Person);
+                                    _this.Current_Group.push(Study_Person);
                                 }
                             });
                         });
@@ -357,8 +365,10 @@ var HomePage = /** @class */ (function () {
         this.Select_Friends = false;
         this.date = false;
         this.time = false;
-        this.Study_People = [];
-        this.Show_Study = false;
+        this.Current_Group = [];
+        this.Study_Groups = [];
+        this.Show_groups = 0;
+        this.Select_Groups = false;
         this.content.scrollToBottom();
         this.chat = this.question;
         this.Update_Time();
@@ -707,12 +717,13 @@ var HomePage = /** @class */ (function () {
                     }
                 }
                 else if (result.action == "Study_group_Invitation-yes" && _this.SignedIn == true) {
+                    var Study_Token_1 = _this.Intent_data["Study_Token"];
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Phone").once('value').then(function (MyPhone) {
                         _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
                             if (snapshot1.exists()) {
                                 snapshot1.forEach(function (snapshot2) {
-                                    var PhoneKey = snapshot2.child("Study groups/" + _this.Intent_data["Study_Token"] + "/People/" + MyPhone.val());
-                                    if (snapshot2.key !== _this.Token && PhoneKey.exists()) {
+                                    var PhoneKey = snapshot2.child("Study groups/" + Study_Token_1 + "/People/" + MyPhone.val());
+                                    if (PhoneKey.exists()) {
                                         PhoneKey.ref.set("Joining");
                                     }
                                 });
@@ -736,12 +747,13 @@ var HomePage = /** @class */ (function () {
                     });
                 }
                 else if (result.action == "Study_group_Invitation-no" && _this.SignedIn == true) {
+                    var Study_Token_2 = _this.Intent_data["Study_Token"];
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Phone").once('value').then(function (MyPhone) {
                         _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
                             if (snapshot1.exists()) {
                                 snapshot1.forEach(function (snapshot2) {
-                                    var PhoneKey = snapshot2.child("Study groups/" + _this.Intent_data["Study_Token"] + "/People/" + MyPhone.val());
-                                    if (snapshot2.key !== _this.Token && PhoneKey.exists()) {
+                                    var PhoneKey = snapshot2.child("Study groups/" + Study_Token_2 + "/People/" + MyPhone.val());
+                                    if (PhoneKey.exists()) {
                                         PhoneKey.ref.set("Not joining");
                                     }
                                 });
@@ -763,6 +775,22 @@ var HomePage = /** @class */ (function () {
                         _this.sendNotification(_this.Intent_data["Creator"]);
                         _this.answer = result.fulfillment.speech;
                     });
+                }
+                else if (result.action == "Manage_study_groups" && _this.SignedIn == true) {
+                    _this.answer = result.fulfillment.speech;
+                    _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups").once('value').then(function (snapshot1) {
+                        var study_group = {};
+                        snapshot1.forEach(function (snapshot2) {
+                            study_group = {
+                                Date: snapshot2.child("Date").val(),
+                                Time: snapshot2.child("Time").val(),
+                                Place: snapshot2.child("Place").val(),
+                                Study_Token: snapshot2.key
+                            };
+                        });
+                        _this.Study_Groups.push(study_group);
+                    });
+                    _this.Show_groups = 1;
                 }
                 else if (result.action == "showUniversities" && result.parameters.country != '' && _this.SignedIn == true) {
                     _this.afDatabase.database.ref('/universtes').child(result.parameters.country)
@@ -838,34 +866,35 @@ var HomePage = /** @class */ (function () {
             var group_key;
             var group_data = this.Notification_data.data;
             this.afDatabase.database.ref("users/" + this.Token + "/Study groups").once('value').then(function (snapshot1) {
-                var group = {};
-                group["Date"] = group_data["Date"];
-                group["Time"] = group_data["Time"];
-                group["Place"] = group_data["Place"];
-                group["Reminder"] = _this.Make_Reminder(group_data["Date"] + ", " + group_data["Time"], 24);
-                group_key = snapshot1.ref.push(group).key;
-                snapshot1.child(group_key).ref.update({ People: group_people });
-                _this.Notification_data.data["Study_Token"] = group_key;
-                _this.Notification_data.data = JSON.stringify(_this.Notification_data.data);
+                snapshot1.ref.parent.child('Phone').once('value').then(function (snapshot2) {
+                    group_people[snapshot2.val()] = "Joining";
+                    var group = {};
+                    group["Date"] = group_data["Date"];
+                    group["Time"] = group_data["Time"];
+                    group["Place"] = group_data["Place"];
+                    group["Reminder"] = _this.Make_Reminder(group_data["Date"] + ", " + group_data["Time"], 24);
+                    group_key = snapshot1.ref.push(group).key;
+                    snapshot1.child(group_key).ref.update({ People: group_people });
+                    _this.Notification_data.data["Study_Token"] = group_key;
+                    _this.Notification_data.data = JSON.stringify(_this.Notification_data.data);
+                });
             }).then(function () {
                 tempFriends.forEach(function (tempFriendPrimary) {
                     var group_people = {};
                     tempFriends.forEach(function (tempFriendSecondary) {
-                        if (tempFriendPrimary.Token !== tempFriendSecondary.Token) {
-                            group_people[tempFriendSecondary.Phone] = "Pending";
-                        }
-                    });
-                    _this.afDatabase.database.ref("users/" + _this.Token).child("Phone").once('value').then(function (snapshot2) {
-                        group_people[snapshot2.val()] = "Joining";
+                        group_people[tempFriendSecondary.Phone] = "Pending";
                     });
                     _this.afDatabase.database.ref("users/" + tempFriendPrimary.Token).child("Study groups").once('value').then(function (snapshot1) {
-                        var group = {};
-                        group["Date"] = group_data["Date"];
-                        group["Time"] = group_data["Time"];
-                        group["Place"] = group_data["Place"];
-                        group["Reminder"] = _this.Make_Reminder(group_data["Date"] + ", " + group_data["Time"], 24);
-                        snapshot1.child(group_key).ref.update(group);
-                        snapshot1.child(group_key).ref.update({ People: group_people });
+                        _this.afDatabase.database.ref("users/" + _this.Token).child("Phone").once('value').then(function (snapshot2) {
+                            group_people[snapshot2.val()] = "Joining";
+                            var group = {};
+                            group["Date"] = group_data["Date"];
+                            group["Time"] = group_data["Time"];
+                            group["Place"] = group_data["Place"];
+                            group["Reminder"] = _this.Make_Reminder(group_data["Date"] + ", " + group_data["Time"], 24);
+                            snapshot1.child(group_key).ref.update(group);
+                            snapshot1.child(group_key).ref.update({ People: group_people });
+                        });
                     });
                     _this.sendNotification(tempFriendPrimary.Token);
                 });
@@ -875,6 +904,111 @@ var HomePage = /** @class */ (function () {
         else {
             this.answer = "Please invite at least 1 of your friends";
         }
+    };
+    HomePage.prototype.Group_Select = function (Group) {
+        var _this = this;
+        this.answer = "Here are the people in the study group on " + Group["Date"] + " at " + Group["Time"] + " in " + Group["Place"];
+        this.afDatabase.database.ref("users/" + this.Token + "/Study groups/" + Group["Study_Token"] + "/People").once('value').then(function (snapshot1) {
+            var Study_People = [];
+            snapshot1.forEach(function (snapshot2) {
+                var Study_Person = {};
+                _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
+                    snapshot3.forEach(function (snapshot4) {
+                        if (snapshot4.child("Phone").val() == snapshot2.key) {
+                            Study_Person = {
+                                Person: {
+                                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                    Status: snapshot2.val()
+                                }
+                            };
+                            Study_People.push(Study_Person);
+                        }
+                        if (snapshot4.key == _this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
+                            _this.Select_Groups = true;
+                        }
+                    });
+                });
+            });
+            _this.Current_Group["Study_People"] = Study_People;
+            _this.Current_Group["Study_Token"] = Group["Study_Token"];
+        });
+        this.Show_groups = 2;
+    };
+    HomePage.prototype.Group_Reply = function (event) {
+        var _this = this;
+        var Study_Token = this.Current_Group["Study_Token"];
+        if (event.toElement.innerHTML == "Accept") {
+            this.answer = "You have accepted to join that study group";
+            this.afDatabase.database.ref("users/" + this.Token + "/Phone").once('value').then(function (MyPhone) {
+                _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
+                    if (snapshot1.exists()) {
+                        snapshot1.forEach(function (snapshot2) {
+                            var PhoneKey = snapshot2.child("Study groups/" + Study_Token + "/People/" + MyPhone.val());
+                            if (PhoneKey.exists()) {
+                                PhoneKey.ref.set("Joining");
+                            }
+                        });
+                        _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + Study_Token + "/People").once('value').then(function (snapshot1) {
+                            var Study_People = [];
+                            snapshot1.forEach(function (snapshot2) {
+                                var Study_Person = {};
+                                _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
+                                    snapshot3.forEach(function (snapshot4) {
+                                        if (snapshot4.child("Phone").val() == snapshot2.key) {
+                                            Study_Person = {
+                                                Person: {
+                                                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                                    Status: snapshot2.val()
+                                                }
+                                            };
+                                            Study_People.push(Study_Person);
+                                        }
+                                    });
+                                });
+                            });
+                            _this.Current_Group["Study_People"] = Study_People;
+                        });
+                    }
+                });
+            });
+        }
+        else if (event.toElement.innerHTML == "Refuse") {
+            this.answer = "You have refused to join that study group";
+            this.afDatabase.database.ref("users/" + this.Token + "/Phone").once('value').then(function (MyPhone) {
+                _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
+                    if (snapshot1.exists()) {
+                        snapshot1.forEach(function (snapshot2) {
+                            var PhoneKey = snapshot2.child("Study groups/" + Study_Token + "/People/" + MyPhone.val());
+                            if (PhoneKey.exists()) {
+                                PhoneKey.ref.set("Not joining");
+                            }
+                        });
+                        _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + Study_Token + "/People").once('value').then(function (snapshot1) {
+                            var Study_People = [];
+                            snapshot1.forEach(function (snapshot2) {
+                                var Study_Person = {};
+                                _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
+                                    snapshot3.forEach(function (snapshot4) {
+                                        if (snapshot4.child("Phone").val() == snapshot2.key) {
+                                            Study_Person = {
+                                                Person: {
+                                                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                                    Status: snapshot2.val()
+                                                }
+                                            };
+                                            Study_People.push(Study_Person);
+                                        }
+                                    });
+                                });
+                            });
+                            _this.Current_Group["Study_People"] = Study_People;
+                        });
+                    }
+                });
+            });
+        }
+        this.Select_Groups = false;
+        this.Study_Groups = [];
     };
     HomePage.prototype.Tutor_Select = function (Tutor) {
         this.Current_Tutor = Tutor;
@@ -1047,7 +1181,7 @@ var HomePage = /** @class */ (function () {
     ], HomePage.prototype, "slides", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n  <ion-navbar>\n\n    <ion-title>\n\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n      <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n    </ion-title>\n\n  </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngIf="answer?.length > 0" no-lines>\n\n      <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n\n        <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n        <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n\n\n      <!-- <ion-card text-wrap class="purple">\n\n        <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">\n\n          <ion-item *ngIf="need_tutor == 0" text-wrap class="purpletext"> {{answer}}</ion-item>\n\n          <ion-item *ngIf="need_tutor == 1" text-wrap class="purpletext"> {{tutor}} <img src="{{images[i]}}"></ion-item>\n\n          <ion-item-options side="right">\n\n            <button ion-button (click)="Reserve()">Reserve</button>\n\n          </ion-item-options>\n\n        </ion-item-sliding>\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card> -->\n\n      <ion-card text-wrap class="purple">\n\n        <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n\n\n        <ion-list *ngIf="need_tutor == 1">\n\n          <ion-item *ngFor="let Tutor of Tutors; let i = index" style="border-bottom: 1px solid purple;">\n\n            <ion-thumbnail item-start>\n\n              <img src={{Tutor.image}}>\n\n            </ion-thumbnail>\n\n            <h2><i>{{Tutor.name}}</i></h2>\n\n            <p>{{Tutor.phone}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Tutor_Select(Tutor)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-list *ngIf="need_tutor == 2">\n\n          <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n\n            <h2><i>Slot</i></h2>\n\n            <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n\n            <h2><i>Place</i></h2>\n\n            <p>{{lesson.place}}</p>\n\n            <h2><i>Cost</i></h2>\n\n            <p>{{lesson.cost}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Tutor_Reserve(i)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <div *ngIf="tutor_Feedback == true">\n\n          <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n\n            name="star" (click)="rating(1)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n            (click)="rating(2)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(3)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n\n        </div>\n\n\n\n        <div *ngIf="date == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="Study_date"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_date;ask()">Choose Time</button>\n\n        </div>\n\n\n\n        <div *ngIf="time == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="Study_time"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_time;ask()">Choose friends</button>\n\n        </div>\n\n\n\n        <ion-list *ngIf="Show_Friends == true">\n\n          <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n\n            <ion-label>\n\n              <h2><i>{{Friend.Name}}:</i></h2>\n\n            </ion-label>\n\n            <p item-end>{{Friend.Phone}}</p>\n\n            <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n\n          </ion-item>\n\n        </ion-list>\n\n        <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n\n\n        <ion-card *ngIf="need_universty == 1">\n\n          <ion-slides class="slider-slide">\n\n            <ion-slide class="slider-slide" *ngFor="let slide of universities">\n\n              <ion-toolbar>\n\n                <ion-buttons end>\n\n                  <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                </ion-buttons>\n\n              </ion-toolbar>\n\n              <img src="{{slide.image}}" class="slide-image" />\n\n              <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>\n\n              <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>\n\n              <p class="descriptioncard">{{slide.description}}</p>\n\n\n\n              <!--\n\n              <p *ngIf="slide.description.length <= limit" class = "descriptioncard">{{slide.description}}</p>\n\n\n\n              <div *ngIf="truncating && slide.description.length > limit" text-wrap class = "descriptioncard">\n\n                {{slide.description | slice:0:100}}\n\n                <button ion-button class = "morelessbutton" small (click)="truncating = false">show more</button>\n\n              </div>\n\n              <div *ngIf="!truncating && slide.description.length > limit" text-wrap class = "descriptioncard">\n\n                {{slide.description}}\n\n                <br>\n\n                <button ion-button class = "morelessbutton" small (click)="truncating = true">show less</button>\n\n              </div>\n\n-->\n\n            </ion-slide>\n\n          </ion-slides>\n\n        </ion-card>\n\n\n\n        <ion-list *ngIf="Show_Study == true">\n\n          <ion-item *ngFor="let Study_Person of Study_People" style="border-bottom: 1px solid purple;">\n\n            <h2><i>{{Study_Person.Name}}:</i></h2>\n\n            <p item-end>{{Study_Person.Status}}</p>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n      <br>\n\n    </div>\n\n  </ion-list>\n\n  <div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n\n    <div style="text-align: center" class="options">\n\n      <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n        <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n      </div>\n\n\n\n    </div>\n\n  </div>\n\n</ion-content>\n\n\n\n<ion-footer style="background-color:#ffffff">\n\n  <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n\n    <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n      <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n    </div>\n\n  </div>\n\n  <div class="flex-items" padding>\n\n    <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n\n    <button class="circularbutton" ion-button icon-only (click)="ask()">\n\n      <ion-icon name="send" class="send"></ion-icon>\n\n    </button>\n\n  </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n  <ion-navbar>\n\n    <ion-title>\n\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n      <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n    </ion-title>\n\n  </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngIf="answer?.length > 0" no-lines>\n\n      <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n\n        <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n        <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n\n\n      <!-- <ion-card text-wrap class="purple">\n\n        <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">\n\n          <ion-item *ngIf="need_tutor == 0" text-wrap class="purpletext"> {{answer}}</ion-item>\n\n          <ion-item *ngIf="need_tutor == 1" text-wrap class="purpletext"> {{tutor}} <img src="{{images[i]}}"></ion-item>\n\n          <ion-item-options side="right">\n\n            <button ion-button (click)="Reserve()">Reserve</button>\n\n          </ion-item-options>\n\n        </ion-item-sliding>\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card> -->\n\n      <ion-card text-wrap class="purple">\n\n        <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n\n\n        <ion-list *ngIf="need_tutor == 1">\n\n          <ion-item *ngFor="let Tutor of Tutors" style="border-bottom: 1px solid purple;">\n\n            <ion-thumbnail item-start>\n\n              <img src={{Tutor.image}}>\n\n            </ion-thumbnail>\n\n            <h2><i>{{Tutor.name}}</i></h2>\n\n            <p>{{Tutor.phone}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Tutor_Select(Tutor)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-list *ngIf="need_tutor == 2">\n\n          <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n\n            <h2><i>Slot</i></h2>\n\n            <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n\n            <h2><i>Place</i></h2>\n\n            <p>{{lesson.place}}</p>\n\n            <h2><i>Cost</i></h2>\n\n            <p>{{lesson.cost}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Tutor_Reserve(i)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <div *ngIf="tutor_Feedback == true">\n\n          <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n\n            name="star" (click)="rating(1)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n            (click)="rating(2)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(3)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n\n        </div>\n\n\n\n        <div *ngIf="date == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="Study_date"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_date;ask()">Choose Time</button>\n\n        </div>\n\n\n\n        <div *ngIf="time == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="Study_time"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_time;ask()">Choose friends</button>\n\n        </div>\n\n\n\n        <ion-list *ngIf="Show_groups == 1">\n\n          <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">\n\n            <h2><i>{{Group.Place}}</i></h2>\n\n            <p>{{Group.Date}}, {{Group.Time}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Group_Select(Group)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-list *ngIf="Show_groups == 2">\n\n          <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">\n\n            <h2><i>{{Study_Person.Person.Name}}:</i></h2>\n\n            <p item-end>{{Study_Person.Person.Status}}</p>\n\n          </ion-item>\n\n        </ion-list>\n\n        <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>\n\n        <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>\n\n\n\n        <ion-list *ngIf="Show_Friends == true">\n\n          <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n\n            <ion-label>\n\n              <h2><i>{{Friend.Name}}:</i></h2>\n\n            </ion-label>\n\n            <p item-end>{{Friend.Phone}}</p>\n\n            <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n\n          </ion-item>\n\n        </ion-list>\n\n        <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n\n\n        <ion-card *ngIf="need_universty == 1">\n\n          <ion-slides class="slider-slide">\n\n            <ion-slide class="slider-slide" *ngFor="let slide of universities">\n\n              <ion-toolbar>\n\n                <ion-buttons end>\n\n                  <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                </ion-buttons>\n\n              </ion-toolbar>\n\n              <img src="{{slide.image}}" class="slide-image" />\n\n              <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>\n\n              <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>\n\n              <p class="descriptioncard">{{slide.description}}</p>\n\n\n\n              <!--\n\n              <p *ngIf="slide.description.length <= limit" class = "descriptioncard">{{slide.description}}</p>\n\n\n\n              <div *ngIf="truncating && slide.description.length > limit" text-wrap class = "descriptioncard">\n\n                {{slide.description | slice:0:100}}\n\n                <button ion-button class = "morelessbutton" small (click)="truncating = false">show more</button>\n\n              </div>\n\n              <div *ngIf="!truncating && slide.description.length > limit" text-wrap class = "descriptioncard">\n\n                {{slide.description}}\n\n                <br>\n\n                <button ion-button class = "morelessbutton" small (click)="truncating = true">show less</button>\n\n              </div>\n\n-->\n\n            </ion-slide>\n\n          </ion-slides>\n\n        </ion-card>\n\n\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n      <br>\n\n    </div>\n\n  </ion-list>\n\n  <div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n\n    <div style="text-align: center" class="options">\n\n      <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n        <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n      </div>\n\n\n\n    </div>\n\n  </div>\n\n</ion-content>\n\n\n\n<ion-footer style="background-color:#ffffff">\n\n  <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n\n    <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n      <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n    </div>\n\n  </div>\n\n  <div class="flex-items" padding>\n\n    <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n\n    <button class="circularbutton" ion-button icon-only (click)="ask()">\n\n      <ion-icon name="send" class="send"></ion-icon>\n\n    </button>\n\n  </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["f" /* NavController */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["g" /* Platform */], __WEBPACK_IMPORTED_MODULE_4__angular_core__["M" /* NgZone */], __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__["a" /* AngularFireDatabase */], __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__["a" /* SharingService */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__["a" /* Contacts */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__["a" /* Network */], __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__["a" /* Calendar */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__["a" /* FCM */], __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__["a" /* HttpClient */]])
     ], HomePage);
