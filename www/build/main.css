@@ -28215,15 +28215,8 @@ page-home .slide-image {
   overflow: hidden;
 }
 
-page-home .select_button {
-  color: white;
-  background-color: #603CD7;
-  width: 25px;
-  border-radius: 100px;
-}
-
 page-home .select_icon {
-  color: white;
+  color: #603CD7;
   font-size: 30px;
   margin-right: -3px;
 }

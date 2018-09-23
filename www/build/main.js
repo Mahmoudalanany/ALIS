@@ -128,10 +128,6 @@ var HomePage = /** @class */ (function () {
         this.need_tutor = 0;
         this.need_universty = 0;
         this.Token = '';
-        this.SU_ques = [];
-        this.filling_form = false;
-        this.q_num = 1;
-        this.end_of_form = false;
         this.Friends = [];
         this.Show_Friends = false;
         this.Select_Friends = false;
@@ -139,12 +135,26 @@ var HomePage = /** @class */ (function () {
         this.tutor_Feedback = false;
         this.Alis_first = false;
         this.SignedIn = false;
-        this.date = false;
-        this.time = false;
+        this.Show_date = false;
+        this.Show_time = false;
+        this.Show_ChooseTime = false;
+        this.Show_ChooseFriends = false;
         this.Current_Group = [];
         this.Study_Groups = [];
         this.Show_groups = 0;
         this.Select_Groups = false;
+        this.Current_Applicant = [];
+        this.applicants = [];
+        this.Show_applicants = false;
+        this.Show_application = false;
+        this.Select_Applicants = false;
+        this.allQuestions = [];
+        this.formQuestion = false;
+        this.questionNumber = 0;
+        this.formAnswers = [];
+        this.Show_duration = false;
+        this.Show_ChooseDuration = false;
+        this.Show_WritePlace = false;
         this.offline_alert = this.alertCtrl.create({
             title: "You're offline",
             subTitle: "Alis can't reach you without internet connection",
@@ -363,26 +373,38 @@ var HomePage = /** @class */ (function () {
         this.Friends = [];
         this.Show_Friends = false;
         this.Select_Friends = false;
-        this.date = false;
-        this.time = false;
+        this.Show_date = false;
+        this.Show_time = false;
+        this.Show_ChooseTime = false;
+        this.Show_ChooseFriends = false;
         this.Current_Group = [];
         this.Study_Groups = [];
         this.Show_groups = 0;
         this.Select_Groups = false;
+        this.Current_Applicant = [];
+        this.applicants = [];
+        this.Show_applicants = false;
+        this.Show_application = false;
+        this.Select_Applicants = false;
+        this.Show_duration = false;
+        this.Show_ChooseDuration = false;
+        this.Show_WritePlace = false;
+        // this.date = false
+        // this.time = false
+        // this.duration = false
         this.content.scrollToBottom();
         this.chat = this.question;
         this.Update_Time();
         this.content.scrollToBottom();
-        if (this.filling_form) {
-            if (this.end_of_form) {
-                this.filling_form = false;
-                this.q_num = 1;
+        if (this.formQuestion) {
+            this.formAnswers.push(this.question);
+            this.questionNumber += 1;
+            this.answer = this.allQuestions[this.questionNumber];
+            if (this.allQuestions.length == this.questionNumber) {
+                this.addFormAnswers(this.formAnswers);
                 this.answer = "okay now you're done";
-            }
-            else {
-                this.add_form_answers('' + this.q_num, this.question);
-                this.q_num++;
-                this.get_application_questions("" + this.q_num);
+                this.questionNumber = 0;
+                this.formQuestion = false;
             }
         }
         else {
@@ -649,34 +671,27 @@ var HomePage = /** @class */ (function () {
                         console.log(error);
                     }).end();
                 }
-                else if (result.action == "Student_activity_name" && _this.SignedIn == true) {
-                    _this.SU_name = result.parameters.Student_Activities;
-                    if (!_this.SU_name) {
-                        _this.answer = result.fulfillment.speech;
-                    }
-                    else {
-                        _this.get_application_questions('1');
-                        _this.applicant_id = _this.afDatabase.database.ref('/' + _this.SU_name + "_applicants").push({
-                            token: _this.Token
-                        }).key;
-                        _this.filling_form = true;
-                        _this.end_of_form = false;
-                    }
-                }
                 else if (result.action == "Study_group_Creation" && _this.SignedIn == true) {
                     _this.answer = result.fulfillment.speech;
                     if (result.actionIncomplete == true) {
-                        if (result.parameters["place"] !== "" && result.parameters["date"] == "") {
-                            _this.date = true;
+                        if (result.parameters["place"] == "") {
                         }
-                        else if (result.parameters["place"] !== "" && result.parameters["date"] !== "" && result.parameters["time"] == "") {
-                            _this.time = true;
+                        else if (result.parameters["date"] == "") {
+                            _this.Show_date = true;
+                            _this.Show_ChooseTime = true;
+                        }
+                        else if (result.parameters["time"] == "") {
+                            _this.Show_date = false;
+                            _this.Show_time = true;
+                            _this.Show_ChooseFriends = true;
                             _this.SyncFriends();
                         }
                     }
                     else {
+                        _this.Show_time = false;
+                        _this.Show_ChooseFriends = false;
                         result.parameters["date"] = new Date(result.parameters["date"]).toLocaleDateString();
-                        result.parameters["time"] = [(parseInt(_this.Study_time.split(":")["0"]) > 12) ? parseInt(_this.Study_time.split(":")["0"]) - 12 : (parseInt(_this.Study_time.split(":")["0"]) == 0) ? "12" : parseInt(_this.Study_time.split(":")["0"]).toString(), _this.Study_time.split(":")["1"]].join(":") + ((parseInt(_this.Study_time.split(":")["0"]) > 12) ? " PM" : " AM");
+                        result.parameters["time"] = [new Date(result.parameters["date"] + ", " + result.parameters["time"]).toLocaleTimeString().split(":")["0"], new Date(result.parameters["date"] + ", " + result.parameters["time"]).toLocaleTimeString().split(":")["1"]].join(":") + new Date(result.parameters["date"] + ", " + result.parameters["time"]).toLocaleTimeString().slice(-3);
                         _this.afDatabase.database.ref("users/" + _this.Token + "/Friends").once('value').then(function (snapshot1) {
                             if (snapshot1.exists()) {
                                 snapshot1.forEach(function (snapshot2) {
@@ -791,22 +806,92 @@ var HomePage = /** @class */ (function () {
                         _this.Study_Groups.push(study_group);
                     });
                     _this.Show_groups = 1;
+                    console.log(_this.Study_Groups);
+                    console.log(_this.Show_groups);
                 }
                 else if (result.action == "showUniversities" && result.parameters.country != '' && _this.SignedIn == true) {
                     _this.afDatabase.database.ref('/universtes').child(result.parameters.country)
                         .once('value').then(function (snapshot1) {
                         snapshot1.forEach(function (snapshot2) {
-                            var university = {
-                                country: result.parameters.country,
-                                location: snapshot2.child('location').val(),
-                                image: snapshot2.child('img_url').val(),
-                                description: snapshot2.child('description').val(),
-                                universtyName: snapshot2.child('name').val()
-                            };
-                            _this.universities.push(university);
+                            var university = snapshot2.val();
+                            university['country'] = result.parameters.country,
+                                _this.universities.push(university);
                         });
                         _this.need_universty = 1;
+                        _this.answer = 'There are some universities!';
                     });
+                }
+                else if (result.action == "applyToStudentActivity" && result.parameters.studentActivityName != '' && _this.SignedIn == true) {
+                    _this.SU_name = result.parameters.studentActivityName;
+                    _this.afDatabase.database.ref(_this.SU_name).child('questions').once('value')
+                        .then(function (snapshot1) {
+                        snapshot1.forEach(function (snapshot2) {
+                            _this.allQuestions.push(snapshot2.val());
+                        });
+                        _this.answer = _this.allQuestions[_this.questionNumber];
+                        _this.formQuestion = true;
+                    });
+                }
+                else if (result.action == "Interviews_Scheduling" && _this.SignedIn == true) {
+                    _this.answer = result.fulfillment.speech;
+                    if (result.actionIncomplete == true) {
+                        if (result.parameters["studentActivity"] == "") {
+                        }
+                        else if (result.parameters["day"] == "") {
+                            _this.Show_date = true;
+                            _this.Show_ChooseTime = true;
+                        }
+                        else if (result.parameters["startTime"] == "") {
+                            _this.Show_date = false;
+                            _this.Show_time = true;
+                            _this.Show_ChooseTime = true;
+                        }
+                        else if (result.parameters["endTime"] == "") {
+                            _this.Show_time = true;
+                            _this.Show_ChooseDuration = true;
+                        }
+                        else if (result.parameters["duration"] == "") {
+                            _this.Show_time = false;
+                            _this.Show_ChooseDuration = false;
+                            _this.Show_duration = true;
+                            _this.Show_WritePlace = true;
+                            console.log("in duration");
+                        }
+                        else if (result.parameters["place"] == "") {
+                            console.log("in place");
+                            _this.Show_duration = false;
+                            _this.Show_WritePlace = false;
+                        }
+                    }
+                    else {
+                        var studentActivity = result.parameters.studentActivity;
+                        var dayOfInterview = result.parameters.day;
+                        var startTime = result.parameters.startTime;
+                        var endTime = result.parameters.endTime;
+                        var duration = result.parameters.duration;
+                        var place = result.parameters.place;
+                        var day = dayOfInterview.slice(8, 10);
+                        var month = dayOfInterview.slice(5, 7);
+                        var year = dayOfInterview.slice(0, 4);
+                        var daySlot = month + "/" + day + "/" + year;
+                        _this.AddDuration(daySlot, startTime, endTime, parseInt(duration), studentActivity, place);
+                    }
+                }
+                else if (result.action == "showApplicants" && result.actionIncomplete == false && _this.SignedIn == true) {
+                    _this.SU_name = result.parameters.studentActivity;
+                    _this.afDatabase.database.ref(_this.SU_name + "/applicants").once('value').then(function (snapshot1) {
+                        snapshot1.forEach(function (snapshot2) {
+                            var applicant = {};
+                            _this.afDatabase.database.ref("users/" + snapshot2.key).once('value').then(function (snapshot3) {
+                                applicant["Applicant_Token"] = snapshot2.key;
+                                applicant["Name"] = snapshot3.child("First_name").val() + " " + snapshot3.child("Last_name").val();
+                                applicant["Status"] = snapshot2.child("status").val();
+                                applicant["Responses"] = snapshot2.child("responses").val();
+                            });
+                            _this.applicants.push(applicant);
+                        });
+                    });
+                    _this.Show_applicants = true;
                 }
                 else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && result.action !== "SignUp-Credentials" && _this.SignedIn == false) {
                     _this.answer = "I think you should sign in!😊";
@@ -826,22 +911,6 @@ var HomePage = /** @class */ (function () {
             return this.afDatabase.database.ref(collection).child(child).child(nextChild).update(data);
         }
         return this.afDatabase.database.ref(collection).child(child).update(data);
-    };
-    HomePage.prototype.get_application_questions = function (Q_num) {
-        var _this = this;
-        return this.afDatabase.database.ref('/forms').child(this.SU_name).child(Q_num).once('value').then(function (snapshot) {
-            if (snapshot.exists()) {
-                _this.answer = snapshot.val();
-            }
-            else {
-                _this.end_of_form = true;
-            }
-        });
-    };
-    HomePage.prototype.add_form_answers = function (ques_num, answer) {
-        return this.afDatabase.database.ref('/' + this.SU_name + "_applicants").child(this.applicant_id).child("" + this.q_num).update({
-            answer: answer
-        });
     };
     HomePage.prototype.rating = function (x) {
         this.rated = x;
@@ -1010,6 +1079,10 @@ var HomePage = /** @class */ (function () {
         this.Select_Groups = false;
         this.Study_Groups = [];
     };
+    HomePage.prototype.Applicant_Select = function (applicant) {
+        this.Current_Applicant = applicant;
+        this.Show_application = true;
+    };
     HomePage.prototype.Tutor_Select = function (Tutor) {
         this.Current_Tutor = Tutor;
         this.need_tutor = 2;
@@ -1067,6 +1140,36 @@ var HomePage = /** @class */ (function () {
     HomePage.prototype.nextSlide = function () {
         this.slides.lockSwipes(false);
         this.slides.slideNext();
+    };
+    HomePage.prototype.selectUniversity = function (i) {
+        var _this = this;
+        var universityID = this.universities[i].university_id;
+        this.afDatabase.database.ref('users').child(this.Token).child('universityInterests').push(universityID)
+            .then(function () {
+            _this.answer = "Nice, Reserved";
+            return;
+        });
+    };
+    HomePage.prototype.AddDuration = function (dayOfInterview, startTime, endTime, duration, studentActivity, place) {
+        startTime = [startTime.split(":")["0"], startTime.split(":")["1"]].join(":");
+        endTime = [endTime.split(":")["0"], endTime.split(":")["1"]].join(":");
+        var startdateTime = new Date(dayOfInterview + ", " + startTime);
+        var enddateTime = new Date(dayOfInterview + ", " + endTime);
+        var slots = [];
+        while (startdateTime.toLocaleString() !== enddateTime.toLocaleString()) {
+            var slot = {};
+            slot['startTime'] = [startdateTime.toLocaleTimeString().split(":")["0"], startdateTime.toLocaleTimeString().split(":")["1"]].join(":");
+            startdateTime.setMinutes(startdateTime.getMinutes() + duration);
+            slot['endTime'] = [startdateTime.toLocaleTimeString().split(":")["0"], startdateTime.toLocaleTimeString().split(":")["1"]].join(":");
+            slot['date'] = startdateTime.toLocaleDateString();
+            slot['place'] = place;
+            slots.push(slot);
+        }
+        this.afDatabase.database.ref(studentActivity + "/slots").set(slots);
+    };
+    HomePage.prototype.addFormAnswers = function (answer) {
+        this.addData(this.SU_name, "applicants/" + this.Token + "/responses", null, answer);
+        this.addData(this.SU_name, "applicants/" + this.Token, null, { status: "Pending" });
     };
     HomePage.prototype.editDistance = function (s1, s2) {
         var costs = new Array();
@@ -1181,7 +1284,7 @@ var HomePage = /** @class */ (function () {
     ], HomePage.prototype, "slides", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n  <ion-navbar>\n\n    <ion-title>\n\n      <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n      <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n      <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n    </ion-title>\n\n  </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content no-bounce>\n\n  <ion-list>\n\n    <div *ngIf="answer?.length > 0" no-lines>\n\n      <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n\n        <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n        <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n\n\n      <!-- <ion-card text-wrap class="purple">\n\n        <ion-item-sliding *ngFor="let tutor of Tutors ;let i = index">\n\n          <ion-item *ngIf="need_tutor == 0" text-wrap class="purpletext"> {{answer}}</ion-item>\n\n          <ion-item *ngIf="need_tutor == 1" text-wrap class="purpletext"> {{tutor}} <img src="{{images[i]}}"></ion-item>\n\n          <ion-item-options side="right">\n\n            <button ion-button (click)="Reserve()">Reserve</button>\n\n          </ion-item-options>\n\n        </ion-item-sliding>\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card> -->\n\n      <ion-card text-wrap class="purple">\n\n        <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n\n\n        <ion-list *ngIf="need_tutor == 1">\n\n          <ion-item *ngFor="let Tutor of Tutors" style="border-bottom: 1px solid purple;">\n\n            <ion-thumbnail item-start>\n\n              <img src={{Tutor.image}}>\n\n            </ion-thumbnail>\n\n            <h2><i>{{Tutor.name}}</i></h2>\n\n            <p>{{Tutor.phone}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Tutor_Select(Tutor)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-list *ngIf="need_tutor == 2">\n\n          <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n\n            <h2><i>Slot</i></h2>\n\n            <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n\n            <h2><i>Place</i></h2>\n\n            <p>{{lesson.place}}</p>\n\n            <h2><i>Cost</i></h2>\n\n            <p>{{lesson.cost}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Tutor_Reserve(i)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <div *ngIf="tutor_Feedback == true">\n\n          <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n\n            name="star" (click)="rating(1)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n            (click)="rating(2)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(3)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n\n          <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n\n        </div>\n\n\n\n        <div *ngIf="date == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="Study_date"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_date;ask()">Choose Time</button>\n\n        </div>\n\n\n\n        <div *ngIf="time == true">\n\n          <ion-item>\n\n            <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="Study_time"></ion-datetime>\n\n          </ion-item>\n\n          <button ion-button clear block (click)="question=Study_time;ask()">Choose friends</button>\n\n        </div>\n\n\n\n        <ion-list *ngIf="Show_groups == 1">\n\n          <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">\n\n            <h2><i>{{Group.Place}}</i></h2>\n\n            <p>{{Group.Date}}, {{Group.Time}}</p>\n\n            <button class="select_button" ion-button icon-only (click)="Group_Select(Group)" item-end>\n\n              <ion-icon name="arrow-dropright" class="select_icon"></ion-icon>\n\n            </button>\n\n          </ion-item>\n\n        </ion-list>\n\n\n\n        <ion-list *ngIf="Show_groups == 2">\n\n          <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">\n\n            <h2><i>{{Study_Person.Person.Name}}:</i></h2>\n\n            <p item-end>{{Study_Person.Person.Status}}</p>\n\n          </ion-item>\n\n        </ion-list>\n\n        <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>\n\n        <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>\n\n\n\n        <ion-list *ngIf="Show_Friends == true">\n\n          <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n\n            <ion-label>\n\n              <h2><i>{{Friend.Name}}:</i></h2>\n\n            </ion-label>\n\n            <p item-end>{{Friend.Phone}}</p>\n\n            <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n\n          </ion-item>\n\n        </ion-list>\n\n        <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n\n\n        <ion-card *ngIf="need_universty == 1">\n\n          <ion-slides class="slider-slide">\n\n            <ion-slide class="slider-slide" *ngFor="let slide of universities">\n\n              <ion-toolbar>\n\n                <ion-buttons end>\n\n                  <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                </ion-buttons>\n\n              </ion-toolbar>\n\n              <img src="{{slide.image}}" class="slide-image" />\n\n              <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>\n\n              <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>\n\n              <p class="descriptioncard">{{slide.description}}</p>\n\n\n\n              <!--\n\n              <p *ngIf="slide.description.length <= limit" class = "descriptioncard">{{slide.description}}</p>\n\n\n\n              <div *ngIf="truncating && slide.description.length > limit" text-wrap class = "descriptioncard">\n\n                {{slide.description | slice:0:100}}\n\n                <button ion-button class = "morelessbutton" small (click)="truncating = false">show more</button>\n\n              </div>\n\n              <div *ngIf="!truncating && slide.description.length > limit" text-wrap class = "descriptioncard">\n\n                {{slide.description}}\n\n                <br>\n\n                <button ion-button class = "morelessbutton" small (click)="truncating = true">show less</button>\n\n              </div>\n\n-->\n\n            </ion-slide>\n\n          </ion-slides>\n\n        </ion-card>\n\n\n\n        <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n      </ion-card>\n\n      <br>\n\n    </div>\n\n  </ion-list>\n\n  <div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n\n    <div style="text-align: center" class="options">\n\n      <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n        <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n      </div>\n\n\n\n    </div>\n\n  </div>\n\n</ion-content>\n\n\n\n<ion-footer style="background-color:#ffffff">\n\n  <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n\n    <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n      <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n    </div>\n\n  </div>\n\n  <div class="flex-items" padding>\n\n    <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n\n    <button class="circularbutton" ion-button icon-only (click)="ask()">\n\n      <ion-icon name="send" class="send"></ion-icon>\n\n    </button>\n\n  </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n    <ion-navbar>\n        <ion-title>\n            <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n        <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n            <img class="logo" src="../assets/imgs/Purple-PNG.png">\n        </ion-title>\n    </ion-navbar>\n</ion-header>\n\n<ion-content no-bounce>\n    <ion-list>\n        <div *ngIf="answer?.length > 0" no-lines>\n            <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n                <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n                <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n            </ion-card>\n\n\n            <ion-card text-wrap class="purple">\n                <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n                <ion-card *ngIf="need_tutor == 1">\n                    <ion-slides class="slider-slide">\n                        <ion-slide class="slider-slide" *ngFor="let Tutor of Tutors">\n                            <ion-toolbar>\n                                <ion-buttons end>\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n                                </ion-buttons>\n                            </ion-toolbar>\n                            <img src="{{Tutor.image}}" class="slide-image" />\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.name}}</h1>\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.phone}}</h1>\n                            <button ion-button color="primary" class="joinbutton" (click)="Tutor_Select(Tutor)" round>\n                                Join Tutor\n                            </button>\n                        </ion-slide>\n                    </ion-slides>\n                </ion-card>\n\n                <ion-list *ngIf="need_tutor == 2">\n                    <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n                        <h2><i>Slot</i></h2>\n                        <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n                        <h2><i>Place</i></h2>\n                        <p>{{lesson.place}}</p>\n                        <h2><i>Cost</i></h2>\n                        <p>{{lesson.cost}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Tutor_Reserve(i)" item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n\n                <ion-list *ngIf="Show_applicants == true">\n                    <ion-item *ngFor="let applicant of applicants" style="border-bottom: 1px solid purple;">\n                        <h2><i>{{applicant.Name}}</i></h2>\n                        <p>{{applicant.Status}}</p>\n                        <ion-icon *ngIf="Hide_applicant == false" name="arrow-dropdown-circle" class="select_icon"\n                            (click)="Show_Applicant(applicant)" item-end></ion-icon>\n                        <ion-icon *ngIf="Hide_applicant == true" name="arrow-dropup-circle" class="select_icon" (click)="Hide_Applicant(applicant)"\n                            item-end></ion-icon>\n                        <ion-list *ngIf="Show_application == true">\n                            <ion-item *ngFor="let Response of Current_Applicant.Responses" style="border-bottom: 1px solid purple;">\n                                <h2><i>Responses</i></h2>\n                                <p>{{Response}}</p>\n                            </ion-item>\n                        </ion-list>\n                        <button ion-button block *ngIf="Select_Applicants == true" (click)="Applicant_Reply($event)">Accept</button>\n                        <button ion-button block *ngIf="Select_Applicants == true" (click)="Applicant_Reply($event)">Refuse</button>\n                    </ion-item>\n                </ion-list>\n\n\n\n\n\n\n\n\n\n\n\n\n                <div *ngIf="tutor_Feedback == true">\n                    <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n                        name="star" (click)="rating(1)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n                        (click)="rating(2)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n                        (click)="rating(3)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n                </div>\n\n                <div *ngIf="Show_date == true">\n                    <ion-item>\n                        <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="date"></ion-datetime>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=date;ask()">Choose\n                        Time</button>\n                </div>\n\n                <div *ngIf="Show_time == true">\n                    <ion-item>\n                        <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="time"></ion-datetime>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_ChooseFriends == true" (click)="question=time;ask()">Choose\n                        friends</button>\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=time;ask()">Choose\n                        Time</button>\n                    <button ion-button clear block *ngIf="Show_ChooseDuration == true" (click)="question=time;ask()">Choose\n                        Duration</button>\n                </div>\n\n                <div *ngIf="Show_duration == true">\n                    <ion-item>\n                        <ion-label>Duration</ion-label>\n                        <ion-select [(ngModel)]="duration">\n                            <div *ngFor="let number of \' \'.repeat(60).split(\'\'), let i = index">\n                                <ion-option value="{{i}}">{{i}}</ion-option>\n                            </div>\n                        </ion-select>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_WritePlace == true" (click)="question=duration;ask()">Write\n                        Place</button>\n                </div>\n\n                <ion-list *ngIf="Show_groups == 1">\n                    <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">\n                        <h2><i>{{Group.Place}}</i></h2>\n                        <p>{{Group.Date}}, {{Group.Time}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Group_Select(Group)"\n                            item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n                <ion-list *ngIf="Show_groups == 2">\n                    <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">\n                        <h2><i>{{Study_Person.Person.Name}}:</i></h2>\n                        <p item-end>{{Study_Person.Person.Status}}</p>\n                    </ion-item>\n                </ion-list>\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>\n\n                <ion-list *ngIf="Show_Friends == true">\n                    <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n                        <ion-label>\n                            <h2><i>{{Friend.Name}}:</i></h2>\n                        </ion-label>\n                        <p item-end>{{Friend.Phone}}</p>\n                        <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n                    </ion-item>\n                </ion-list>\n                <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n                <ion-card *ngIf="need_universty == 1">\n                    <ion-slides class="slider-slide">\n                        <ion-slide class="slider-slide" *ngFor="let slide of universities; let i = index">\n                            <ion-toolbar>\n                                <ion-buttons end>\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n                                </ion-buttons>\n                            </ion-toolbar>\n                            <img src="{{slide.img_url}}" class="slide-image" />\n                            <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>\n                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>\n                            <p class="descriptioncard">{{slide.description}}</p>\n\n                            <button ion-button large clear icon-end color="primary" (click)="selectUniversity(i)"\n                                disabled={{interestedButton}}>\n                                Interested\n                                <ion-icon name="ios-flash-outline"></ion-icon>\n                            </button>\n\n                        </ion-slide>\n                    </ion-slides>\n                </ion-card>\n\n\n                <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n            </ion-card>\n            <br>\n        </div>\n    </ion-list>\n    <div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n        <div style="text-align: center" class="options">\n            <div class="options" no-lines *ngFor="let option of options;" text-center>\n                <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n            </div>\n\n        </div>\n    </div>\n</ion-content>\n\n<ion-footer style="background-color:#ffffff">\n    <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n        <div class="options" no-lines *ngFor="let option of options;" text-center>\n            <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n        </div>\n    </div>\n    <div class="flex-items" padding>\n        <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n        <button class="circularbutton" ion-button icon-only (click)="ask()">\n            <ion-icon name="send" class="send"></ion-icon>\n        </button>\n    </div>\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["f" /* NavController */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["g" /* Platform */], __WEBPACK_IMPORTED_MODULE_4__angular_core__["M" /* NgZone */], __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__["a" /* AngularFireDatabase */], __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__["a" /* SharingService */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__["a" /* Contacts */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__["a" /* Network */], __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__["a" /* Calendar */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__["a" /* FCM */], __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__["a" /* HttpClient */]])
     ], HomePage);
