@@ -52,34 +52,39 @@
 
 
                 <ion-list *ngIf="Show_applicants == true">
-                    <ion-item *ngFor="let applicant of applicants" style="border-bottom: 1px solid purple;">
-                        <h2><i>{{applicant.Name}}</i></h2>
-                        <p>{{applicant.Status}}</p>
-                        <ion-icon *ngIf="Hide_applicant == false" name="arrow-dropdown-circle" class="select_icon"
-                            (click)="Show_Applicant(applicant)" item-end></ion-icon>
-                        <ion-icon *ngIf="Hide_applicant == true" name="arrow-dropup-circle" class="select_icon" (click)="Hide_Applicant(applicant)"
-                            item-end></ion-icon>
-                        <ion-list *ngIf="Show_application == true">
-                            <ion-item *ngFor="let Response of Current_Applicant.Responses" style="border-bottom: 1px solid purple;">
-                                <h2><i>Responses</i></h2>
+                    <div *ngFor="let applicant of applicants; let i = index">
+                        <ion-item style="border-bottom: 1px solid purple;">
+                            <h2><i>{{applicant.Name}}</i></h2>
+                            <p>{{applicant.Status}}</p>
+                            <ion-icon *ngIf="applicant.IsViewed == false" name="arrow-dropright-circle" class="select_icon"
+                                (click)="Show_Applicant(applicant,i)" item-start></ion-icon>
+                            <ion-icon *ngIf="applicant.IsViewed == true" name="arrow-dropdown-circle" class="select_icon"
+                                (click)="Hide_Applicant(i)" item-start></ion-icon>
+                        </ion-item>
+
+                        <ion-list *ngIf="Show_application == true && applicant.IsViewed == true">
+                            <ion-item *ngFor="let Response of applicant.Responses;let i = index">
+                                <h2><i>{{applicant.Questions[i]}}</i></h2>
                                 <p>{{Response}}</p>
                             </ion-item>
+                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == 'Pending'"
+                                (click)="Action_on_Applicant($event,i)">Accept</button>
+                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == 'Pending'"
+                                (click)="Action_on_Applicant($event,i)">Refuse</button>
                         </ion-list>
-                        <button ion-button block *ngIf="Select_Applicants == true" (click)="Applicant_Reply($event)">Accept</button>
-                        <button ion-button block *ngIf="Select_Applicants == true" (click)="Applicant_Reply($event)">Refuse</button>
-                    </ion-item>
+                    </div>
                 </ion-list>
 
-
-
-
-
-
-
-
-
-
-
+                <ion-list *ngIf="Show_Interview_slots == true">
+                    <ion-item *ngFor="let slot of Interview_slots; let i = index" style="border-bottom: 1px solid purple;">
+                        <h2><i>Slot</i></h2>
+                        <p>{{slot.Date}}, {{slot.Start_time}} -> {{slot.End_time}}</p>
+                        <h2><i>Place</i></h2>
+                        <p>{{slot.Place}}</p>
+                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Choose_Interview_slot(slot)"
+                            item-end></ion-icon>
+                    </ion-item>
+                </ion-list>
 
                 <div *ngIf="tutor_Feedback == true">
                     <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? 'rate' : 'light'"
@@ -117,7 +122,7 @@
                         <ion-label>Duration</ion-label>
                         <ion-select [(ngModel)]="duration">
                             <div *ngFor="let number of ' '.repeat(60).split(''), let i = index">
-                                <ion-option value="{{i}}">{{i}}</ion-option>
+                                <ion-option value="{{i+1}}">{{i+1}}</ion-option>
                             </div>
                         </ion-select>
                     </ion-item>

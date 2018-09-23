@@ -1,7 +1,6 @@
 import http from 'http'
 import * as admin from 'firebase-admin'
 
-// let serviceAccount = require();
 admin.initializeApp({
     credential: admin.credential.cert("./alis-ac07d-firebase-adminsdk-uj1w9-2ae6dcdcb6.json"),
     databaseURL: "https://alis-ac07d.firebaseio.com"
@@ -17,7 +16,8 @@ http.createServer(function (req, res) {
             let date = `${serverDate_and_Time.Date}`;
             let time = `${serverDate_and_Time.Time} ${serverDate_and_Time.AMPM}`;
             Tutor_Feedback(date, time);
-            Study_Feedback(date, time);
+            Study_Group_Reminder(date, time);
+            Student_Activity_Reminder(date, time)
         }
     }, 1000)
 }).listen(8080);
@@ -89,7 +89,7 @@ function Tutor_Feedback(date, time) {
     });
 }
 
-function Study_Feedback(date, time) {
+function Study_Group_Reminder(date, time) {
     admin.database().ref('/users').once('value').then(snapshot1 => {
         snapshot1.forEach(snapshot2 => {
             if (snapshot2.child('Study groups').exists()) {
@@ -112,4 +112,22 @@ function Study_Feedback(date, time) {
             }
         })
     });
+}
+
+function Student_Activity_Reminder(date, time) {
+    admin.database().ref("IEEE/applicants").once('value').then(snapshot1 => {
+        snapshot1.forEach(snapshot2 => {
+            if (snapshot2.child("slot/Reminder").exists()) {
+                if (`${date}, ${time}` == snapshot2.child("slot/Reminder").val()) {
+                    let info = {
+                        title: 'Student activity reminder!',
+                        body: `You have an interview with IEEE on ${snapshot2.child("slot/Date").val()} at ${snapshot2.child("slot/Start_time").val()} in ${snapshot2.child("slot/Place").val()}`,
+                        type: 'Welcome',
+                        data: JSON.stringify({})
+                    }
+                    sendNotification(snapshot2.key, info)
+                }
+            }
+        })
+    })
 }

@@ -60,12 +60,12 @@ export class HomePage {
   Study_Groups = [];
   Show_groups = 0;
   Select_Groups = false
-  Current_Applicant = []
   applicants = []
   Show_applicants = false;
-  Hide_applicant = false;
   Show_application = false;
-  Select_Applicants = false
+  Select_Applicants = false;
+  Show_Interview_slots = false
+  Interview_slots = []
   allQuestions = [];
   formQuestion = false;
   questionNumber = 0;
@@ -197,6 +197,20 @@ export class HomePage {
           })
         })
       }
+      else if (this.Intent_type == "Student_activity_Acceptance") {
+        this.answer = `Please select a slot for ${this.Intent_data["SU_name"]} interview:`
+        this.afDatabase.database.ref(`${this.Intent_data["SU_name"]}/slots`).once('value').then(snapshot1 => {
+          snapshot1.forEach(snapshot2 => {
+            let slot = {}
+            slot["Date"] = snapshot2.child('date').val()
+            slot["Start_time"] = snapshot2.child('startTime').val()
+            slot["End_time"] = snapshot2.child('endTime').val()
+            slot["Place"] = snapshot2.child('place').val()
+            this.Interview_slots.push(slot)
+          })
+        })
+        this.Show_Interview_slots = true
+      }
     })
   }
 
@@ -312,12 +326,12 @@ export class HomePage {
     this.Study_Groups = []
     this.Show_groups = 0
     this.Select_Groups = false
-    this.Current_Applicant = []
     this.applicants = []
     this.Show_applicants = false
-    this.Hide_applicant = false;
     this.Show_application = false;
     this.Select_Applicants = false
+    this.Show_Interview_slots = false
+    this.Interview_slots = []
     this.Show_duration = false
     this.Show_ChooseDuration = false
     this.Show_WritePlace = false
@@ -819,12 +833,16 @@ export class HomePage {
                   applicant["Applicant_Token"] = snapshot2.key
                   applicant["Name"] = snapshot3.child("First_name").val() + " " + snapshot3.child("Last_name").val()
                   applicant["Status"] = snapshot2.child("status").val()
+                  snapshot1.ref.parent.child('questions').once('value').then(questions => applicant["Questions"] = questions.val())
                   applicant["Responses"] = snapshot2.child("responses").val()
+                  applicant["IsViewed"] = false
                 })
                 this.applicants.push(applicant)
               });
             });
             this.Show_applicants = true;
+            this.Show_application = true
+            this.Select_Applicants = true
           }
           else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && result.action !== "SignUp-Credentials" && this.SignedIn == false) {
             this.answer = "I think you should sign in!😊"
@@ -1015,15 +1033,56 @@ export class HomePage {
     }
     this.Select_Groups = false
     this.Study_Groups = []
+    this.Current_Group = []
   }
 
-  Show_Applicant(applicant) {
-    this.Current_Applicant = applicant
-    this.Show_application = true
-    this.Hide_applicant = true
-    this.Select_Applicants = true
+  Show_Applicant(applicant, i) {
+    applicant["IsViewed"] = true
+    this.applicants[i]["IsViewed"] = true
   }
 
+  Hide_Applicant(i) {
+    this.applicants[i]["IsViewed"] = false
+  }
+
+  Action_on_Applicant(event, i) {
+    if (event.toElement.innerHTML == "Accept") {
+      this.applicants[i]["Status"] = "Accepted"
+      this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Accepted")
+      this.Notification_data = {
+        Title: `${this.SU_name} Application Request`,
+        Body: `You have been chosen by ${this.SU_name} to be interviewed😊`,
+        type: "Student_activity_Acceptance",
+        data: JSON.stringify({
+          SU_name: this.SU_name
+        })
+      }
+    }
+    else if (event.toElement.innerHTML == "Refuse") {
+      this.applicants[i]["Status"] = "Refused"
+      this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Refused")
+      this.Notification_data = {
+        Title: `${this.SU_name} Application Request`,
+        Body: `We're sorry to tell you that you won't be able to join ${this.SU_name} for this season. Don't worry, you can still apply to other student activites😊`,
+        type: "Welcome",
+        data: JSON.stringify({})
+      }
+    }
+    this.sendNotification(this.applicants[i]["Applicant_Token"])
+  }
+
+  Choose_Interview_slot(slot) {
+    this.answer = `Thanks for your time. ${this.Intent_data["SU_name"]} is waiting to see you on ${slot.Date} at ${slot.Start_time} in ${slot.Place}`
+    this.afDatabase.database.ref(`${this.Intent_data["SU_name"]}/applicants/${this.Token}/slot`).update({
+      Date: slot.Date,
+      Start_time: slot.Start_time,
+      End_time: slot.End_time,
+      Place: slot.Place,
+      Reminder: this.Make_Reminder(`${slot.Date}, ${slot.Start_time}`, 24)
+    })
+    this.Show_Interview_slots = false
+    this.Interview_slots = []
+  }
 
   Tutor_Select(Tutor) {
     this.Current_Tutor = Tutor
@@ -1103,9 +1162,9 @@ export class HomePage {
     let slots = []
     while (startdateTime.toLocaleString() !== enddateTime.toLocaleString()) {
       let slot = {}
-      slot['startTime'] = [startdateTime.toLocaleTimeString().split(":")["0"], startdateTime.toLocaleTimeString().split(":")["1"]].join(":")
+      slot['startTime'] = [startdateTime.toLocaleTimeString().split(":")["0"], startdateTime.toLocaleTimeString().split(":")["1"]].join(":") + startdateTime.toLocaleTimeString().slice(-3);
       startdateTime.setMinutes(startdateTime.getMinutes() + duration)
-      slot['endTime'] = [startdateTime.toLocaleTimeString().split(":")["0"], startdateTime.toLocaleTimeString().split(":")["1"]].join(":")
+      slot['endTime'] = [startdateTime.toLocaleTimeString().split(":")["0"], startdateTime.toLocaleTimeString().split(":")["1"]].join(":") + startdateTime.toLocaleTimeString().slice(-3);
       slot['date'] = startdateTime.toLocaleDateString();
       slot['place'] = place
       slots.push(slot);
