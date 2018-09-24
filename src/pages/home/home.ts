@@ -20,9 +20,6 @@ const uuidv1 = require('uuid/v1');
 export class HomePage {
   @ViewChild(Content) content: Content;
   @ViewChild(Slides) slides: Slides;
-  // limit: number = 60;
-  // truncating = true;
-
 
   chat; //User Message
   answer; //ALIS Reply
@@ -73,9 +70,6 @@ export class HomePage {
   Show_duration = false
   Show_ChooseDuration = false
   Show_WritePlace = false
-  date;
-  time;
-  duration;
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM, private http: HttpClient) {
     this.offline_alert = this.alertCtrl.create({
       title: "You're offline",
@@ -106,9 +100,6 @@ export class HomePage {
       this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
       this.uuid = uuidv1()
       this.Token = this.Share.getToken();
-      // this.relevantMajors();
-      // this.showMajors();
-
       this.Update_Time()
       this.Alis_first = true
       if (this.Intent_type == "Welcome") {
@@ -214,96 +205,6 @@ export class HomePage {
     })
   }
 
-  ionViewDidEnter() {
-
-    this.connected = this.network.onConnect().subscribe(data => {
-      console.log(`You are now ${data.type} via ${this.network.type}`)
-      this.offline_alert.dismiss();
-      this.offline_alert = this.alertCtrl.create({
-        title: "You're offline",
-        subTitle: "Alis can't reach you without internet connection",
-        enableBackdropDismiss: false
-      });
-    }, error => console.error(error));
-
-    this.disconnected = this.network.onDisconnect().subscribe(data => {
-      console.log(`You are now ${data.type} via ${this.network.type}`)
-      this.offline_alert.present();
-    }, error => console.error(error));
-  }
-
-  ionViewWillLeave() {
-    this.connected.unsubscribe();
-    this.disconnected.unsubscribe();
-  }
-
-  GetDate_and_Time() {
-    var d = new Date(),
-      date = [(d.getMonth() + 1), d.getDate(), d.getFullYear()].join("/"),
-      time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"),
-      ampm = (d.getHours() < 12) ? "AM" : "PM"
-    return { 'Date': date, 'Time': time, 'AMPM': ampm };
-  }
-
-  Update_Time() {
-    var d = new Date(),
-      time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"),
-      ampm = (d.getHours() < 12) ? "AM" : "PM"
-    this.CurrentTime = time + ' ' + ampm;
-  }
-
-  SyncFriends() {
-    this.contacts.find(['*'])
-      .then(contactslist => {
-        var numbers = []
-        contactslist.forEach(data => {
-          if (data.name) {
-            if (data.name.formatted == undefined) {
-              return
-            }
-          }
-          else {
-            return
-          }
-
-          if (data.phoneNumbers) {
-            let phones = new Set<string>()
-            var phone_as_name = false;
-            data.phoneNumbers.some(phonenumber => {
-              phonenumber.value = phonenumber.value.replace(/ +/g, "");
-              if (data.name.formatted.trim() != phonenumber.value) {
-                phones.add(phonenumber.value)
-              }
-              else {
-                phone_as_name = true
-                return true
-              }
-            })
-            if (phone_as_name) {
-              return
-            }
-            phones.forEach(phone => { numbers.push({ Phone: phone, Found: false }) })
-          }
-        })
-        var friends = []
-        this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
-          if (snapshot1.exists()) {
-            snapshot1.forEach((snapshot2) => {
-              for (let index = 0; index < numbers.length; index++) {
-                if (snapshot2.child('Phone').val() !== snapshot1.child(this.Token).child('Phone').val() && snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
-                  numbers[index].Found = true
-                  friends.push(numbers[index].Phone)
-                  let data = { Friends: friends };
-                  this.addData('/users', this.Token, null, data).then().catch();
-                  break
-                }
-              }
-            })
-          }
-        });
-      });
-  }
-
   ask() {
     if (this.question == undefined || this.question == null || this.question.trim() == '') {
       this.question = null;
@@ -335,9 +236,6 @@ export class HomePage {
     this.Show_duration = false
     this.Show_ChooseDuration = false
     this.Show_WritePlace = false
-    // this.date = false
-    // this.time = false
-    // this.duration = false
 
     this.content.scrollToBottom();
     this.chat = this.question;
@@ -751,12 +649,10 @@ export class HomePage {
               this.Study_Groups.push(study_group)
             })
             this.Show_groups = 1
-
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/universtes').child(result.parameters.country)
               .once('value').then(snapshot1 => {
-
                 snapshot1.forEach(snapshot2 => {
                   let university = snapshot2.val();
                   university['country'] = result.parameters.country,
@@ -780,9 +676,7 @@ export class HomePage {
           else if (result.action == "Interviews_Scheduling" && this.SignedIn == true) {
             this.answer = result.fulfillment.speech;
             if (result.actionIncomplete == true) {
-              if (result.parameters["studentActivity"] == "") {
-
-              }
+              if (result.parameters["studentActivity"] == "") { }
               else if (result.parameters["day"] == "") {
                 this.Show_date = true
                 this.Show_ChooseTime = true
@@ -801,11 +695,8 @@ export class HomePage {
                 this.Show_ChooseDuration = false
                 this.Show_duration = true
                 this.Show_WritePlace = true
-                console.log("in duration");
               }
               else if (result.parameters["place"] == "") {
-                console.log("in place");
-
                 this.Show_duration = false
                 this.Show_WritePlace = false
               }
@@ -858,11 +749,69 @@ export class HomePage {
     this.question = null;
   }
 
+  Update_Time() {
+    var d = new Date(),
+      time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"),
+      ampm = (d.getHours() < 12) ? "AM" : "PM"
+    this.CurrentTime = time + ' ' + ampm;
+  }
+
   addData(collection, child, nextChild, data) {
     if (nextChild) {
       return this.afDatabase.database.ref(collection).child(child).child(nextChild).update(data);
     }
     return this.afDatabase.database.ref(collection).child(child).update(data);
+  }
+
+  SyncFriends() {
+    this.contacts.find(['*'])
+      .then(contactslist => {
+        var numbers = []
+        contactslist.forEach(data => {
+          if (data.name) {
+            if (data.name.formatted == undefined) {
+              return
+            }
+          }
+          else {
+            return
+          }
+          if (data.phoneNumbers) {
+            let phones = new Set<string>()
+            var phone_as_name = false;
+            data.phoneNumbers.some(phonenumber => {
+              phonenumber.value = phonenumber.value.replace(/ +/g, "");
+              if (data.name.formatted.trim() != phonenumber.value) {
+                phones.add(phonenumber.value)
+              }
+              else {
+                phone_as_name = true
+                return true
+              }
+            })
+            if (phone_as_name) {
+              return
+            }
+            phones.forEach(phone => { numbers.push({ Phone: phone, Found: false }) })
+          }
+        })
+        var friends = []
+        this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
+          if (snapshot1.exists()) {
+            snapshot1.forEach((snapshot2) => {
+              for (let index = 0; index < numbers.length; index++) {
+                if (snapshot2.child('Phone').val() !== snapshot1.child(this.Token).child('Phone').val() && snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
+                  numbers[index].Found = true
+                  friends.push(numbers[index].Phone)
+                  let data = { Friends: friends };
+                  this.addData('/users', this.Token, null, data).then().catch();
+                  break
+                }
+              }
+            })
+          }
+        });
+      });
   }
 
   rating(x) {
@@ -955,7 +904,6 @@ export class HomePage {
       this.Current_Group["Study_People"] = Study_People
       this.Current_Group["Study_Token"] = Group["Study_Token"]
     })
-
     this.Show_groups = 2
   }
 
@@ -1036,54 +984,6 @@ export class HomePage {
     this.Current_Group = []
   }
 
-  Show_Applicant(applicant, i) {
-    applicant["IsViewed"] = true
-    this.applicants[i]["IsViewed"] = true
-  }
-
-  Hide_Applicant(i) {
-    this.applicants[i]["IsViewed"] = false
-  }
-
-  Action_on_Applicant(event, i) {
-    if (event.toElement.innerHTML == "Accept") {
-      this.applicants[i]["Status"] = "Accepted"
-      this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Accepted")
-      this.Notification_data = {
-        Title: `${this.SU_name} Application Request`,
-        Body: `You have been chosen by ${this.SU_name} to be interviewed😊`,
-        type: "Student_activity_Acceptance",
-        data: JSON.stringify({
-          SU_name: this.SU_name
-        })
-      }
-    }
-    else if (event.toElement.innerHTML == "Refuse") {
-      this.applicants[i]["Status"] = "Refused"
-      this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Refused")
-      this.Notification_data = {
-        Title: `${this.SU_name} Application Request`,
-        Body: `We're sorry to tell you that you won't be able to join ${this.SU_name} for this season. Don't worry, you can still apply to other student activites😊`,
-        type: "Welcome",
-        data: JSON.stringify({})
-      }
-    }
-    this.sendNotification(this.applicants[i]["Applicant_Token"])
-  }
-
-  Choose_Interview_slot(slot) {
-    this.answer = `Thanks for your time. ${this.Intent_data["SU_name"]} is waiting to see you on ${slot.Date} at ${slot.Start_time} in ${slot.Place}`
-    this.afDatabase.database.ref(`${this.Intent_data["SU_name"]}/applicants/${this.Token}/slot`).update({
-      Date: slot.Date,
-      Start_time: slot.Start_time,
-      End_time: slot.End_time,
-      Place: slot.Place,
-      Reminder: this.Make_Reminder(`${slot.Date}, ${slot.Start_time}`, 24)
-    })
-    this.Show_Interview_slots = false
-    this.Interview_slots = []
-  }
-
   Tutor_Select(Tutor) {
     this.Current_Tutor = Tutor
     this.need_tutor = 2
@@ -1146,6 +1046,7 @@ export class HomePage {
     this.slides.lockSwipes(false);
     this.slides.slideNext();
   }
+
   selectUniversity(i) {
     let universityID = this.universities[i].university_id;
     this.afDatabase.database.ref('users').child(this.Token).child('universityInterests').push(universityID)
@@ -1154,6 +1055,7 @@ export class HomePage {
         return;
       });
   }
+
   AddDuration(dayOfInterview, startTime, endTime, duration, studentActivity, place) {
     startTime = [startTime.split(":")["0"], startTime.split(":")["1"]].join(":")
     endTime = [endTime.split(":")["0"], endTime.split(":")["1"]].join(":")
@@ -1171,9 +1073,58 @@ export class HomePage {
     }
     this.afDatabase.database.ref(`${studentActivity}/slots`).set(slots);
   }
+
   addFormAnswers(answer) {
     this.addData(this.SU_name, `applicants/${this.Token}/responses`, null, answer);
     this.addData(this.SU_name, `applicants/${this.Token}`, null, { status: "Pending" });
+  }
+
+  Show_Applicant(applicant, i) {
+    applicant["IsViewed"] = true
+    this.applicants[i]["IsViewed"] = true
+  }
+
+  Hide_Applicant(i) {
+    this.applicants[i]["IsViewed"] = false
+  }
+
+  Action_on_Applicant(event, i) {
+    if (event.toElement.innerHTML == "Accept") {
+      this.applicants[i]["Status"] = "Accepted"
+      this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Accepted")
+      this.Notification_data = {
+        Title: `${this.SU_name} Application Request`,
+        Body: `You have been chosen by ${this.SU_name} to be interviewed😊`,
+        type: "Student_activity_Acceptance",
+        data: JSON.stringify({
+          SU_name: this.SU_name
+        })
+      }
+    }
+    else if (event.toElement.innerHTML == "Refuse") {
+      this.applicants[i]["Status"] = "Refused"
+      this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Refused")
+      this.Notification_data = {
+        Title: `${this.SU_name} Application Request`,
+        Body: `We're sorry to tell you that you won't be able to join ${this.SU_name} for this season. Don't worry, you can still apply to other student activites😊`,
+        type: "Welcome",
+        data: JSON.stringify({})
+      }
+    }
+    this.sendNotification(this.applicants[i]["Applicant_Token"])
+  }
+
+  Choose_Interview_slot(slot) {
+    this.answer = `Thanks for your time. ${this.Intent_data["SU_name"]} is waiting to see you on ${slot.Date} at ${slot.Start_time} in ${slot.Place}`
+    this.afDatabase.database.ref(`${this.Intent_data["SU_name"]}/applicants/${this.Token}/slot`).update({
+      Date: slot.Date,
+      Start_time: slot.Start_time,
+      End_time: slot.End_time,
+      Place: slot.Place,
+      Reminder: this.Make_Reminder(`${slot.Date}, ${slot.Start_time}`, 24)
+    })
+    this.Show_Interview_slots = false
+    this.Interview_slots = []
   }
 
   editDistance(s1, s2) {
@@ -1267,4 +1218,26 @@ export class HomePage {
       })
     })
   }
+
+  ionViewDidEnter() {
+    this.connected = this.network.onConnect().subscribe(data => {
+      console.log(`You are now ${data.type} via ${this.network.type}`)
+      this.offline_alert.dismiss();
+      this.offline_alert = this.alertCtrl.create({
+        title: "You're offline",
+        subTitle: "Alis can't reach you without internet connection",
+        enableBackdropDismiss: false
+      });
+    }, error => console.error(error));
+    this.disconnected = this.network.onDisconnect().subscribe(data => {
+      console.log(`You are now ${data.type} via ${this.network.type}`)
+      this.offline_alert.present();
+    }, error => console.error(error));
+  }
+
+  ionViewWillLeave() {
+    this.connected.unsubscribe();
+    this.disconnected.unsubscribe();
+  }
+
 }
