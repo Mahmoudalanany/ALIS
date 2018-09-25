@@ -357,154 +357,51 @@ export class HomePage {
                 this.need_tutor = 1;
               })
           }
-          else if (result.action == "study_level" && this.SignedIn == true) {
-            if (result.parameters.study_level !== '') {
-              let data = { studyLevel: result.parameters.study_level };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'get_hobbies' && this.SignedIn == true) {
-            if (result.parameters.hobbies.length > 0) {
-              let data = { hobbies: result.parameters.hobbies };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'father_job' && this.SignedIn == true) {
-            if (result.parameters.father_job !== '') {
-              let data = { fatherJob: result.parameters.fatherJob };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'mother_job' && this.SignedIn == true) {
-            if (result.parameters.mother_job !== '') {
-              let data = { motherJob: result.parameters.motherJob };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'school_name' && this.SignedIn == true) {
-            if (result.parameters.school_name !== '') {
-              let data = { schoolName: result.parameters.school_name };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getNational' && this.SignedIn == true) {
-            if (result.parameters.highSchoolDegree !== '') {
-              let data = { highSchoolDegree: result.parameters.highSchoolDegree };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getSat' && this.SignedIn == true) {
-            if (result.parameters.highSchoolDegree !== '') {
-              let data = { highSchoolDegree: result.parameters.highSchoolDegree };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getIG' && this.SignedIn == true) {
-            if (result.parameters.highSchoolDegree !== '') {
-              let data = { highSchoolDegree: result.parameters.highSchoolDegree };
-              this.addData('/users', this.Token, null, data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getTanyaThanawyGrade' && this.SignedIn == true) {
-            let gradeNum;
-            if (result.parameters.tanyaPercentage !== '') {
-              let gradePercentage = result.parameters.tanyaPercentage;
-              gradeNum = gradePercentage.slice(0, -1);
-            } else if (result.parameters.tanyaNum !== '') {
-              gradeNum = result.parameters.tanyaNum;
-            }
-            let data = { tanyaThanwyGrade: gradeNum };
-            this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getTaltaThanawyGrade' && this.SignedIn == true) {
-            let gradeNum;
-            if (result.parameters.taltaPercentage !== '') {
-              let gradePercentage = result.parameters.taltaPercentage;
-              gradeNum = gradePercentage.slice(0, -1);
-            } else if (result.parameters.taltaNum !== '') {
-              gradeNum = result.parameters.taltaNum;
-            }
-            let data = { taltaThanwyGrade: gradeNum };
-            this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getSat1' && this.SignedIn == true) {
-            let gradeNum;
-            if (result.parameters.sat1Percentage !== '') {
-              let gradePercentage = result.parameters.sat1Percentage;
-              gradeNum = gradePercentage.slice(0, -1);
-            }
-            else if (result.parameters.sat1Num !== '') {
-              gradeNum = result.parameters.sat1Num;
-            }
-            let data = { sat1Grade: gradeNum };
-            this.addData('/users', this.Token, 'satGrades', data).then().catch();
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getSat2' && this.SignedIn == true) {
-            let gradeNum;
-            if (result.parameters.sat2Percentage !== '') {
-              let gradePercentage = result.parameters.sat2Percentage;
-              gradeNum = gradePercentage.slice(0, -1);
-            }
-            else if (result.parameters.sat2Num !== '') {
-              gradeNum = result.parameters.sat2Num;
-            }
-            let data = { sat2Grade: gradeNum };
-            this.addData('/users', this.Token, 'satGrades', data).then().catch();
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getIGArabicGrade' && this.SignedIn == true) {
-            if (result.parameters.arabicIG_Grade !== '') {
-              let data = { arabicGrade: result.parameters.arabicIG_Grade };
+          else if (result.action == "study_level" || result.action == 'get_hobbies'
+            || result.action == 'father_job' || result.action == 'mother_job'
+            || result.action == 'school_name' || result.action == 'getNational'
+            || result.action == 'getIGArabicGrade' || result.action == 'getIGEnglishGrade'
+            || result.action == 'getIGMathGrade' || result.action == 'getIGChemistryGrade'
+            || result.action == 'getIGPhysicsGrade' || result.action == 'getIGBiologyGrade'
+            || result.action == 'getSat1' || result.action == 'getSat2'
+            || result.action == 'getTanyaThanawyGrade' || result.action == 'getTaltaThanawyGrade'
+            && this.SignedIn == true) {
+
+            let parameters = result.parameters;
+            let key = Object.keys(parameters)[0];
+            let value = parameters[key]
+            let data = {};
+            data[key] = value;
+
+            if (result.action == 'getIGArabicGrade' || result.action == 'getIGEnglishGrade'
+              || result.action == 'getIGMathGrade' || result.action == 'getIGChemistryGrade'
+              || result.action == 'getIGPhysicsGrade' || result.action == 'getIGBiologyGrade' &&
+              value != '') {
+
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
+              this.answer = result.fulfillment.speech;
+              return;
+            }
+            else if (result.action == 'getSat1' || result.action == 'getSat2' && value != '') {
+
+              this.addData('/users', this.Token, 'satGrades', data).then().catch();
+              this.answer = result.fulfillment.speech;
+              return;
+            }
+            else if (result.action == 'getTanyaThanawyGrade' || result.action == 'getTaltaThanawyGrade' && value != '') {
+              this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
+              this.answer = result.fulfillment.speech;
+              return;
+            }
+
+            if (value != '') {
+              this.addData('users', this.Token, null, data).then(() => {
+                console.log('Saved');
+              }).catch();
             }
             this.answer = result.fulfillment.speech;
           }
-          else if (result.action == 'getIGEnglishGrade' && this.SignedIn == true) {
-            if (result.parameters.englishIG_Grade !== '') {
-              let data = { englishGrade: result.parameters.englishIG_Grade };
-              this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getIGMathGrade' && this.SignedIn == true) {
-            if (result.parameters.mathIG_Grade !== '') {
-              let data = { mathGrade: result.parameters.mathIG_Grade };
-              this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getIGChemistryGrade' && this.SignedIn == true) {
-            if (result.parameters.chemistryIG_Grade !== '') {
-              let data = { chemistryGrade: result.parameters.chemistryIG_Grade };
-              this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getIGPhysicsGrade' && this.SignedIn == true) {
-            if (result.parameters.physicsIG_Grade !== '') {
-              let data = { chemistryGrade: result.parameters.physicsIG_Grade };
-              this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
-          else if (result.action == 'getIGBiologyGrade' && this.SignedIn == true) {
-            if (result.parameters.biologyIG_Grade !== '') {
-              let data = { chemistryGrade: result.parameters.biologyIG_Grade };
-              this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
-            }
-            this.answer = result.fulfillment.speech;
-          }
+          
           else if (result.action == 'getFeedback-yes' && this.SignedIn == true) {
             this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
