@@ -141,8 +141,8 @@
 
                 <ion-list *ngIf="Show_groups == 2">
                     <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">
-                        <h2><i>{{Study_Person.Person.Name}}:</i></h2>
-                        <p item-end>{{Study_Person.Person.Status}}</p>
+                        <h2><i>{{Study_Person.Name}}:</i></h2>
+                        <p item-end>{{Study_Person.Status}}</p>
                     </ion-item>
                 </ion-list>
                 <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>

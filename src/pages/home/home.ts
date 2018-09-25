@@ -142,23 +142,26 @@ export class HomePage {
             this.SignedIn = true;
             this.Show_groups = 2;
             this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
+              let People = []
               snapshot1.forEach(snapshot2 => {
-                let Study_Person = {};
+                let Person = {};
                 this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
                   snapshot3.forEach(snapshot4 => {
                     if (snapshot4.child("Phone").val() == snapshot2.key) {
-                      Study_Person = {
-                        Person: {
-                          Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                          Status: snapshot2.val()
-                        },
-                        Study_Token: this.Intent_data["Study_Token"]
+                      Person = {
+                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                        Status: snapshot2.val()
                       }
-                      this.Current_Group.push(Study_Person)
+                      People.push(Person)
+                    }
+                    if (snapshot4.key == this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
+                      this.Select_Groups = true
                     }
                   })
                 })
               })
+              this.Current_Group["Study_People"] = People
+              this.Current_Group["Study_Token"] = this.Intent_data["Study_Token"]
             })
           }).once('error', (error) => {
             console.log(error);
@@ -169,23 +172,22 @@ export class HomePage {
         this.SignedIn = true;
         this.Show_groups = 2;
         this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
+          let People = []
           snapshot1.forEach(snapshot2 => {
-            let Study_Person = {};
+            let Person = {};
             this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
               snapshot3.forEach(snapshot4 => {
                 if (snapshot4.child("Phone").val() == snapshot2.key) {
-                  Study_Person = {
-                    Person: {
-                      Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                      Status: snapshot2.val()
-                    },
-                    Study_Token: this.Intent_data["Study_Token"]
+                  Person = {
+                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                    Status: snapshot2.val()
                   }
-                  this.Current_Group.push(Study_Person)
+                  People.push(Person)
                 }
               })
             })
           })
+          this.Current_Group["Study_People"] = People
         })
       }
       else if (this.Intent_type == "Student_activity_Acceptance") {
@@ -574,81 +576,23 @@ export class HomePage {
               })
             }
           }
-          else if (result.action == "Study_group_Invitation-yes" && this.SignedIn == true) {
-            let Study_Token = this.Intent_data["Study_Token"]
-            this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
-              this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
-                if (snapshot1.exists()) {
-                  snapshot1.forEach(snapshot2 => {
-                    let PhoneKey = snapshot2.child(`Study groups/${Study_Token}/People/${MyPhone.val()}`)
-                    if (PhoneKey.exists()) {
-                      PhoneKey.ref.set("Joining")
-                    }
-                  })
-                }
-              })
-            })
-            this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
-              this.Notification_data = {
-                Title: "Study Group",
-                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has accepted to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
-                type: "Study_group_Reply",
-                data: JSON.stringify({
-                  Date: this.Intent_data["Date"],
-                  Time: this.Intent_data["Time"],
-                  Place: this.Intent_data["Place"],
-                  Study_Token: this.Intent_data["Study_Token"]
-                })
-              }
-              this.sendNotification(this.Intent_data["Creator"])
-              this.answer = result.fulfillment.speech;
-            })
-          }
-          else if (result.action == "Study_group_Invitation-no" && this.SignedIn == true) {
-            let Study_Token = this.Intent_data["Study_Token"]
-            this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
-              this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
-                if (snapshot1.exists()) {
-                  snapshot1.forEach(snapshot2 => {
-                    let PhoneKey = snapshot2.child(`Study groups/${Study_Token}/People/${MyPhone.val()}`)
-                    if (PhoneKey.exists()) {
-                      PhoneKey.ref.set("Not joining")
-                    }
-                  })
-                }
-              })
-            })
-            this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot1 => {
-              this.Notification_data = {
-                Title: "Study Group",
-                Body: `${snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val()} has refused to join the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
-                type: "Study_group_Reply",
-                data: JSON.stringify({
-                  Date: this.Intent_data["Date"],
-                  Time: this.Intent_data["Time"],
-                  Place: this.Intent_data["Place"],
-                  Study_Token: this.Intent_data["Study_Token"]
-                })
-              }
-              this.sendNotification(this.Intent_data["Creator"])
-              this.answer = result.fulfillment.speech;
-            })
-          }
           else if (result.action == "Manage_study_groups" && this.SignedIn == true) {
             this.answer = result.fulfillment.speech;
             this.afDatabase.database.ref(`users/${this.Token}/Study groups`).once('value').then(snapshot1 => {
-              let study_group = {};
-              snapshot1.forEach(snapshot2 => {
-                study_group = {
-                  Date: snapshot2.child("Date").val(),
-                  Time: snapshot2.child("Time").val(),
-                  Place: snapshot2.child("Place").val(),
-                  Study_Token: snapshot2.key
-                }
-              })
-              this.Study_Groups.push(study_group)
+              if (snapshot1.exists()) {
+                this.Show_groups = 1
+                let study_group = {};
+                snapshot1.forEach(snapshot2 => {
+                  study_group = {
+                    Date: snapshot2.child("Date").val(),
+                    Time: snapshot2.child("Time").val(),
+                    Place: snapshot2.child("Place").val(),
+                    Study_Token: snapshot2.key
+                  }
+                })
+                this.Study_Groups.push(study_group)
+              }
             })
-            this.Show_groups = 1
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/universtes').child(result.parameters.country)
@@ -849,29 +793,28 @@ export class HomePage {
           snapshot1.child(group_key).ref.update({ People: group_people })
           this.Notification_data.data["Study_Token"] = group_key
           this.Notification_data.data = JSON.stringify(this.Notification_data.data)
-        })
-      }).then(() => {
-        tempFriends.forEach(tempFriendPrimary => {
-          let group_people = {}
-          tempFriends.forEach(tempFriendSecondary => {
-            group_people[tempFriendSecondary.Phone] = "Pending"
-          })
-          this.afDatabase.database.ref(`users/${tempFriendPrimary.Token}`).child("Study groups").once('value').then(snapshot1 => {
-            this.afDatabase.database.ref(`users/${this.Token}`).child("Phone").once('value').then(snapshot2 => {
-              group_people[snapshot2.val()] = "Joining"
-              let group = {}
-              group["Date"] = group_data["Date"]
-              group["Time"] = group_data["Time"]
-              group["Place"] = group_data["Place"]
-              group["Reminder"] = this.Make_Reminder(`${group_data["Date"]}, ${group_data["Time"]}`, 24)
-              snapshot1.child(group_key).ref.update(group)
-              snapshot1.child(group_key).ref.update({ People: group_people })
+          tempFriends.forEach(tempFriendPrimary => {
+            let group_people = {}
+            tempFriends.forEach(tempFriendSecondary => {
+              group_people[tempFriendSecondary.Phone] = "Pending"
             })
+            this.afDatabase.database.ref(`users/${tempFriendPrimary.Token}`).child("Study groups").once('value').then(snapshot1 => {
+              this.afDatabase.database.ref(`users/${this.Token}`).child("Phone").once('value').then(snapshot2 => {
+                group_people[snapshot2.val()] = "Joining"
+                let group = {}
+                group["Date"] = group_data["Date"]
+                group["Time"] = group_data["Time"]
+                group["Place"] = group_data["Place"]
+                group["Reminder"] = this.Make_Reminder(`${group_data["Date"]}, ${group_data["Time"]}`, 24)
+                snapshot1.child(group_key).ref.update(group)
+                snapshot1.child(group_key).ref.update({ People: group_people })
+              })
+            })
+            this.sendNotification(tempFriendPrimary.Token)
           })
-          this.sendNotification(tempFriendPrimary.Token)
+          this.answer = "I invited your selected friends to the study group!😊"
         })
       })
-      this.answer = "I invited your selected friends to the study group!😊"
     }
     else {
       this.answer = "Please invite at least 1 of your friends"
@@ -881,27 +824,25 @@ export class HomePage {
   Group_Select(Group) {
     this.answer = `Here are the people in the study group on ${Group["Date"]} at ${Group["Time"]} in ${Group["Place"]}`
     this.afDatabase.database.ref(`users/${this.Token}/Study groups/${Group["Study_Token"]}/People`).once('value').then(snapshot1 => {
-      let Study_People = [];
+      let People = [];
       snapshot1.forEach(snapshot2 => {
-        let Study_Person = {};
+        let Person = {};
         this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
           snapshot3.forEach(snapshot4 => {
             if (snapshot4.child("Phone").val() == snapshot2.key) {
-              Study_Person = {
-                Person: {
-                  Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                  Status: snapshot2.val()
-                }
+              Person = {
+                Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                Status: snapshot2.val()
               }
-              Study_People.push(Study_Person)
-            }
-            if (snapshot4.key == this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
-              this.Select_Groups = true
+              People.push(Person)
+              if (snapshot4.key == this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
+                this.Select_Groups = true
+              }
             }
           })
         })
       })
-      this.Current_Group["Study_People"] = Study_People
+      this.Current_Group["Study_People"] = People
       this.Current_Group["Study_Token"] = Group["Study_Token"]
     })
     this.Show_groups = 2
@@ -921,27 +862,41 @@ export class HomePage {
               }
             })
             this.afDatabase.database.ref(`users/${this.Token}/Study groups/${Study_Token}/People`).once('value').then(snapshot1 => {
-              let Study_People = [];
+              let People = [];
               snapshot1.forEach(snapshot2 => {
-                let Study_Person = {};
+                let Person = {};
                 this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
                   snapshot3.forEach(snapshot4 => {
                     if (snapshot4.child("Phone").val() == snapshot2.key) {
-                      Study_Person = {
-                        Person: {
-                          Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                          Status: snapshot2.val()
-                        }
+                      Person = {
+                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                        Status: snapshot2.val()
                       }
-                      Study_People.push(Study_Person)
+                      People.push(Person)
                     }
                   })
                 })
               })
-              this.Current_Group["Study_People"] = Study_People
+              this.Current_Group["Study_People"] = People
             })
           }
         })
+        if (this.Intent_data["Creator"] !== undefined) {
+          this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot => {
+            this.Notification_data = {
+              Title: 'Study group aceptance!',
+              Body: `${snapshot.child("First_name").val() + " " + snapshot.child("Last_name").val()} has accepted to join the  study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
+              type: 'Study_group_Reply',
+              data: JSON.stringify({
+                Date: `${this.Intent_data["Date"]}`,
+                Time: `${this.Intent_data["Time"]}`,
+                Place: `${this.Intent_data["Place"]}`,
+                Study_Token: `${this.Intent_data["Study_Token"]}`
+              })
+            }
+            this.sendNotification(this.Intent_data["Creator"])
+          })
+        }
       })
     }
     else if (event.toElement.innerHTML == "Refuse") {
@@ -956,27 +911,41 @@ export class HomePage {
               }
             })
             this.afDatabase.database.ref(`users/${this.Token}/Study groups/${Study_Token}/People`).once('value').then(snapshot1 => {
-              let Study_People = [];
+              let People = [];
               snapshot1.forEach(snapshot2 => {
-                let Study_Person = {};
+                let Person = {};
                 this.afDatabase.database.ref('users').once('value').then(snapshot3 => {
                   snapshot3.forEach(snapshot4 => {
                     if (snapshot4.child("Phone").val() == snapshot2.key) {
-                      Study_Person = {
-                        Person: {
-                          Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                          Status: snapshot2.val()
-                        }
+                      Person = {
+                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                        Status: snapshot2.val()
                       }
-                      Study_People.push(Study_Person)
+                      People.push(Person)
                     }
                   })
                 })
               })
-              this.Current_Group["Study_People"] = Study_People
+              this.Current_Group["Study_People"] = People
             })
           }
         })
+        if (this.Intent_data["Creator"] !== undefined) {
+          this.afDatabase.database.ref(`users/${this.Token}`).once('value').then(snapshot => {
+            this.Notification_data = {
+              Title: 'Study group refusal!',
+              Body: `${snapshot.child("First_name").val() + " " + snapshot.child("Last_name").val()} has refused to join the  study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`,
+              type: 'Study_group_Reply',
+              data: JSON.stringify({
+                Date: `${this.Intent_data["Date"]}`,
+                Time: `${this.Intent_data["Time"]}`,
+                Place: `${this.Intent_data["Place"]}`,
+                Study_Token: `${this.Intent_data["Study_Token"]}`
+              })
+            }
+            this.sendNotification(this.Intent_data["Creator"])
+          })
+        }
       })
     }
     this.Select_Groups = false

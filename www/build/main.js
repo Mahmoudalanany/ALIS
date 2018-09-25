@@ -183,8 +183,6 @@ var HomePage = /** @class */ (function () {
             _this.API_Agent = __WEBPACK_IMPORTED_MODULE_8_apiai__("7327b7cfa4a144a0b3924da4f9b375b9");
             _this.uuid = uuidv1();
             _this.Token = _this.Share.getToken();
-            // this.relevantMajors();
-            // this.showMajors();
             _this.Update_Time();
             _this.Alis_first = true;
             if (_this.Intent_type == "Welcome") {
@@ -232,23 +230,26 @@ var HomePage = /** @class */ (function () {
                     _this.SignedIn = true;
                     _this.Show_groups = 2;
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + _this.Intent_data["Study_Token"] + "/People").once('value').then(function (snapshot1) {
+                        var People = [];
                         snapshot1.forEach(function (snapshot2) {
-                            var Study_Person = {};
+                            var Person = {};
                             _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
                                 snapshot3.forEach(function (snapshot4) {
                                     if (snapshot4.child("Phone").val() == snapshot2.key) {
-                                        Study_Person = {
-                                            Person: {
-                                                Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                                                Status: snapshot2.val()
-                                            },
-                                            Study_Token: _this.Intent_data["Study_Token"]
+                                        Person = {
+                                            Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                            Status: snapshot2.val()
                                         };
-                                        _this.Current_Group.push(Study_Person);
+                                        People.push(Person);
+                                    }
+                                    if (snapshot4.key == _this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
+                                        _this.Select_Groups = true;
                                     }
                                 });
                             });
                         });
+                        _this.Current_Group["Study_People"] = People;
+                        _this.Current_Group["Study_Token"] = _this.Intent_data["Study_Token"];
                     });
                 }).once('error', function (error) {
                     console.log(error);
@@ -259,23 +260,22 @@ var HomePage = /** @class */ (function () {
                 _this.SignedIn = true;
                 _this.Show_groups = 2;
                 _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + _this.Intent_data["Study_Token"] + "/People").once('value').then(function (snapshot1) {
+                    var People = [];
                     snapshot1.forEach(function (snapshot2) {
-                        var Study_Person = {};
+                        var Person = {};
                         _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
                             snapshot3.forEach(function (snapshot4) {
                                 if (snapshot4.child("Phone").val() == snapshot2.key) {
-                                    Study_Person = {
-                                        Person: {
-                                            Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                                            Status: snapshot2.val()
-                                        },
-                                        Study_Token: _this.Intent_data["Study_Token"]
+                                    Person = {
+                                        Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                        Status: snapshot2.val()
                                     };
-                                    _this.Current_Group.push(Study_Person);
+                                    People.push(Person);
                                 }
                             });
                         });
                     });
+                    _this.Current_Group["Study_People"] = People;
                 });
             }
             else if (_this.Intent_type == "Student_activity_Acceptance") {
@@ -294,85 +294,6 @@ var HomePage = /** @class */ (function () {
             }
         });
     }
-    HomePage.prototype.ionViewDidEnter = function () {
-        var _this = this;
-        this.connected = this.network.onConnect().subscribe(function (data) {
-            console.log("You are now " + data.type + " via " + _this.network.type);
-            _this.offline_alert.dismiss();
-            _this.offline_alert = _this.alertCtrl.create({
-                title: "You're offline",
-                subTitle: "Alis can't reach you without internet connection",
-                enableBackdropDismiss: false
-            });
-        }, function (error) { return console.error(error); });
-        this.disconnected = this.network.onDisconnect().subscribe(function (data) {
-            console.log("You are now " + data.type + " via " + _this.network.type);
-            _this.offline_alert.present();
-        }, function (error) { return console.error(error); });
-    };
-    HomePage.prototype.ionViewWillLeave = function () {
-        this.connected.unsubscribe();
-        this.disconnected.unsubscribe();
-    };
-    HomePage.prototype.GetDate_and_Time = function () {
-        var d = new Date(), date = [(d.getMonth() + 1), d.getDate(), d.getFullYear()].join("/"), time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"), ampm = (d.getHours() < 12) ? "AM" : "PM";
-        return { 'Date': date, 'Time': time, 'AMPM': ampm };
-    };
-    HomePage.prototype.Update_Time = function () {
-        var d = new Date(), time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"), ampm = (d.getHours() < 12) ? "AM" : "PM";
-        this.CurrentTime = time + ' ' + ampm;
-    };
-    HomePage.prototype.SyncFriends = function () {
-        var _this = this;
-        this.contacts.find(['*'])
-            .then(function (contactslist) {
-            var numbers = [];
-            contactslist.forEach(function (data) {
-                if (data.name) {
-                    if (data.name.formatted == undefined) {
-                        return;
-                    }
-                }
-                else {
-                    return;
-                }
-                if (data.phoneNumbers) {
-                    var phones_1 = new Set();
-                    var phone_as_name = false;
-                    data.phoneNumbers.some(function (phonenumber) {
-                        phonenumber.value = phonenumber.value.replace(/ +/g, "");
-                        if (data.name.formatted.trim() != phonenumber.value) {
-                            phones_1.add(phonenumber.value);
-                        }
-                        else {
-                            phone_as_name = true;
-                            return true;
-                        }
-                    });
-                    if (phone_as_name) {
-                        return;
-                    }
-                    phones_1.forEach(function (phone) { numbers.push({ Phone: phone, Found: false }); });
-                }
-            });
-            var friends = [];
-            _this.afDatabase.database.ref('/users').once('value').then(function (snapshot1) {
-                if (snapshot1.exists()) {
-                    snapshot1.forEach(function (snapshot2) {
-                        for (var index = 0; index < numbers.length; index++) {
-                            if (snapshot2.child('Phone').val() !== snapshot1.child(_this.Token).child('Phone').val() && snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
-                                numbers[index].Found = true;
-                                friends.push(numbers[index].Phone);
-                                var data = { Friends: friends };
-                                _this.addData('/users', _this.Token, null, data).then().catch();
-                                break;
-                            }
-                        }
-                    });
-                }
-            });
-        });
-    };
     HomePage.prototype.ask = function () {
         var _this = this;
         if (this.question == undefined || this.question == null || this.question.trim() == '') {
@@ -405,9 +326,6 @@ var HomePage = /** @class */ (function () {
         this.Show_duration = false;
         this.Show_ChooseDuration = false;
         this.Show_WritePlace = false;
-        // this.date = false
-        // this.time = false
-        // this.duration = false
         this.content.scrollToBottom();
         this.chat = this.question;
         this.Update_Time();
@@ -747,81 +665,23 @@ var HomePage = /** @class */ (function () {
                         });
                     }
                 }
-                else if (result.action == "Study_group_Invitation-yes" && _this.SignedIn == true) {
-                    var Study_Token_1 = _this.Intent_data["Study_Token"];
-                    _this.afDatabase.database.ref("users/" + _this.Token + "/Phone").once('value').then(function (MyPhone) {
-                        _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
-                            if (snapshot1.exists()) {
-                                snapshot1.forEach(function (snapshot2) {
-                                    var PhoneKey = snapshot2.child("Study groups/" + Study_Token_1 + "/People/" + MyPhone.val());
-                                    if (PhoneKey.exists()) {
-                                        PhoneKey.ref.set("Joining");
-                                    }
-                                });
-                            }
-                        });
-                    });
-                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
-                        _this.Notification_data = {
-                            Title: "Study Group",
-                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has accepted to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
-                            type: "Study_group_Reply",
-                            data: JSON.stringify({
-                                Date: _this.Intent_data["Date"],
-                                Time: _this.Intent_data["Time"],
-                                Place: _this.Intent_data["Place"],
-                                Study_Token: _this.Intent_data["Study_Token"]
-                            })
-                        };
-                        _this.sendNotification(_this.Intent_data["Creator"]);
-                        _this.answer = result.fulfillment.speech;
-                    });
-                }
-                else if (result.action == "Study_group_Invitation-no" && _this.SignedIn == true) {
-                    var Study_Token_2 = _this.Intent_data["Study_Token"];
-                    _this.afDatabase.database.ref("users/" + _this.Token + "/Phone").once('value').then(function (MyPhone) {
-                        _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
-                            if (snapshot1.exists()) {
-                                snapshot1.forEach(function (snapshot2) {
-                                    var PhoneKey = snapshot2.child("Study groups/" + Study_Token_2 + "/People/" + MyPhone.val());
-                                    if (PhoneKey.exists()) {
-                                        PhoneKey.ref.set("Not joining");
-                                    }
-                                });
-                            }
-                        });
-                    });
-                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot1) {
-                        _this.Notification_data = {
-                            Title: "Study Group",
-                            Body: snapshot1.child('First_name').val() + " " + snapshot1.child('Last_name').val() + " has refused to join the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
-                            type: "Study_group_Reply",
-                            data: JSON.stringify({
-                                Date: _this.Intent_data["Date"],
-                                Time: _this.Intent_data["Time"],
-                                Place: _this.Intent_data["Place"],
-                                Study_Token: _this.Intent_data["Study_Token"]
-                            })
-                        };
-                        _this.sendNotification(_this.Intent_data["Creator"]);
-                        _this.answer = result.fulfillment.speech;
-                    });
-                }
                 else if (result.action == "Manage_study_groups" && _this.SignedIn == true) {
                     _this.answer = result.fulfillment.speech;
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups").once('value').then(function (snapshot1) {
-                        var study_group = {};
-                        snapshot1.forEach(function (snapshot2) {
-                            study_group = {
-                                Date: snapshot2.child("Date").val(),
-                                Time: snapshot2.child("Time").val(),
-                                Place: snapshot2.child("Place").val(),
-                                Study_Token: snapshot2.key
-                            };
-                        });
-                        _this.Study_Groups.push(study_group);
+                        if (snapshot1.exists()) {
+                            _this.Show_groups = 1;
+                            var study_group_1 = {};
+                            snapshot1.forEach(function (snapshot2) {
+                                study_group_1 = {
+                                    Date: snapshot2.child("Date").val(),
+                                    Time: snapshot2.child("Time").val(),
+                                    Place: snapshot2.child("Place").val(),
+                                    Study_Token: snapshot2.key
+                                };
+                            });
+                            _this.Study_Groups.push(study_group_1);
+                        }
                     });
-                    _this.Show_groups = 1;
                 }
                 else if (result.action == "showUniversities" && result.parameters.country != '' && _this.SignedIn == true) {
                     _this.afDatabase.database.ref('/universtes').child(result.parameters.country)
@@ -849,8 +709,7 @@ var HomePage = /** @class */ (function () {
                 else if (result.action == "Interviews_Scheduling" && _this.SignedIn == true) {
                     _this.answer = result.fulfillment.speech;
                     if (result.actionIncomplete == true) {
-                        if (result.parameters["studentActivity"] == "") {
-                        }
+                        if (result.parameters["studentActivity"] == "") { }
                         else if (result.parameters["day"] == "") {
                             _this.Show_date = true;
                             _this.Show_ChooseTime = true;
@@ -869,10 +728,8 @@ var HomePage = /** @class */ (function () {
                             _this.Show_ChooseDuration = false;
                             _this.Show_duration = true;
                             _this.Show_WritePlace = true;
-                            console.log("in duration");
                         }
                         else if (result.parameters["place"] == "") {
-                            console.log("in place");
                             _this.Show_duration = false;
                             _this.Show_WritePlace = false;
                         }
@@ -924,11 +781,66 @@ var HomePage = /** @class */ (function () {
         }
         this.question = null;
     };
+    HomePage.prototype.Update_Time = function () {
+        var d = new Date(), time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"), ampm = (d.getHours() < 12) ? "AM" : "PM";
+        this.CurrentTime = time + ' ' + ampm;
+    };
     HomePage.prototype.addData = function (collection, child, nextChild, data) {
         if (nextChild) {
             return this.afDatabase.database.ref(collection).child(child).child(nextChild).update(data);
         }
         return this.afDatabase.database.ref(collection).child(child).update(data);
+    };
+    HomePage.prototype.SyncFriends = function () {
+        var _this = this;
+        this.contacts.find(['*'])
+            .then(function (contactslist) {
+            var numbers = [];
+            contactslist.forEach(function (data) {
+                if (data.name) {
+                    if (data.name.formatted == undefined) {
+                        return;
+                    }
+                }
+                else {
+                    return;
+                }
+                if (data.phoneNumbers) {
+                    var phones_1 = new Set();
+                    var phone_as_name = false;
+                    data.phoneNumbers.some(function (phonenumber) {
+                        phonenumber.value = phonenumber.value.replace(/ +/g, "");
+                        if (data.name.formatted.trim() != phonenumber.value) {
+                            phones_1.add(phonenumber.value);
+                        }
+                        else {
+                            phone_as_name = true;
+                            return true;
+                        }
+                    });
+                    if (phone_as_name) {
+                        return;
+                    }
+                    phones_1.forEach(function (phone) { numbers.push({ Phone: phone, Found: false }); });
+                }
+            });
+            var friends = [];
+            _this.afDatabase.database.ref('/users').once('value').then(function (snapshot1) {
+                if (snapshot1.exists()) {
+                    snapshot1.forEach(function (snapshot2) {
+                        for (var index = 0; index < numbers.length; index++) {
+                            if (snapshot2.child('Phone').val() !== snapshot1.child(_this.Token).child('Phone').val() && snapshot2.child('Phone').val() == numbers[index].Phone && numbers[index].Found == false) {
+                                numbers[index].Found = true;
+                                friends.push(numbers[index].Phone);
+                                var data = { Friends: friends };
+                                _this.addData('/users', _this.Token, null, data).then().catch();
+                                break;
+                            }
+                        }
+                    });
+                }
+            });
+        });
     };
     HomePage.prototype.rating = function (x) {
         this.rated = x;
@@ -964,29 +876,28 @@ var HomePage = /** @class */ (function () {
                     snapshot1.child(group_key).ref.update({ People: group_people });
                     _this.Notification_data.data["Study_Token"] = group_key;
                     _this.Notification_data.data = JSON.stringify(_this.Notification_data.data);
-                });
-            }).then(function () {
-                tempFriends.forEach(function (tempFriendPrimary) {
-                    var group_people = {};
-                    tempFriends.forEach(function (tempFriendSecondary) {
-                        group_people[tempFriendSecondary.Phone] = "Pending";
-                    });
-                    _this.afDatabase.database.ref("users/" + tempFriendPrimary.Token).child("Study groups").once('value').then(function (snapshot1) {
-                        _this.afDatabase.database.ref("users/" + _this.Token).child("Phone").once('value').then(function (snapshot2) {
-                            group_people[snapshot2.val()] = "Joining";
-                            var group = {};
-                            group["Date"] = group_data["Date"];
-                            group["Time"] = group_data["Time"];
-                            group["Place"] = group_data["Place"];
-                            group["Reminder"] = _this.Make_Reminder(group_data["Date"] + ", " + group_data["Time"], 24);
-                            snapshot1.child(group_key).ref.update(group);
-                            snapshot1.child(group_key).ref.update({ People: group_people });
+                    tempFriends.forEach(function (tempFriendPrimary) {
+                        var group_people = {};
+                        tempFriends.forEach(function (tempFriendSecondary) {
+                            group_people[tempFriendSecondary.Phone] = "Pending";
                         });
+                        _this.afDatabase.database.ref("users/" + tempFriendPrimary.Token).child("Study groups").once('value').then(function (snapshot1) {
+                            _this.afDatabase.database.ref("users/" + _this.Token).child("Phone").once('value').then(function (snapshot2) {
+                                group_people[snapshot2.val()] = "Joining";
+                                var group = {};
+                                group["Date"] = group_data["Date"];
+                                group["Time"] = group_data["Time"];
+                                group["Place"] = group_data["Place"];
+                                group["Reminder"] = _this.Make_Reminder(group_data["Date"] + ", " + group_data["Time"], 24);
+                                snapshot1.child(group_key).ref.update(group);
+                                snapshot1.child(group_key).ref.update({ People: group_people });
+                            });
+                        });
+                        _this.sendNotification(tempFriendPrimary.Token);
                     });
-                    _this.sendNotification(tempFriendPrimary.Token);
+                    _this.answer = "I invited your selected friends to the study group!😊";
                 });
             });
-            this.answer = "I invited your selected friends to the study group!😊";
         }
         else {
             this.answer = "Please invite at least 1 of your friends";
@@ -996,27 +907,25 @@ var HomePage = /** @class */ (function () {
         var _this = this;
         this.answer = "Here are the people in the study group on " + Group["Date"] + " at " + Group["Time"] + " in " + Group["Place"];
         this.afDatabase.database.ref("users/" + this.Token + "/Study groups/" + Group["Study_Token"] + "/People").once('value').then(function (snapshot1) {
-            var Study_People = [];
+            var People = [];
             snapshot1.forEach(function (snapshot2) {
-                var Study_Person = {};
+                var Person = {};
                 _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
                     snapshot3.forEach(function (snapshot4) {
                         if (snapshot4.child("Phone").val() == snapshot2.key) {
-                            Study_Person = {
-                                Person: {
-                                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                                    Status: snapshot2.val()
-                                }
+                            Person = {
+                                Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                Status: snapshot2.val()
                             };
-                            Study_People.push(Study_Person);
-                        }
-                        if (snapshot4.key == _this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
-                            _this.Select_Groups = true;
+                            People.push(Person);
+                            if (snapshot4.key == _this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
+                                _this.Select_Groups = true;
+                            }
                         }
                     });
                 });
             });
-            _this.Current_Group["Study_People"] = Study_People;
+            _this.Current_Group["Study_People"] = People;
             _this.Current_Group["Study_Token"] = Group["Study_Token"];
         });
         this.Show_groups = 2;
@@ -1036,27 +945,41 @@ var HomePage = /** @class */ (function () {
                             }
                         });
                         _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + Study_Token + "/People").once('value').then(function (snapshot1) {
-                            var Study_People = [];
+                            var People = [];
                             snapshot1.forEach(function (snapshot2) {
-                                var Study_Person = {};
+                                var Person = {};
                                 _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
                                     snapshot3.forEach(function (snapshot4) {
                                         if (snapshot4.child("Phone").val() == snapshot2.key) {
-                                            Study_Person = {
-                                                Person: {
-                                                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                                                    Status: snapshot2.val()
-                                                }
+                                            Person = {
+                                                Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                                Status: snapshot2.val()
                                             };
-                                            Study_People.push(Study_Person);
+                                            People.push(Person);
                                         }
                                     });
                                 });
                             });
-                            _this.Current_Group["Study_People"] = Study_People;
+                            _this.Current_Group["Study_People"] = People;
                         });
                     }
                 });
+                if (_this.Intent_data["Creator"] !== undefined) {
+                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot) {
+                        _this.Notification_data = {
+                            Title: 'Study group aceptance!',
+                            Body: snapshot.child("First_name").val() + " " + snapshot.child("Last_name").val() + " has accepted to join the  study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
+                            type: 'Study_group_Reply',
+                            data: JSON.stringify({
+                                Date: "" + _this.Intent_data["Date"],
+                                Time: "" + _this.Intent_data["Time"],
+                                Place: "" + _this.Intent_data["Place"],
+                                Study_Token: "" + _this.Intent_data["Study_Token"]
+                            })
+                        };
+                        _this.sendNotification(_this.Intent_data["Creator"]);
+                    });
+                }
             });
         }
         else if (event.toElement.innerHTML == "Refuse") {
@@ -1071,76 +994,46 @@ var HomePage = /** @class */ (function () {
                             }
                         });
                         _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups/" + Study_Token + "/People").once('value').then(function (snapshot1) {
-                            var Study_People = [];
+                            var People = [];
                             snapshot1.forEach(function (snapshot2) {
-                                var Study_Person = {};
+                                var Person = {};
                                 _this.afDatabase.database.ref('users').once('value').then(function (snapshot3) {
                                     snapshot3.forEach(function (snapshot4) {
                                         if (snapshot4.child("Phone").val() == snapshot2.key) {
-                                            Study_Person = {
-                                                Person: {
-                                                    Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
-                                                    Status: snapshot2.val()
-                                                }
+                                            Person = {
+                                                Name: snapshot4.child('First_name').val() + " " + snapshot4.child('Last_name').val(),
+                                                Status: snapshot2.val()
                                             };
-                                            Study_People.push(Study_Person);
+                                            People.push(Person);
                                         }
                                     });
                                 });
                             });
-                            _this.Current_Group["Study_People"] = Study_People;
+                            _this.Current_Group["Study_People"] = People;
                         });
                     }
                 });
+                if (_this.Intent_data["Creator"] !== undefined) {
+                    _this.afDatabase.database.ref("users/" + _this.Token).once('value').then(function (snapshot) {
+                        _this.Notification_data = {
+                            Title: 'Study group refusal!',
+                            Body: snapshot.child("First_name").val() + " " + snapshot.child("Last_name").val() + " has refused to join the  study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"],
+                            type: 'Study_group_Reply',
+                            data: JSON.stringify({
+                                Date: "" + _this.Intent_data["Date"],
+                                Time: "" + _this.Intent_data["Time"],
+                                Place: "" + _this.Intent_data["Place"],
+                                Study_Token: "" + _this.Intent_data["Study_Token"]
+                            })
+                        };
+                        _this.sendNotification(_this.Intent_data["Creator"]);
+                    });
+                }
             });
         }
         this.Select_Groups = false;
         this.Study_Groups = [];
         this.Current_Group = [];
-    };
-    HomePage.prototype.Show_Applicant = function (applicant, i) {
-        applicant["IsViewed"] = true;
-        this.applicants[i]["IsViewed"] = true;
-    };
-    HomePage.prototype.Hide_Applicant = function (i) {
-        this.applicants[i]["IsViewed"] = false;
-    };
-    HomePage.prototype.Action_on_Applicant = function (event, i) {
-        if (event.toElement.innerHTML == "Accept") {
-            this.applicants[i]["Status"] = "Accepted";
-            this.afDatabase.database.ref(this.SU_name + "/applicants/" + this.applicants[i]["Applicant_Token"] + "/status").set("Accepted");
-            this.Notification_data = {
-                Title: this.SU_name + " Application Request",
-                Body: "You have been chosen by " + this.SU_name + " to be interviewed\uD83D\uDE0A",
-                type: "Student_activity_Acceptance",
-                data: JSON.stringify({
-                    SU_name: this.SU_name
-                })
-            };
-        }
-        else if (event.toElement.innerHTML == "Refuse") {
-            this.applicants[i]["Status"] = "Refused";
-            this.afDatabase.database.ref(this.SU_name + "/applicants/" + this.applicants[i]["Applicant_Token"] + "/status").set("Refused");
-            this.Notification_data = {
-                Title: this.SU_name + " Application Request",
-                Body: "We're sorry to tell you that you won't be able to join " + this.SU_name + " for this season. Don't worry, you can still apply to other student activites\uD83D\uDE0A",
-                type: "Welcome",
-                data: JSON.stringify({})
-            };
-        }
-        this.sendNotification(this.applicants[i]["Applicant_Token"]);
-    };
-    HomePage.prototype.Choose_Interview_slot = function (slot) {
-        this.answer = "Thanks for your time. " + this.Intent_data["SU_name"] + " is waiting to see you on " + slot.Date + " at " + slot.Start_time + " in " + slot.Place;
-        this.afDatabase.database.ref(this.Intent_data["SU_name"] + "/applicants/" + this.Token + "/slot").update({
-            Date: slot.Date,
-            Start_time: slot.Start_time,
-            End_time: slot.End_time,
-            Place: slot.Place,
-            Reminder: this.Make_Reminder(slot.Date + ", " + slot.Start_time, 24)
-        });
-        this.Show_Interview_slots = false;
-        this.Interview_slots = [];
     };
     HomePage.prototype.Tutor_Select = function (Tutor) {
         this.Current_Tutor = Tutor;
@@ -1229,6 +1122,50 @@ var HomePage = /** @class */ (function () {
     HomePage.prototype.addFormAnswers = function (answer) {
         this.addData(this.SU_name, "applicants/" + this.Token + "/responses", null, answer);
         this.addData(this.SU_name, "applicants/" + this.Token, null, { status: "Pending" });
+    };
+    HomePage.prototype.Show_Applicant = function (applicant, i) {
+        applicant["IsViewed"] = true;
+        this.applicants[i]["IsViewed"] = true;
+    };
+    HomePage.prototype.Hide_Applicant = function (i) {
+        this.applicants[i]["IsViewed"] = false;
+    };
+    HomePage.prototype.Action_on_Applicant = function (event, i) {
+        if (event.toElement.innerHTML == "Accept") {
+            this.applicants[i]["Status"] = "Accepted";
+            this.afDatabase.database.ref(this.SU_name + "/applicants/" + this.applicants[i]["Applicant_Token"] + "/status").set("Accepted");
+            this.Notification_data = {
+                Title: this.SU_name + " Application Request",
+                Body: "You have been chosen by " + this.SU_name + " to be interviewed\uD83D\uDE0A",
+                type: "Student_activity_Acceptance",
+                data: JSON.stringify({
+                    SU_name: this.SU_name
+                })
+            };
+        }
+        else if (event.toElement.innerHTML == "Refuse") {
+            this.applicants[i]["Status"] = "Refused";
+            this.afDatabase.database.ref(this.SU_name + "/applicants/" + this.applicants[i]["Applicant_Token"] + "/status").set("Refused");
+            this.Notification_data = {
+                Title: this.SU_name + " Application Request",
+                Body: "We're sorry to tell you that you won't be able to join " + this.SU_name + " for this season. Don't worry, you can still apply to other student activites\uD83D\uDE0A",
+                type: "Welcome",
+                data: JSON.stringify({})
+            };
+        }
+        this.sendNotification(this.applicants[i]["Applicant_Token"]);
+    };
+    HomePage.prototype.Choose_Interview_slot = function (slot) {
+        this.answer = "Thanks for your time. " + this.Intent_data["SU_name"] + " is waiting to see you on " + slot.Date + " at " + slot.Start_time + " in " + slot.Place;
+        this.afDatabase.database.ref(this.Intent_data["SU_name"] + "/applicants/" + this.Token + "/slot").update({
+            Date: slot.Date,
+            Start_time: slot.Start_time,
+            End_time: slot.End_time,
+            Place: slot.Place,
+            Reminder: this.Make_Reminder(slot.Date + ", " + slot.Start_time, 24)
+        });
+        this.Show_Interview_slots = false;
+        this.Interview_slots = [];
     };
     HomePage.prototype.editDistance = function (s1, s2) {
         var costs = new Array();
@@ -1333,6 +1270,26 @@ var HomePage = /** @class */ (function () {
             });
         });
     };
+    HomePage.prototype.ionViewDidEnter = function () {
+        var _this = this;
+        this.connected = this.network.onConnect().subscribe(function (data) {
+            console.log("You are now " + data.type + " via " + _this.network.type);
+            _this.offline_alert.dismiss();
+            _this.offline_alert = _this.alertCtrl.create({
+                title: "You're offline",
+                subTitle: "Alis can't reach you without internet connection",
+                enableBackdropDismiss: false
+            });
+        }, function (error) { return console.error(error); });
+        this.disconnected = this.network.onDisconnect().subscribe(function (data) {
+            console.log("You are now " + data.type + " via " + _this.network.type);
+            _this.offline_alert.present();
+        }, function (error) { return console.error(error); });
+    };
+    HomePage.prototype.ionViewWillLeave = function () {
+        this.connected.unsubscribe();
+        this.disconnected.unsubscribe();
+    };
     __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["_8" /* ViewChild */])(__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["b" /* Content */]),
         __metadata("design:type", __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["b" /* Content */])
@@ -1343,7 +1300,7 @@ var HomePage = /** @class */ (function () {
     ], HomePage.prototype, "slides", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n    <ion-navbar>\n        <ion-title>\n            <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n        <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n            <img class="logo" src="../assets/imgs/Purple-PNG.png">\n        </ion-title>\n    </ion-navbar>\n</ion-header>\n\n<ion-content no-bounce>\n    <ion-list>\n        <div *ngIf="answer?.length > 0" no-lines>\n            <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n                <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n                <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n            </ion-card>\n\n\n            <ion-card text-wrap class="purple">\n                <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n                <ion-card *ngIf="need_tutor == 1">\n                    <ion-slides class="slider-slide">\n                        <ion-slide class="slider-slide" *ngFor="let Tutor of Tutors">\n                            <ion-toolbar>\n                                <ion-buttons end>\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n                                </ion-buttons>\n                            </ion-toolbar>\n                            <img src="{{Tutor.image}}" class="slide-image" />\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.name}}</h1>\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.phone}}</h1>\n                            <button ion-button color="primary" class="joinbutton" (click)="Tutor_Select(Tutor)" round>\n                                Join Tutor\n                            </button>\n                        </ion-slide>\n                    </ion-slides>\n                </ion-card>\n\n                <ion-list *ngIf="need_tutor == 2">\n                    <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n                        <h2><i>Slot</i></h2>\n                        <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n                        <h2><i>Place</i></h2>\n                        <p>{{lesson.place}}</p>\n                        <h2><i>Cost</i></h2>\n                        <p>{{lesson.cost}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Tutor_Reserve(i)" item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n\n                <ion-list *ngIf="Show_applicants == true">\n                    <div *ngFor="let applicant of applicants; let i = index">\n                        <ion-item style="border-bottom: 1px solid purple;">\n                            <h2><i>{{applicant.Name}}</i></h2>\n                            <p>{{applicant.Status}}</p>\n                            <ion-icon *ngIf="applicant.IsViewed == false" name="arrow-dropright-circle" class="select_icon"\n                                (click)="Show_Applicant(applicant,i)" item-start></ion-icon>\n                            <ion-icon *ngIf="applicant.IsViewed == true" name="arrow-dropdown-circle" class="select_icon"\n                                (click)="Hide_Applicant(i)" item-start></ion-icon>\n                        </ion-item>\n\n                        <ion-list *ngIf="Show_application == true && applicant.IsViewed == true">\n                            <ion-item *ngFor="let Response of applicant.Responses;let i = index">\n                                <h2><i>{{applicant.Questions[i]}}</i></h2>\n                                <p>{{Response}}</p>\n                            </ion-item>\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n                                (click)="Action_on_Applicant($event,i)">Accept</button>\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n                                (click)="Action_on_Applicant($event,i)">Refuse</button>\n                        </ion-list>\n                    </div>\n                </ion-list>\n\n                <ion-list *ngIf="Show_Interview_slots == true">\n                    <ion-item *ngFor="let slot of Interview_slots; let i = index" style="border-bottom: 1px solid purple;">\n                        <h2><i>Slot</i></h2>\n                        <p>{{slot.Date}}, {{slot.Start_time}} -> {{slot.End_time}}</p>\n                        <h2><i>Place</i></h2>\n                        <p>{{slot.Place}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Choose_Interview_slot(slot)"\n                            item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n                <div *ngIf="tutor_Feedback == true">\n                    <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n                        name="star" (click)="rating(1)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n                        (click)="rating(2)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n                        (click)="rating(3)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n                </div>\n\n                <div *ngIf="Show_date == true">\n                    <ion-item>\n                        <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="date"></ion-datetime>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=date;ask()">Choose\n                        Time</button>\n                </div>\n\n                <div *ngIf="Show_time == true">\n                    <ion-item>\n                        <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="time"></ion-datetime>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_ChooseFriends == true" (click)="question=time;ask()">Choose\n                        friends</button>\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=time;ask()">Choose\n                        Time</button>\n                    <button ion-button clear block *ngIf="Show_ChooseDuration == true" (click)="question=time;ask()">Choose\n                        Duration</button>\n                </div>\n\n                <div *ngIf="Show_duration == true">\n                    <ion-item>\n                        <ion-label>Duration</ion-label>\n                        <ion-select [(ngModel)]="duration">\n                            <div *ngFor="let number of \' \'.repeat(60).split(\'\'), let i = index">\n                                <ion-option value="{{i+1}}">{{i+1}}</ion-option>\n                            </div>\n                        </ion-select>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_WritePlace == true" (click)="question=duration;ask()">Write\n                        Place</button>\n                </div>\n\n                <ion-list *ngIf="Show_groups == 1">\n                    <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">\n                        <h2><i>{{Group.Place}}</i></h2>\n                        <p>{{Group.Date}}, {{Group.Time}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Group_Select(Group)"\n                            item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n                <ion-list *ngIf="Show_groups == 2">\n                    <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">\n                        <h2><i>{{Study_Person.Person.Name}}:</i></h2>\n                        <p item-end>{{Study_Person.Person.Status}}</p>\n                    </ion-item>\n                </ion-list>\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>\n\n                <ion-list *ngIf="Show_Friends == true">\n                    <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n                        <ion-label>\n                            <h2><i>{{Friend.Name}}:</i></h2>\n                        </ion-label>\n                        <p item-end>{{Friend.Phone}}</p>\n                        <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n                    </ion-item>\n                </ion-list>\n                <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n                <ion-card *ngIf="need_universty == 1">\n                    <ion-slides class="slider-slide">\n                        <ion-slide class="slider-slide" *ngFor="let slide of universities; let i = index">\n                            <ion-toolbar>\n                                <ion-buttons end>\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n                                </ion-buttons>\n                            </ion-toolbar>\n                            <img src="{{slide.img_url}}" class="slide-image" />\n                            <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>\n                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>\n                            <p class="descriptioncard">{{slide.description}}</p>\n\n                            <button ion-button large clear icon-end color="primary" (click)="selectUniversity(i)"\n                                disabled={{interestedButton}}>\n                                Interested\n                                <ion-icon name="ios-flash-outline"></ion-icon>\n                            </button>\n\n                        </ion-slide>\n                    </ion-slides>\n                </ion-card>\n\n\n                <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n            </ion-card>\n            <br>\n        </div>\n    </ion-list>\n    <div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n        <div style="text-align: center" class="options">\n            <div class="options" no-lines *ngFor="let option of options;" text-center>\n                <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n            </div>\n\n        </div>\n    </div>\n</ion-content>\n\n<ion-footer style="background-color:#ffffff">\n    <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n        <div class="options" no-lines *ngFor="let option of options;" text-center>\n            <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n        </div>\n    </div>\n    <div class="flex-items" padding>\n        <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n        <button class="circularbutton" ion-button icon-only (click)="ask()">\n            <ion-icon name="send" class="send"></ion-icon>\n        </button>\n    </div>\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n    <ion-navbar>\n        <ion-title>\n            <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n        <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n            <img class="logo" src="../assets/imgs/Purple-PNG.png">\n        </ion-title>\n    </ion-navbar>\n</ion-header>\n\n<ion-content no-bounce>\n    <ion-list>\n        <div *ngIf="answer?.length > 0" no-lines>\n            <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n                <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n                <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n            </ion-card>\n\n\n            <ion-card text-wrap class="purple">\n                <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n                <ion-card *ngIf="need_tutor == 1">\n                    <ion-slides class="slider-slide">\n                        <ion-slide class="slider-slide" *ngFor="let Tutor of Tutors">\n                            <ion-toolbar>\n                                <ion-buttons end>\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n                                </ion-buttons>\n                            </ion-toolbar>\n                            <img src="{{Tutor.image}}" class="slide-image" />\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.name}}</h1>\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.phone}}</h1>\n                            <button ion-button color="primary" class="joinbutton" (click)="Tutor_Select(Tutor)" round>\n                                Join Tutor\n                            </button>\n                        </ion-slide>\n                    </ion-slides>\n                </ion-card>\n\n                <ion-list *ngIf="need_tutor == 2">\n                    <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n                        <h2><i>Slot</i></h2>\n                        <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n                        <h2><i>Place</i></h2>\n                        <p>{{lesson.place}}</p>\n                        <h2><i>Cost</i></h2>\n                        <p>{{lesson.cost}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Tutor_Reserve(i)" item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n\n                <ion-list *ngIf="Show_applicants == true">\n                    <div *ngFor="let applicant of applicants; let i = index">\n                        <ion-item style="border-bottom: 1px solid purple;">\n                            <h2><i>{{applicant.Name}}</i></h2>\n                            <p>{{applicant.Status}}</p>\n                            <ion-icon *ngIf="applicant.IsViewed == false" name="arrow-dropright-circle" class="select_icon"\n                                (click)="Show_Applicant(applicant,i)" item-start></ion-icon>\n                            <ion-icon *ngIf="applicant.IsViewed == true" name="arrow-dropdown-circle" class="select_icon"\n                                (click)="Hide_Applicant(i)" item-start></ion-icon>\n                        </ion-item>\n\n                        <ion-list *ngIf="Show_application == true && applicant.IsViewed == true">\n                            <ion-item *ngFor="let Response of applicant.Responses;let i = index">\n                                <h2><i>{{applicant.Questions[i]}}</i></h2>\n                                <p>{{Response}}</p>\n                            </ion-item>\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n                                (click)="Action_on_Applicant($event,i)">Accept</button>\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n                                (click)="Action_on_Applicant($event,i)">Refuse</button>\n                        </ion-list>\n                    </div>\n                </ion-list>\n\n                <ion-list *ngIf="Show_Interview_slots == true">\n                    <ion-item *ngFor="let slot of Interview_slots; let i = index" style="border-bottom: 1px solid purple;">\n                        <h2><i>Slot</i></h2>\n                        <p>{{slot.Date}}, {{slot.Start_time}} -> {{slot.End_time}}</p>\n                        <h2><i>Place</i></h2>\n                        <p>{{slot.Place}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Choose_Interview_slot(slot)"\n                            item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n                <div *ngIf="tutor_Feedback == true">\n                    <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n                        name="star" (click)="rating(1)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n                        (click)="rating(2)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n                        (click)="rating(3)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n                    <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n                </div>\n\n                <div *ngIf="Show_date == true">\n                    <ion-item>\n                        <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="date"></ion-datetime>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=date;ask()">Choose\n                        Time</button>\n                </div>\n\n                <div *ngIf="Show_time == true">\n                    <ion-item>\n                        <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="time"></ion-datetime>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_ChooseFriends == true" (click)="question=time;ask()">Choose\n                        friends</button>\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=time;ask()">Choose\n                        Time</button>\n                    <button ion-button clear block *ngIf="Show_ChooseDuration == true" (click)="question=time;ask()">Choose\n                        Duration</button>\n                </div>\n\n                <div *ngIf="Show_duration == true">\n                    <ion-item>\n                        <ion-label>Duration</ion-label>\n                        <ion-select [(ngModel)]="duration">\n                            <div *ngFor="let number of \' \'.repeat(60).split(\'\'), let i = index">\n                                <ion-option value="{{i+1}}">{{i+1}}</ion-option>\n                            </div>\n                        </ion-select>\n                    </ion-item>\n                    <button ion-button clear block *ngIf="Show_WritePlace == true" (click)="question=duration;ask()">Write\n                        Place</button>\n                </div>\n\n                <ion-list *ngIf="Show_groups == 1">\n                    <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">\n                        <h2><i>{{Group.Place}}</i></h2>\n                        <p>{{Group.Date}}, {{Group.Time}}</p>\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Group_Select(Group)"\n                            item-end></ion-icon>\n                    </ion-item>\n                </ion-list>\n\n                <ion-list *ngIf="Show_groups == 2">\n                    <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">\n                        <h2><i>{{Study_Person.Name}}:</i></h2>\n                        <p item-end>{{Study_Person.Status}}</p>\n                    </ion-item>\n                </ion-list>\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>\n\n                <ion-list *ngIf="Show_Friends == true">\n                    <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n                        <ion-label>\n                            <h2><i>{{Friend.Name}}:</i></h2>\n                        </ion-label>\n                        <p item-end>{{Friend.Phone}}</p>\n                        <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n                    </ion-item>\n                </ion-list>\n                <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n                <ion-card *ngIf="need_universty == 1">\n                    <ion-slides class="slider-slide">\n                        <ion-slide class="slider-slide" *ngFor="let slide of universities; let i = index">\n                            <ion-toolbar>\n                                <ion-buttons end>\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n                                </ion-buttons>\n                            </ion-toolbar>\n                            <img src="{{slide.img_url}}" class="slide-image" />\n                            <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>\n                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>\n                            <p class="descriptioncard">{{slide.description}}</p>\n\n                            <button ion-button large clear icon-end color="primary" (click)="selectUniversity(i)"\n                                disabled={{interestedButton}}>\n                                Interested\n                                <ion-icon name="ios-flash-outline"></ion-icon>\n                            </button>\n\n                        </ion-slide>\n                    </ion-slides>\n                </ion-card>\n\n\n                <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n            </ion-card>\n            <br>\n        </div>\n    </ion-list>\n    <div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n        <div style="text-align: center" class="options">\n            <div class="options" no-lines *ngFor="let option of options;" text-center>\n                <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n            </div>\n\n        </div>\n    </div>\n</ion-content>\n\n<ion-footer style="background-color:#ffffff">\n    <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n        <div class="options" no-lines *ngFor="let option of options;" text-center>\n            <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n        </div>\n    </div>\n    <div class="flex-items" padding>\n        <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n        <button class="circularbutton" ion-button icon-only (click)="ask()">\n            <ion-icon name="send" class="send"></ion-icon>\n        </button>\n    </div>\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["f" /* NavController */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["g" /* Platform */], __WEBPACK_IMPORTED_MODULE_4__angular_core__["M" /* NgZone */], __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__["a" /* AngularFireDatabase */], __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__["a" /* SharingService */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__["a" /* Contacts */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__["a" /* Network */], __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__["a" /* Calendar */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__["a" /* FCM */], __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__["a" /* HttpClient */]])
     ], HomePage);
