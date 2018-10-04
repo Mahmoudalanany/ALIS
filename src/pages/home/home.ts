@@ -35,6 +35,8 @@ export class HomePage {
   rated;
   API_Agent: APIModule.Application;
   uuid;
+  session_log = '';
+  session_date;
   connected: Subscription;
   disconnected: Subscription;
   offline_alert: Alert;
@@ -71,22 +73,31 @@ export class HomePage {
   Show_ChooseDuration = false
   Show_WritePlace = false
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM, private http: HttpClient) {
-    this.offline_alert = this.alertCtrl.create({
-      title: "You're offline",
-      subTitle: "Alis can't reach you without internet connection",
-      enableBackdropDismiss: false
-    });
-
+    this.ngZone.run(() => {
+      this.offline_alert = this.alertCtrl.create({
+        title: "You're offline",
+        subTitle: "Alis can't reach you without internet connection",
+        enableBackdropDismiss: false
+      });
+    })
     if (!navigator.onLine) {
-      this.offline_alert.present();
+      this.ngZone.run(() => {
+        this.offline_alert.present();
+      })
     }
 
     fcm.onNotification().subscribe(notification => {
-      this.SignedIn = true;
+      this.ngZone.run(() => {
+        this.SignedIn = true;
+      })
       if (notification.wasTapped) {
         console.log("Received in background");
-        this.Intent_type = notification.type
-        this.Intent_data = JSON.parse(notification.data)
+        this.ngZone.run(() => {
+          this.Intent_type = notification.type
+        })
+        this.ngZone.run(() => {
+          this.Intent_data = JSON.parse(notification.data)
+        })
         console.log(this.Intent_type);
         console.log(this.Intent_data);
       } else {
@@ -97,20 +108,38 @@ export class HomePage {
     })
 
     platform.ready().then(() => {
-      this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
-      this.uuid = uuidv1()
-      this.Token = this.Share.getToken();
+      this.ngZone.run(() => {
+        this.API_Agent = APIModule("7327b7cfa4a144a0b3924da4f9b375b9");
+      })
+      this.ngZone.run(() => {
+        this.uuid = uuidv1()
+      })
+      this.ngZone.run(() => {
+        this.session_date = new Date().toLocaleDateString()
+      })
+      this.afDatabase.database.ref(`sessions/${this.uuid}/Date`).set(this.session_date)
+      this.ngZone.run(() => {
+        this.Token = this.Share.getToken();
+      })
       this.Update_Time()
-      this.Alis_first = true
+      this.ngZone.run(() => {
+        this.Alis_first = true
+      })
       if (this.Intent_type == "Welcome") {
         this.afDatabase.database.ref('/users').once('value').then((snapshot1) => {
           if (snapshot1.child(this.Token).exists()) {
             this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot1.child(this.Token).child('First_name').val() } }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
-                this.answer = speech;
-                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.options = snapshot1.val() })
-                this.SignedIn = true;
+                this.ngZone.run(() => {
+                  this.answer = speech;
+                })
+                this.session_log += 'Alis:' + this.answer + '<*>'
+                this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
+                this.ngZone.run(() => {
+                  this.SignedIn = true;
+                })
               }).once('error', (error) => {
                 console.log(error);
               }).end();
@@ -118,8 +147,12 @@ export class HomePage {
             this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
-                this.answer = speech;
-                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.options = snapshot1.val() })
+                this.ngZone.run(() => {
+                  this.answer = speech;
+                })
+                this.session_log += 'Alis: ' + this.answer + '<*>'
+                this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
               }).once('error', (error) => {
                 console.log(error);
               }).end();
@@ -129,8 +162,12 @@ export class HomePage {
       else if (this.Intent_type == "Rating") {
         this.API_Agent.eventRequest({ name: "getFeedback" }, { sessionId: this.uuid })
           .once('response', ({ result: { fulfillment: { speech } } }) => {
-            this.answer = speech;
-            this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.options = snapshot1.val() })
+            this.ngZone.run(() => {
+              this.answer = speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
           }).once('error', (error) => {
             console.log(error);
           }).end();
@@ -138,9 +175,17 @@ export class HomePage {
       else if (this.Intent_type == "Study_group_Invitation") {
         this.API_Agent.eventRequest({ name: "Study_group_Invitation", data: { 'Name': this.Intent_data["Name"], 'Date': this.Intent_data["Date"], 'Time': this.Intent_data["Time"], 'Place': this.Intent_data["Place"] } }, { sessionId: this.uuid })
           .once('response', ({ result: { fulfillment: { speech } } }) => {
-            this.answer = speech;
-            this.SignedIn = true;
-            this.Show_groups = 2;
+            this.ngZone.run(() => {
+              this.answer = speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            this.ngZone.run(() => {
+              this.SignedIn = true;
+            })
+            this.ngZone.run(() => {
+              this.Show_groups = 2;
+            })
             this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
               let People = []
               snapshot1.forEach(snapshot2 => {
@@ -155,22 +200,36 @@ export class HomePage {
                       People.push(Person)
                     }
                     if (snapshot4.key == this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
-                      this.Select_Groups = true
+                      this.ngZone.run(() => {
+                        this.Select_Groups = true
+                      })
                     }
                   })
                 })
               })
-              this.Current_Group["Study_People"] = People
-              this.Current_Group["Study_Token"] = this.Intent_data["Study_Token"]
+              this.ngZone.run(() => {
+                this.Current_Group["Study_People"] = People
+              })
+              this.ngZone.run(() => {
+                this.Current_Group["Study_Token"] = this.Intent_data["Study_Token"]
+              })
             })
           }).once('error', (error) => {
             console.log(error);
           }).end();
       }
       else if (this.Intent_type == "Study_group_Reply") {
-        this.answer = `Here are the people in the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`
-        this.SignedIn = true;
-        this.Show_groups = 2;
+        this.ngZone.run(() => {
+          this.answer = `Here are the people in the study group on ${this.Intent_data["Date"]} at ${this.Intent_data["Time"]} in ${this.Intent_data["Place"]}`
+        })
+        this.session_log += 'Alis: ' + this.answer + '<*>'
+        this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+        this.ngZone.run(() => {
+          this.SignedIn = true;
+        })
+        this.ngZone.run(() => {
+          this.Show_groups = 2;
+        })
         this.afDatabase.database.ref(`users/${this.Token}/Study groups/${this.Intent_data["Study_Token"]}/People`).once('value').then(snapshot1 => {
           let People = []
           snapshot1.forEach(snapshot2 => {
@@ -187,11 +246,17 @@ export class HomePage {
               })
             })
           })
-          this.Current_Group["Study_People"] = People
+          this.ngZone.run(() => {
+            this.Current_Group["Study_People"] = People
+          })
         })
       }
       else if (this.Intent_type == "Student_activity_Acceptance") {
-        this.answer = `Please select a slot for ${this.Intent_data["SU_name"]} interview:`
+        this.ngZone.run(() => {
+          this.answer = `Please select a slot for ${this.Intent_data["SU_name"]} interview:`
+        })
+        this.session_log += 'Alis: ' + this.answer + '<*>'
+        this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
         this.afDatabase.database.ref(`${this.Intent_data["SU_name"]}/slots`).once('value').then(snapshot1 => {
           snapshot1.forEach(snapshot2 => {
             let slot = {}
@@ -199,62 +264,81 @@ export class HomePage {
             slot["Start_time"] = snapshot2.child('startTime').val()
             slot["End_time"] = snapshot2.child('endTime').val()
             slot["Place"] = snapshot2.child('place').val()
-            this.Interview_slots.push(slot)
+            this.ngZone.run(() => {
+              this.Interview_slots.push(slot)
+            })
           })
         })
-        this.Show_Interview_slots = true
+        this.ngZone.run(() => {
+          this.Show_Interview_slots = true
+        })
       }
     })
   }
 
   ask() {
     if (this.question == undefined || this.question == null || this.question.trim() == '') {
-      this.question = null;
+      this.ngZone.run(() => {
+        this.question = null;
+      })
       return;
     }
-    this.answer = "Alis is typing...";
-    this.need_universty = 0;
-    this.Alis_first = false
-    this.need_tutor = 0;
-    this.tutor_Feedback = false
-    this.rated = null
-    this.Friends = []
-    this.Show_Friends = false
-    this.Select_Friends = false
-    this.Show_date = false
-    this.Show_time = false
-    this.Show_ChooseTime = false
-    this.Show_ChooseFriends = false
-    this.Current_Group = []
-    this.Study_Groups = []
-    this.Show_groups = 0
-    this.Select_Groups = false
-    this.applicants = []
-    this.Show_applicants = false
-    this.Show_application = false;
-    this.Select_Applicants = false
-    this.Show_Interview_slots = false
-    this.Interview_slots = []
-    this.Show_duration = false
-    this.Show_ChooseDuration = false
-    this.Show_WritePlace = false
-
+    this.ngZone.run(() => {
+      this.answer = "Alis is typing...";
+      this.need_universty = 0;
+      this.Alis_first = false
+      this.need_tutor = 0;
+      this.tutor_Feedback = false
+      this.rated = null
+      this.Friends = []
+      this.Show_Friends = false
+      this.Select_Friends = false
+      this.Show_date = false
+      this.Show_time = false
+      this.Show_ChooseTime = false
+      this.Show_ChooseFriends = false
+      this.Current_Group = []
+      this.Study_Groups = []
+      this.Show_groups = 0
+      this.Select_Groups = false
+      this.applicants = []
+      this.Show_applicants = false
+      this.Show_application = false;
+      this.Select_Applicants = false
+      this.Show_Interview_slots = false
+      this.Interview_slots = []
+      this.Show_duration = false
+      this.Show_ChooseDuration = false
+      this.Show_WritePlace = false
+    })
     this.content.scrollToBottom();
-    this.chat = this.question;
+    this.ngZone.run(() => {
+      this.chat = this.question;
+    })
+    this.session_log += 'User:' + this.question + '<*>'
+    this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
     this.Update_Time()
     this.content.scrollToBottom();
 
 
     if (this.formQuestion) {
-      this.formAnswers.push(this.question);
-      this.questionNumber += 1;
-      this.answer = this.allQuestions[this.questionNumber];
+      this.ngZone.run(() => {
+        this.formAnswers.push(this.question);
+        this.questionNumber += 1;
+        this.answer = this.allQuestions[this.questionNumber];
+      })
+      this.session_log += 'Alis: ' + this.answer + '<*>'
+      this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
 
       if (this.allQuestions.length == this.questionNumber) {
         this.addFormAnswers(this.formAnswers);
-        this.answer = "okay now you're done";
-        this.questionNumber = 0;
-        this.formQuestion = false;
+        this.ngZone.run(() => {
+          this.answer = "okay now you're done";
+          this.questionNumber = 0;
+          this.formQuestion = false;
+        })
+        this.session_log += 'Alis: ' + this.answer + '<*>'
+        this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
       }
     }
     else {
@@ -277,18 +361,32 @@ export class HomePage {
                     this.API_Agent.eventRequest({ name: "Welcome", data: { 'Name': snapshot2.child('First_name').val() } }, { sessionId: this.uuid })
                       .once('response', ({ result: { fulfillment: { speech } } }) => {
                         speech = speech + "😊";
-                        this.answer = speech;
-                        this.SignedIn = true;
+                        this.ngZone.run(() => {
+                          this.answer = speech;
+                        })
+                        this.session_log += 'Alis: ' + this.answer + '<*>'
+                        this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                        this.ngZone.run(() => {
+                          this.SignedIn = true;
+                        })
                       }).once('error', (error) => {
                         console.log(error);
                       }).end();
                   }
                 })
                 if (!phonefound) {
-                  this.answer = "Sorry, I can't find your number. You can sign up again!😊";
+                  this.ngZone.run(() => {
+                    this.answer = "Sorry, I can't find your number. You can sign up again!😊";
+                  })
+                  this.session_log += 'Alis: ' + this.answer + '<*>'
+                  this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
                 }
               } else {
-                this.answer = "I think you should sign up!😊";
+                this.ngZone.run(() => {
+                  this.answer = "I think you should sign up!😊";
+                })
+                this.session_log += 'Alis: ' + this.answer + '<*>'
+                this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
               }
             })
           }
@@ -303,23 +401,41 @@ export class HomePage {
                   }
                 })
                 if (phonefound) {
-                  this.answer = "This number is already used"
+                  this.ngZone.run(() => {
+                    this.answer = "This number is already used"
+                  })
+                  this.session_log += 'Alis: ' + this.answer + '<*>'
+                  this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
                 }
                 else {
                   let data = { First_name: result.parameters["First-name"], Last_name: result.parameters["Last-name"], Phone: result.parameters["phone-number"] };
                   this.addData('/users', this.Token, null, data).then().catch();
-                  this.answer = result.fulfillment.speech;
-                  this.SignedIn = true;
+                  this.ngZone.run(() => {
+                    this.answer = result.fulfillment.speech;
+                  })
+                  this.session_log += 'Alis: ' + this.answer + '<*>'
+                  this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                  this.ngZone.run(() => {
+                    this.SignedIn = true;
+                  })
                 }
               }
             })
           }
           else if (result.action == "Synchronize_Friends" && this.SignedIn == true) {
             this.SyncFriends();
-            this.answer = result.fulfillment.speech;
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
           }
           else if (result.action == "Show_Friends" && this.SignedIn == true) {
-            this.answer = result.fulfillment.speech;
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
             this.afDatabase.database.ref(`users/${this.Token}/Friends`).once('value').then(snapshot1 => {
               if (snapshot1.exists()) {
                 snapshot1.forEach(snapshot2 => {
@@ -330,14 +446,18 @@ export class HomePage {
                           Name: snapshot2_2.child('First_name').val() + " " + snapshot2_2.child('Last_name').val(),
                           Phone: snapshot2_2.child('Phone').val(),
                         }
-                        this.Friends.push(Friend)
+                        this.ngZone.run(() => {
+                          this.Friends.push(Friend)
+                        })
                       }
                     })
                   })
                 })
               }
             })
-            this.Show_Friends = true
+            this.ngZone.run(() => {
+              this.Show_Friends = true
+            })
           }
           else if (result.action == "needTutor" && result.parameters.tutorSubject != '' && this.SignedIn == true) {
             this.afDatabase.database.ref('/teachers').child(result.parameters.tutorSubject)
@@ -353,8 +473,12 @@ export class HomePage {
                   }
                   tutors.push(tutor);
                 })
-                this.Tutors = tutors;
-                this.need_tutor = 1;
+                this.ngZone.run(() => {
+                  this.Tutors = tutors;
+                })
+                this.ngZone.run(() => {
+                  this.need_tutor = 1;
+                })
               })
           }
           else if (result.action == "study_level" || result.action == 'get_hobbies'
@@ -379,59 +503,97 @@ export class HomePage {
               value != '') {
 
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
-              this.answer = result.fulfillment.speech;
+              this.ngZone.run(() => {
+                this.answer = result.fulfillment.speech;
+              })
+              this.session_log += 'Alis: ' + this.answer + '<*>'
+              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
               return;
             }
             else if (result.action == 'getSat1' || result.action == 'getSat2' && value != '') {
 
               this.addData('/users', this.Token, 'satGrades', data).then().catch();
-              this.answer = result.fulfillment.speech;
+              this.ngZone.run(() => {
+                this.answer = result.fulfillment.speech;
+              })
+              this.session_log += 'Alis: ' + this.answer + '<*>'
+              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
               return;
             }
             else if (result.action == 'getTanyaThanawyGrade' || result.action == 'getTaltaThanawyGrade' && value != '') {
               this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
-              this.answer = result.fulfillment.speech;
+              this.ngZone.run(() => {
+                this.answer = result.fulfillment.speech;
+              })
+              this.session_log += 'Alis: ' + this.answer + '<*>'
+              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
               return;
             }
-
             if (value != '') {
               this.addData('users', this.Token, null, data).then(() => {
                 console.log('Saved');
               }).catch();
             }
-            this.answer = result.fulfillment.speech;
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
           }
-          
           else if (result.action == 'getFeedback-yes' && this.SignedIn == true) {
             this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
                 speech = speech + "😊";
-                this.answer = speech;
-                this.tutor_Feedback = true
+                this.ngZone.run(() => {
+                  this.answer = speech;
+                })
+                this.session_log += 'Alis: ' + this.answer + '<*>'
+                this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                this.ngZone.run(() => {
+                  this.tutor_Feedback = true
+                })
               }).once('error', (error) => {
                 console.log(error);
               }).end();
           }
           else if (result.action == "Study_group_Creation" && this.SignedIn == true) {
-            this.answer = result.fulfillment.speech;
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
             if (result.actionIncomplete == true) {
               if (result.parameters["place"] == "") {
 
               }
               else if (result.parameters["date"] == "") {
-                this.Show_date = true
-                this.Show_ChooseTime = true
+                this.ngZone.run(() => {
+                  this.Show_date = true
+                })
+                this.ngZone.run(() => {
+                  this.Show_ChooseTime = true
+                })
               }
               else if (result.parameters["time"] == "") {
-                this.Show_date = false
-                this.Show_time = true
-                this.Show_ChooseFriends = true
+                this.ngZone.run(() => {
+                  this.Show_date = false
+                })
+                this.ngZone.run(() => {
+                  this.Show_time = true
+                })
+                this.ngZone.run(() => {
+                  this.Show_ChooseFriends = true
+                })
                 this.SyncFriends()
               }
             }
             else {
-              this.Show_time = false
-              this.Show_ChooseFriends = false
+              this.ngZone.run(() => {
+                this.Show_time = false
+              })
+              this.ngZone.run(() => {
+                this.Show_ChooseFriends = false
+              })
               result.parameters["date"] = new Date(result.parameters["date"]).toLocaleDateString();
               result.parameters["time"] = [new Date(`${result.parameters["date"]}, ${result.parameters["time"]}`).toLocaleTimeString().split(":")["0"], new Date(`${result.parameters["date"]}, ${result.parameters["time"]}`).toLocaleTimeString().split(":")["1"]].join(":") + new Date(`${result.parameters["date"]}, ${result.parameters["time"]}`).toLocaleTimeString().slice(-3);
               this.afDatabase.database.ref(`users/${this.Token}/Friends`).once('value').then(snapshot1 => {
@@ -446,15 +608,21 @@ export class HomePage {
                             Phone: snapshot2_2.child('Phone').val(),
                             checked: false
                           }
-                          this.Friends.push(Friend)
+                          this.ngZone.run(() => {
+                            this.Friends.push(Friend)
+                          })
                         }
                       })
                     })
                   })
                 }
               })
-              this.Show_Friends = true
-              this.Select_Friends = true
+              this.ngZone.run(() => {
+                this.Show_Friends = true
+              })
+              this.ngZone.run(() => {
+                this.Select_Friends = true
+              })
               this.afDatabase.database.ref("users").child(this.Token).once('value').then(snapshot1 => {
                 if (snapshot1.exists()) {
                   this.Notification_data = {
@@ -474,10 +642,16 @@ export class HomePage {
             }
           }
           else if (result.action == "Manage_study_groups" && this.SignedIn == true) {
-            this.answer = result.fulfillment.speech;
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
             this.afDatabase.database.ref(`users/${this.Token}/Study groups`).once('value').then(snapshot1 => {
               if (snapshot1.exists()) {
-                this.Show_groups = 1
+                this.ngZone.run(() => {
+                  this.Show_groups = 1
+                })
                 let study_group = {};
                 snapshot1.forEach(snapshot2 => {
                   study_group = {
@@ -487,7 +661,9 @@ export class HomePage {
                     Study_Token: snapshot2.key
                   }
                 })
-                this.Study_Groups.push(study_group)
+                this.ngZone.run(() => {
+                  this.Study_Groups.push(study_group)
+                })
               }
             })
           }
@@ -497,49 +673,97 @@ export class HomePage {
                 snapshot1.forEach(snapshot2 => {
                   let university = snapshot2.val();
                   university['country'] = result.parameters.country,
-                    this.universities.push(university);
+                    this.ngZone.run(() => {
+                      this.universities.push(university);
+                    })
                 })
-                this.need_universty = 1;
-                this.answer = 'There are some universities!';
+                this.ngZone.run(() => {
+                  this.need_universty = 1;
+                })
+                this.ngZone.run(() => {
+                  this.answer = 'There are some universities!';
+                })
+                this.session_log += 'Alis: ' + this.answer + '<*>'
+                this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
               })
           }
           else if (result.action == "applyToStudentActivity" && result.parameters.studentActivityName != '' && this.SignedIn == true) {
-            this.SU_name = result.parameters.studentActivityName;
+            this.ngZone.run(() => {
+              this.SU_name = result.parameters.studentActivityName;
+            })
             this.afDatabase.database.ref(this.SU_name).child('questions').once('value')
               .then(snapshot1 => {
                 snapshot1.forEach(snapshot2 => {
-                  this.allQuestions.push(snapshot2.val());
+                  this.ngZone.run(() => {
+                    this.allQuestions.push(snapshot2.val());
+                  })
                 })
-                this.answer = this.allQuestions[this.questionNumber];
-                this.formQuestion = true;
+                this.ngZone.run(() => {
+                  this.answer = this.allQuestions[this.questionNumber];
+                })
+                this.session_log += 'Alis: ' + this.answer + '<*>'
+                this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                this.ngZone.run(() => {
+                  this.formQuestion = true;
+                })
               });
           }
           else if (result.action == "Interviews_Scheduling" && this.SignedIn == true) {
-            this.answer = result.fulfillment.speech;
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
             if (result.actionIncomplete == true) {
               if (result.parameters["studentActivity"] == "") { }
               else if (result.parameters["day"] == "") {
-                this.Show_date = true
-                this.Show_ChooseTime = true
+                this.ngZone.run(() => {
+                  this.Show_date = true
+                })
+                this.ngZone.run(() => {
+                  this.Show_ChooseTime = true
+                })
               }
               else if (result.parameters["startTime"] == "") {
-                this.Show_date = false
-                this.Show_time = true
-                this.Show_ChooseTime = true
+                this.ngZone.run(() => {
+                  this.Show_date = false
+                })
+                this.ngZone.run(() => {
+                  this.Show_time = true
+                })
+                this.ngZone.run(() => {
+                  this.Show_ChooseTime = true
+                })
               }
               else if (result.parameters["endTime"] == "") {
-                this.Show_time = true
-                this.Show_ChooseDuration = true
+                this.ngZone.run(() => {
+                  this.Show_time = true
+                })
+                this.ngZone.run(() => {
+                  this.Show_ChooseDuration = true
+                })
               }
               else if (result.parameters["duration"] == "") {
-                this.Show_time = false
-                this.Show_ChooseDuration = false
-                this.Show_duration = true
-                this.Show_WritePlace = true
+                this.ngZone.run(() => {
+                  this.Show_time = false
+                })
+                this.ngZone.run(() => {
+                  this.Show_ChooseDuration = false
+                })
+                this.ngZone.run(() => {
+                  this.Show_duration = true
+                })
+                this.ngZone.run(() => {
+                  this.Show_WritePlace = true
+                })
               }
               else if (result.parameters["place"] == "") {
-                this.Show_duration = false
-                this.Show_WritePlace = false
+                this.ngZone.run(() => {
+                  this.Show_duration = false
+                })
+                this.ngZone.run(() => {
+                  this.Show_WritePlace = false
+                })
               }
             }
             else {
@@ -557,7 +781,9 @@ export class HomePage {
             }
           }
           else if (result.action == "showApplicants" && result.actionIncomplete == false && this.SignedIn == true) {
-            this.SU_name = result.parameters.studentActivity;
+            this.ngZone.run(() => {
+              this.SU_name = result.parameters.studentActivity;
+            })
             this.afDatabase.database.ref(`${this.SU_name}/applicants`).once('value').then(snapshot1 => {
               snapshot1.forEach(snapshot2 => {
                 let applicant = {}
@@ -569,32 +795,55 @@ export class HomePage {
                   applicant["Responses"] = snapshot2.child("responses").val()
                   applicant["IsViewed"] = false
                 })
-                this.applicants.push(applicant)
+                this.ngZone.run(() => {
+                  this.applicants.push(applicant)
+                })
               });
             });
-            this.Show_applicants = true;
-            this.Show_application = true
-            this.Select_Applicants = true
+            this.ngZone.run(() => {
+              this.Show_applicants = true;
+            })
+            this.ngZone.run(() => {
+              this.Show_application = true
+            })
+            this.ngZone.run(() => {
+              this.Select_Applicants = true
+            })
+          }
+          else if (result.action == "ShowMajors" && this.SignedIn == true) {
+            this.relevantMajors()
           }
           else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && result.action !== "SignUp-Credentials" && this.SignedIn == false) {
-            this.answer = "I think you should sign in!😊"
+            this.ngZone.run(() => {
+              this.answer = "I think you should sign in!😊"
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
           }
           else {
-            this.answer = result.fulfillment.speech;
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
           }
-          this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(snapshot1 => { this.options = snapshot1.val() })
+          this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
         }).once('error', (error) => {
           console.log(error);
         }).end();
     }
-    this.question = null;
+    this.ngZone.run(() => {
+      this.question = null;
+    })
   }
 
   Update_Time() {
     var d = new Date(),
       time = [(d.getHours() > 12) ? d.getHours() - 12 : (d.getHours() == 0) ? "12" : d.getHours(), (d.getMinutes() < 10) ? '0' + d.getMinutes() : d.getMinutes()].join(":"),
       ampm = (d.getHours() < 12) ? "AM" : "PM"
-    this.CurrentTime = time + ' ' + ampm;
+    this.ngZone.run(() => {
+      this.CurrentTime = time + ' ' + ampm;
+    })
   }
 
   addData(collection, child, nextChild, data) {
@@ -656,11 +905,17 @@ export class HomePage {
   }
 
   rating(x) {
-    this.rated = x;
+    this.ngZone.run(() => {
+      this.rated = x;
+    })
     let data = {}
     data[this.Intent_data.phone] = this.rated
     this.addData('/users', this.Token, 'Ratings', data).then().catch();
-    this.answer = "Thanks for your Feedback😊"
+    this.ngZone.run(() => {
+      this.answer = "Thanks for your Feedback😊"
+    })
+    this.session_log += 'Alis: ' + this.answer + '<*>'
+    this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
   }
 
   Invite() {
@@ -673,8 +928,12 @@ export class HomePage {
       }
     })
     if (tempFriends !== []) {
-      this.Show_Friends = false
-      this.Select_Friends = false
+      this.ngZone.run(() => {
+        this.Show_Friends = false
+      })
+      this.ngZone.run(() => {
+        this.Select_Friends = false
+      })
       var group_key;
       var group_data = this.Notification_data.data;
       this.afDatabase.database.ref(`users/${this.Token}/Study groups`).once('value').then(snapshot1 => {
@@ -709,17 +968,29 @@ export class HomePage {
             })
             this.sendNotification(tempFriendPrimary.Token)
           })
-          this.answer = "I invited your selected friends to the study group!😊"
+          this.ngZone.run(() => {
+            this.answer = "I invited your selected friends to the study group!😊"
+          })
+          this.session_log += 'Alis: ' + this.answer + '<*>'
+          this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
         })
       })
     }
     else {
-      this.answer = "Please invite at least 1 of your friends"
+      this.ngZone.run(() => {
+        this.answer = "Please invite at least 1 of your friends"
+      })
+      this.session_log += 'Alis: ' + this.answer + '<*>'
+      this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
     }
   }
 
   Group_Select(Group) {
-    this.answer = `Here are the people in the study group on ${Group["Date"]} at ${Group["Time"]} in ${Group["Place"]}`
+    this.ngZone.run(() => {
+      this.answer = `Here are the people in the study group on ${Group["Date"]} at ${Group["Time"]} in ${Group["Place"]}`
+    })
+    this.session_log += 'Alis: ' + this.answer + '<*>'
+    this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
     this.afDatabase.database.ref(`users/${this.Token}/Study groups/${Group["Study_Token"]}/People`).once('value').then(snapshot1 => {
       let People = [];
       snapshot1.forEach(snapshot2 => {
@@ -733,22 +1004,34 @@ export class HomePage {
               }
               People.push(Person)
               if (snapshot4.key == this.Token && snapshot4.child("Phone").val() == snapshot2.key && snapshot2.val() == "Pending") {
-                this.Select_Groups = true
+                this.ngZone.run(() => {
+                  this.Select_Groups = true
+                })
               }
             }
           })
         })
       })
-      this.Current_Group["Study_People"] = People
-      this.Current_Group["Study_Token"] = Group["Study_Token"]
+      this.ngZone.run(() => {
+        this.Current_Group["Study_People"] = People
+      })
+      this.ngZone.run(() => {
+        this.Current_Group["Study_Token"] = Group["Study_Token"]
+      })
     })
-    this.Show_groups = 2
+    this.ngZone.run(() => {
+      this.Show_groups = 2
+    })
   }
 
   Group_Reply(event) {
     let Study_Token = this.Current_Group["Study_Token"]
     if (event.toElement.innerHTML == "Accept") {
-      this.answer = "You have accepted to join that study group"
+      this.ngZone.run(() => {
+        this.answer = "You have accepted to join that study group"
+      })
+      this.session_log += 'Alis: ' + this.answer + '<*>'
+      this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
       this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
         this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
           if (snapshot1.exists()) {
@@ -774,7 +1057,9 @@ export class HomePage {
                   })
                 })
               })
-              this.Current_Group["Study_People"] = People
+              this.ngZone.run(() => {
+                this.Current_Group["Study_People"] = People
+              })
             })
           }
         })
@@ -797,7 +1082,11 @@ export class HomePage {
       })
     }
     else if (event.toElement.innerHTML == "Refuse") {
-      this.answer = "You have refused to join that study group"
+      this.ngZone.run(() => {
+        this.answer = "You have refused to join that study group"
+      })
+      this.session_log += 'Alis: ' + this.answer + '<*>'
+      this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
       this.afDatabase.database.ref(`users/${this.Token}/Phone`).once('value').then(MyPhone => {
         this.afDatabase.database.ref('users').once('value').then(snapshot1 => {
           if (snapshot1.exists()) {
@@ -823,7 +1112,9 @@ export class HomePage {
                   })
                 })
               })
-              this.Current_Group["Study_People"] = People
+              this.ngZone.run(() => {
+                this.Current_Group["Study_People"] = People
+              })
             })
           }
         })
@@ -845,14 +1136,24 @@ export class HomePage {
         }
       })
     }
-    this.Select_Groups = false
-    this.Study_Groups = []
-    this.Current_Group = []
+    this.ngZone.run(() => {
+      this.Select_Groups = false
+    })
+    this.ngZone.run(() => {
+      this.Study_Groups = []
+    })
+    this.ngZone.run(() => {
+      this.Current_Group = []
+    })
   }
 
   Tutor_Select(Tutor) {
-    this.Current_Tutor = Tutor
-    this.need_tutor = 2
+    this.ngZone.run(() => {
+      this.Current_Tutor = Tutor
+    })
+    this.ngZone.run(() => {
+      this.need_tutor = 2
+    })
   }
 
   Tutor_Reserve(i) {
@@ -872,10 +1173,20 @@ export class HomePage {
     this.afDatabase.database.ref('users').child(this.Token).child('lessonsRequests').push(data);
     var dt = new Date(this.Make_Reminder(`${this.Current_Tutor.lessons[i].slot.date}, ${this.Current_Tutor.lessons[i].slot.start_time}`, 24))
     this.calendar.createEventWithOptions(`${this.Current_Tutor.subject} class`, null, null, dt, dt, { 'firstReminderMinutes': 0 })
-    this.need_tutor = 0;
-    this.Current_Tutor = '';
-    this.Tutors = [];
-    this.answer = "I reserved your lesson! 😊";
+    this.ngZone.run(() => {
+      this.need_tutor = 0;
+    })
+    this.ngZone.run(() => {
+      this.Current_Tutor = '';
+    })
+    this.ngZone.run(() => {
+      this.Tutors = [];
+    })
+    this.ngZone.run(() => {
+      this.answer = "I reserved your lesson! 😊";
+    })
+    this.session_log += 'Alis: ' + this.answer + '<*>'
+    this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
   }
 
   Make_Reminder(datetime, hours) {
@@ -917,7 +1228,11 @@ export class HomePage {
     let universityID = this.universities[i].university_id;
     this.afDatabase.database.ref('users').child(this.Token).child('universityInterests').push(universityID)
       .then(() => {
-        this.answer = "Nice, Reserved";
+        this.ngZone.run(() => {
+          this.answer = "Nice, Reserved";
+        })
+        this.session_log += 'Alis: ' + this.answer + '<*>'
+        this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
         return;
       });
   }
@@ -947,16 +1262,22 @@ export class HomePage {
 
   Show_Applicant(applicant, i) {
     applicant["IsViewed"] = true
-    this.applicants[i]["IsViewed"] = true
+    this.ngZone.run(() => {
+      this.applicants[i]["IsViewed"] = true
+    })
   }
 
   Hide_Applicant(i) {
-    this.applicants[i]["IsViewed"] = false
+    this.ngZone.run(() => {
+      this.applicants[i]["IsViewed"] = false
+    })
   }
 
   Action_on_Applicant(event, i) {
     if (event.toElement.innerHTML == "Accept") {
-      this.applicants[i]["Status"] = "Accepted"
+      this.ngZone.run(() => {
+        this.applicants[i]["Status"] = "Accepted"
+      })
       this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Accepted")
       this.Notification_data = {
         Title: `${this.SU_name} Application Request`,
@@ -968,7 +1289,9 @@ export class HomePage {
       }
     }
     else if (event.toElement.innerHTML == "Refuse") {
-      this.applicants[i]["Status"] = "Refused"
+      this.ngZone.run(() => {
+        this.applicants[i]["Status"] = "Refused"
+      })
       this.afDatabase.database.ref(`${this.SU_name}/applicants/${this.applicants[i]["Applicant_Token"]}/status`).set("Refused")
       this.Notification_data = {
         Title: `${this.SU_name} Application Request`,
@@ -981,7 +1304,11 @@ export class HomePage {
   }
 
   Choose_Interview_slot(slot) {
-    this.answer = `Thanks for your time. ${this.Intent_data["SU_name"]} is waiting to see you on ${slot.Date} at ${slot.Start_time} in ${slot.Place}`
+    this.ngZone.run(() => {
+      this.answer = `Thanks for your time. ${this.Intent_data["SU_name"]} is waiting to see you on ${slot.Date} at ${slot.Start_time} in ${slot.Place}`
+    })
+    this.session_log += 'Alis: ' + this.answer + '<*>'
+    this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
     this.afDatabase.database.ref(`${this.Intent_data["SU_name"]}/applicants/${this.Token}/slot`).update({
       Date: slot.Date,
       Start_time: slot.Start_time,
@@ -989,8 +1316,12 @@ export class HomePage {
       Place: slot.Place,
       Reminder: this.Make_Reminder(`${slot.Date}, ${slot.Start_time}`, 24)
     })
-    this.Show_Interview_slots = false
-    this.Interview_slots = []
+    this.ngZone.run(() => {
+      this.Show_Interview_slots = false
+    })
+    this.ngZone.run(() => {
+      this.Interview_slots = []
+    })
   }
 
   editDistance(s1, s2) {
@@ -1086,24 +1417,38 @@ export class HomePage {
   }
 
   ionViewDidEnter() {
-    this.connected = this.network.onConnect().subscribe(data => {
-      console.log(`You are now ${data.type} via ${this.network.type}`)
-      this.offline_alert.dismiss();
-      this.offline_alert = this.alertCtrl.create({
-        title: "You're offline",
-        subTitle: "Alis can't reach you without internet connection",
-        enableBackdropDismiss: false
-      });
-    }, error => console.error(error));
-    this.disconnected = this.network.onDisconnect().subscribe(data => {
-      console.log(`You are now ${data.type} via ${this.network.type}`)
-      this.offline_alert.present();
-    }, error => console.error(error));
+    this.ngZone.run(() => {
+      this.connected = this.network.onConnect().subscribe(data => {
+        console.log(`You are now ${data.type} via ${this.network.type}`)
+        this.ngZone.run(() => {
+          this.offline_alert.dismiss();
+        })
+        this.ngZone.run(() => {
+          this.offline_alert = this.alertCtrl.create({
+            title: "You're offline",
+            subTitle: "Alis can't reach you without internet connection",
+            enableBackdropDismiss: false
+          });
+        })
+      }, error => console.error(error));
+    })
+    this.ngZone.run(() => {
+      this.disconnected = this.network.onDisconnect().subscribe(data => {
+        console.log(`You are now ${data.type} via ${this.network.type}`)
+        this.ngZone.run(() => {
+          this.offline_alert.present();
+        })
+      }, error => console.error(error));
+    })
   }
 
   ionViewWillLeave() {
-    this.connected.unsubscribe();
-    this.disconnected.unsubscribe();
+    this.ngZone.run(() => {
+      this.connected.unsubscribe();
+    })
+    this.ngZone.run(() => {
+      this.disconnected.unsubscribe();
+    })
   }
 
 }
