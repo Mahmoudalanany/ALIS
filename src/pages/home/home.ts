@@ -21,17 +21,19 @@ export class HomePage {
   @ViewChild(Content) content: Content;
   @ViewChild(Slides) slides: Slides;
 
-  chat; //User Message
-  answer; //ALIS Reply
-  CurrentTime; //Message's Sent Time
+  chat = ''; //User Message
+  answer = ''; //ALIS Reply
+  CurrentTime = ''; //Message's Sent Time
   Tutors = [];
   universities = [];
+  schools = [];
   options = [];
   need_tutor = 0;
   need_universty = 0;
+  need_school = 0;
   Token = '';
-  question: string;
-  SU_name: string;
+  question = '';
+  SU_name = '';
   rated;
   API_Agent: APIModule.Application;
   uuid;
@@ -72,6 +74,8 @@ export class HomePage {
   Show_duration = false
   Show_ChooseDuration = false
   Show_WritePlace = false
+  Careers = [];
+  Show_Career = false;
   constructor(public navCtrl: NavController, public platform: Platform, public ngZone: NgZone, private afDatabase: AngularFireDatabase, private Share: SharingService, private contacts: Contacts, private network: Network, private calendar: Calendar, private alertCtrl: AlertController, private fcm: FCM, private http: HttpClient) {
     this.ngZone.run(() => {
       this.offline_alert = this.alertCtrl.create({
@@ -136,7 +140,7 @@ export class HomePage {
                 })
                 this.session_log += 'Alis:' + this.answer + '<*>'
                 this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
+                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot => { this.ngZone.run(() => { this.options = snapshot.val() }) })
                 this.ngZone.run(() => {
                   this.SignedIn = true;
                 })
@@ -144,15 +148,14 @@ export class HomePage {
                 console.log(error);
               }).end();
           } else {
-            this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: this.uuid })
+            this.API_Agent.eventRequest({ name: "SignUp" }, { sessionId: this.uuid })
               .once('response', ({ result: { fulfillment: { speech } } }) => {
-                speech = speech + "😊";
                 this.ngZone.run(() => {
-                  this.answer = speech;
+                  this.answer = "Hello I'm Alis, " + speech;
                 })
                 this.session_log += 'Alis: ' + this.answer + '<*>'
                 this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-                this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
+                this.afDatabase.database.ref('options').child("Sign In").once('value').then(snapshot => { this.ngZone.run(() => { this.options = snapshot.val() }) })
               }).once('error', (error) => {
                 console.log(error);
               }).end();
@@ -167,7 +170,7 @@ export class HomePage {
             })
             this.session_log += 'Alis: ' + this.answer + '<*>'
             this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-            this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
+            this.afDatabase.database.ref('options').child("getFeedback").once('value').then(snapshot => { this.ngZone.run(() => { this.options = snapshot.val() }) })
           }).once('error', (error) => {
             console.log(error);
           }).end();
@@ -286,6 +289,7 @@ export class HomePage {
     this.ngZone.run(() => {
       this.answer = "Alis is typing...";
       this.need_universty = 0;
+      this.need_school = 0;
       this.Alis_first = false
       this.need_tutor = 0;
       this.tutor_Feedback = false
@@ -310,6 +314,8 @@ export class HomePage {
       this.Show_duration = false
       this.Show_ChooseDuration = false
       this.Show_WritePlace = false
+      this.Careers = []
+      this.Show_Career = false;
     })
     this.content.scrollToBottom();
     this.ngZone.run(() => {
@@ -332,8 +338,22 @@ export class HomePage {
 
       if (this.allQuestions.length == this.questionNumber) {
         this.addFormAnswers(this.formAnswers);
+        this.relevantMajors()
+        this.afDatabase.database.ref(`users/${this.Token}/PossibleMajors`).once('value').then(snapshot1 => {
+          if (snapshot1.exists()) {
+            let majors = []
+            snapshot1.forEach(snapshot2 => {
+              majors.push({ 'Major': snapshot2.key, 'Rank': snapshot2.val() })
+            })
+            console.log(majors.sort(function (a, b) { return b.Rank - a.Rank }));
+            majors.forEach(major => {
+              this.ngZone.run(() => {
+                this.answer += major['Major'] + '\n'
+              })
+            })
+          }
+        })
         this.ngZone.run(() => {
-          this.answer = "okay now you're done";
           this.questionNumber = 0;
           this.formQuestion = false;
         })
@@ -383,7 +403,7 @@ export class HomePage {
                 }
               } else {
                 this.ngZone.run(() => {
-                  this.answer = "I think you should sign up!😊";
+                  this.answer = "You're my first contact!, sign up please😊";
                 })
                 this.session_log += 'Alis: ' + this.answer + '<*>'
                 this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
@@ -668,24 +688,42 @@ export class HomePage {
             })
           }
           else if (result.action == "showUniversities" && result.parameters.country != '' && this.SignedIn == true) {
-            this.afDatabase.database.ref('/universtes').child(result.parameters.country)
-              .once('value').then(snapshot1 => {
-                snapshot1.forEach(snapshot2 => {
-                  let university = snapshot2.val();
-                  university['country'] = result.parameters.country,
-                    this.ngZone.run(() => {
-                      this.universities.push(university);
-                    })
-                })
-                this.ngZone.run(() => {
-                  this.need_universty = 1;
-                })
-                this.ngZone.run(() => {
-                  this.answer = 'There are some universities!';
-                })
-                this.session_log += 'Alis: ' + this.answer + '<*>'
-                this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            this.afDatabase.database.ref('/universtes').child(result.parameters.country).once('value').then(snapshot1 => {
+              snapshot1.forEach(snapshot2 => {
+                let university = snapshot2.val();
+                university['country'] = result.parameters.country,
+                  this.ngZone.run(() => {
+                    this.universities.push(university);
+                  })
               })
+              this.ngZone.run(() => {
+                this.need_universty = 1;
+              })
+              this.ngZone.run(() => {
+                this.answer = 'There are some universities!';
+              })
+              this.session_log += 'Alis: ' + this.answer + '<*>'
+              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            })
+          }
+          else if (result.action == "Schools" && result.actionIncomplete == false && this.SignedIn == true) {
+            this.afDatabase.database.ref('/Schools').child(result.parameters.location).once('value').then(snapshot1 => {
+              snapshot1.forEach(snapshot2 => {
+                let school = snapshot2.val();
+                school['Region'] = result.parameters.location,
+                  this.ngZone.run(() => {
+                    this.schools.push(school);
+                  })
+              })
+              this.ngZone.run(() => {
+                this.need_school = 1;
+              })
+              this.ngZone.run(() => {
+                this.answer = result.fulfillment.speech;
+              })
+              this.session_log += 'Alis: ' + this.answer + '<*>'
+              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            })
           }
           else if (result.action == "applyToStudentActivity" && result.parameters.studentActivityName != '' && this.SignedIn == true) {
             this.ngZone.run(() => {
@@ -811,7 +849,17 @@ export class HomePage {
             })
           }
           else if (result.action == "ShowMajors" && this.SignedIn == true) {
-            this.relevantMajors()
+
+          }
+          else if (result.action == "Career_Info" && result.actionIncomplete == false && this.SignedIn == true) {
+            this.afDatabase.database.ref(`Careers/${result.parameters.career}`).once('value').then(snapshot => {
+              if (snapshot.exists()) {
+                let career = snapshot.val()
+                career["Career"] = result.parameters.career
+                this.Careers.push(career)
+                this.Show_Career = true
+              }
+            })
           }
           else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && result.action !== "SignUp-Credentials" && this.SignedIn == false) {
             this.ngZone.run(() => {
@@ -827,7 +875,17 @@ export class HomePage {
             this.session_log += 'Alis: ' + this.answer + '<*>'
             this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
           }
-          this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(snapshot1 => { this.ngZone.run(() => { this.options = snapshot1.val() }) })
+          for (let index = 0; index < result.contexts.length; index++) {
+            if (result.contexts[index]["name"].includes("dialog_params_")) {
+              let parameter = result.contexts[index]["name"].substring(result.contexts[index]["name"].indexOf("dialog_params_") + "dialog_params_".length);
+              this.afDatabase.database.ref('options').child(`${result.metadata.intentName} - ${parameter}`).once('value').then(snapshot => { this.ngZone.run(() => { this.options = snapshot.val() }) })
+              break;
+            }
+            else if (index == result.contexts.length - 1) {
+              this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(snapshot => { this.ngZone.run(() => { this.options = snapshot.val() }) })
+            }
+          }
+
         }).once('error', (error) => {
           console.log(error);
         }).end();
@@ -1226,15 +1284,14 @@ export class HomePage {
 
   selectUniversity(i) {
     let universityID = this.universities[i].university_id;
-    this.afDatabase.database.ref('users').child(this.Token).child('universityInterests').push(universityID)
-      .then(() => {
-        this.ngZone.run(() => {
-          this.answer = "Nice, Reserved";
-        })
-        this.session_log += 'Alis: ' + this.answer + '<*>'
-        this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-        return;
-      });
+    this.afDatabase.database.ref('users').child(this.Token).child('universityInterests').push(universityID).then(() => {
+      this.ngZone.run(() => {
+        this.answer = "Nice, Reserved";
+      })
+      this.session_log += 'Alis: ' + this.answer + '<*>'
+      this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+      return;
+    });
   }
 
   AddDuration(dayOfInterview, startTime, endTime, duration, studentActivity, place) {

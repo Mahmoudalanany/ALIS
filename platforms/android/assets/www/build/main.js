@@ -122,12 +122,19 @@ var HomePage = /** @class */ (function () {
         this.alertCtrl = alertCtrl;
         this.fcm = fcm;
         this.http = http;
+        this.chat = ''; //User Message
+        this.answer = ''; //ALIS Reply
+        this.CurrentTime = ''; //Message's Sent Time
         this.Tutors = [];
         this.universities = [];
+        this.schools = [];
         this.options = [];
         this.need_tutor = 0;
         this.need_universty = 0;
+        this.need_school = 0;
         this.Token = '';
+        this.question = '';
+        this.SU_name = '';
         this.session_log = '';
         this.Friends = [];
         this.Show_Friends = false;
@@ -157,6 +164,8 @@ var HomePage = /** @class */ (function () {
         this.Show_duration = false;
         this.Show_ChooseDuration = false;
         this.Show_WritePlace = false;
+        this.Careers = [];
+        this.Show_Career = false;
         this.ngZone.run(function () {
             _this.offline_alert = _this.alertCtrl.create({
                 title: "You're offline",
@@ -200,7 +209,7 @@ var HomePage = /** @class */ (function () {
             _this.ngZone.run(function () {
                 _this.session_date = new Date().toLocaleDateString();
             });
-            // this.afDatabase.database.ref(`sessions/${this.uuid}/Date`).set(this.session_date)
+            _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Date").set(_this.session_date);
             _this.ngZone.run(function () {
                 _this.Token = _this.Share.getToken();
             });
@@ -219,8 +228,8 @@ var HomePage = /** @class */ (function () {
                                 _this.answer = speech;
                             });
                             _this.session_log += 'Alis:' + _this.answer + '<*>';
-                            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-                            _this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(function (snapshot1) { _this.ngZone.run(function () { _this.options = snapshot1.val(); }); });
+                            _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
+                            _this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(function (snapshot) { _this.ngZone.run(function () { _this.options = snapshot.val(); }); });
                             _this.ngZone.run(function () {
                                 _this.SignedIn = true;
                             });
@@ -229,16 +238,15 @@ var HomePage = /** @class */ (function () {
                         }).end();
                     }
                     else {
-                        _this.API_Agent.eventRequest({ name: "Welcome" }, { sessionId: _this.uuid })
+                        _this.API_Agent.eventRequest({ name: "SignUp" }, { sessionId: _this.uuid })
                             .once('response', function (_a) {
                             var speech = _a.result.fulfillment.speech;
-                            speech = speech + "😊";
                             _this.ngZone.run(function () {
-                                _this.answer = speech;
+                                _this.answer = "Hello I'm Alis, " + speech;
                             });
                             _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-                            _this.afDatabase.database.ref('options').child("Default Welcome Intent").once('value').then(function (snapshot1) { _this.ngZone.run(function () { _this.options = snapshot1.val(); }); });
+                            _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
+                            _this.afDatabase.database.ref('options').child("Sign In").once('value').then(function (snapshot) { _this.ngZone.run(function () { _this.options = snapshot.val(); }); });
                         }).once('error', function (error) {
                             console.log(error);
                         }).end();
@@ -253,8 +261,8 @@ var HomePage = /** @class */ (function () {
                         _this.answer = speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-                    _this.afDatabase.database.ref('options').child("getFeedback").once('value').then(function (snapshot1) { _this.ngZone.run(function () { _this.options = snapshot1.val(); }); });
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
+                    _this.afDatabase.database.ref('options').child("getFeedback").once('value').then(function (snapshot) { _this.ngZone.run(function () { _this.options = snapshot.val(); }); });
                 }).once('error', function (error) {
                     console.log(error);
                 }).end();
@@ -267,7 +275,7 @@ var HomePage = /** @class */ (function () {
                         _this.answer = speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                     _this.ngZone.run(function () {
                         _this.SignedIn = true;
                     });
@@ -311,7 +319,7 @@ var HomePage = /** @class */ (function () {
                     _this.answer = "Here are the people in the study group on " + _this.Intent_data["Date"] + " at " + _this.Intent_data["Time"] + " in " + _this.Intent_data["Place"];
                 });
                 _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                 _this.ngZone.run(function () {
                     _this.SignedIn = true;
                 });
@@ -344,7 +352,7 @@ var HomePage = /** @class */ (function () {
                     _this.answer = "Please select a slot for " + _this.Intent_data["SU_name"] + " interview:";
                 });
                 _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                 _this.afDatabase.database.ref(_this.Intent_data["SU_name"] + "/slots").once('value').then(function (snapshot1) {
                     snapshot1.forEach(function (snapshot2) {
                         var slot = {};
@@ -374,6 +382,7 @@ var HomePage = /** @class */ (function () {
         this.ngZone.run(function () {
             _this.answer = "Alis is typing...";
             _this.need_universty = 0;
+            _this.need_school = 0;
             _this.Alis_first = false;
             _this.need_tutor = 0;
             _this.tutor_Feedback = false;
@@ -398,13 +407,15 @@ var HomePage = /** @class */ (function () {
             _this.Show_duration = false;
             _this.Show_ChooseDuration = false;
             _this.Show_WritePlace = false;
+            _this.Careers = [];
+            _this.Show_Career = false;
         });
         this.content.scrollToBottom();
         this.ngZone.run(function () {
             _this.chat = _this.question;
         });
         this.session_log += 'User:' + this.question + '<*>';
-        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+        this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
         this.Update_Time();
         this.content.scrollToBottom();
         if (this.formQuestion) {
@@ -414,16 +425,30 @@ var HomePage = /** @class */ (function () {
                 _this.answer = _this.allQuestions[_this.questionNumber];
             });
             this.session_log += 'Alis: ' + this.answer + '<*>';
-            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
             if (this.allQuestions.length == this.questionNumber) {
                 this.addFormAnswers(this.formAnswers);
+                this.relevantMajors();
+                this.afDatabase.database.ref("users/" + this.Token + "/PossibleMajors").once('value').then(function (snapshot1) {
+                    if (snapshot1.exists()) {
+                        var majors_1 = [];
+                        snapshot1.forEach(function (snapshot2) {
+                            majors_1.push({ 'Major': snapshot2.key, 'Rank': snapshot2.val() });
+                        });
+                        console.log(majors_1.sort(function (a, b) { return b.Rank - a.Rank; }));
+                        majors_1.forEach(function (major) {
+                            _this.ngZone.run(function () {
+                                _this.answer += major['Major'] + '\n';
+                            });
+                        });
+                    }
+                });
                 this.ngZone.run(function () {
-                    _this.answer = "okay now you're done";
                     _this.questionNumber = 0;
                     _this.formQuestion = false;
                 });
                 this.session_log += 'Alis: ' + this.answer + '<*>';
-                //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
             }
         }
         else {
@@ -452,7 +477,7 @@ var HomePage = /** @class */ (function () {
                                             _this.answer = speech;
                                         });
                                         _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                                        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                                         _this.ngZone.run(function () {
                                             _this.SignedIn = true;
                                         });
@@ -466,15 +491,15 @@ var HomePage = /** @class */ (function () {
                                     _this.answer = "Sorry, I can't find your number. You can sign up again!😊";
                                 });
                                 _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                                //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                                _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                             }
                         }
                         else {
                             _this.ngZone.run(function () {
-                                _this.answer = "I think you should sign up!😊";
+                                _this.answer = "You're my first contact!, sign up please😊";
                             });
                             _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                            _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                         }
                     });
                 }
@@ -493,7 +518,7 @@ var HomePage = /** @class */ (function () {
                                     _this.answer = "This number is already used";
                                 });
                                 _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                                //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                                _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                             }
                             else {
                                 var data = { First_name: result.parameters["First-name"], Last_name: result.parameters["Last-name"], Phone: result.parameters["phone-number"] };
@@ -502,7 +527,7 @@ var HomePage = /** @class */ (function () {
                                     _this.answer = result.fulfillment.speech;
                                 });
                                 _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                                //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                                _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                                 _this.ngZone.run(function () {
                                     _this.SignedIn = true;
                                 });
@@ -516,14 +541,14 @@ var HomePage = /** @class */ (function () {
                         _this.answer = result.fulfillment.speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                 }
                 else if (result.action == "Show_Friends" && _this.SignedIn == true) {
                     _this.ngZone.run(function () {
                         _this.answer = result.fulfillment.speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Friends").once('value').then(function (snapshot1) {
                         if (snapshot1.exists()) {
                             snapshot1.forEach(function (snapshot2) {
@@ -592,7 +617,7 @@ var HomePage = /** @class */ (function () {
                             _this.answer = result.fulfillment.speech;
                         });
                         _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                         return;
                     }
                     else if (result.action == 'getSat1' || result.action == 'getSat2' && value != '') {
@@ -601,7 +626,7 @@ var HomePage = /** @class */ (function () {
                             _this.answer = result.fulfillment.speech;
                         });
                         _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                         return;
                     }
                     else if (result.action == 'getTanyaThanawyGrade' || result.action == 'getTaltaThanawyGrade' && value != '') {
@@ -610,7 +635,7 @@ var HomePage = /** @class */ (function () {
                             _this.answer = result.fulfillment.speech;
                         });
                         _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                         return;
                     }
                     if (value != '') {
@@ -622,7 +647,7 @@ var HomePage = /** @class */ (function () {
                         _this.answer = result.fulfillment.speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                 }
                 else if (result.action == 'getFeedback-yes' && _this.SignedIn == true) {
                     _this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': _this.Intent_data.tutorName, 'subject': _this.Intent_data.subject } }, { sessionId: _this.uuid })
@@ -633,7 +658,7 @@ var HomePage = /** @class */ (function () {
                             _this.answer = speech;
                         });
                         _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                         _this.ngZone.run(function () {
                             _this.tutor_Feedback = true;
                         });
@@ -646,7 +671,7 @@ var HomePage = /** @class */ (function () {
                         _this.answer = result.fulfillment.speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                     if (result.actionIncomplete == true) {
                         if (result.parameters["place"] == "") {
                         }
@@ -730,7 +755,7 @@ var HomePage = /** @class */ (function () {
                         _this.answer = result.fulfillment.speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                     _this.afDatabase.database.ref("users/" + _this.Token + "/Study groups").once('value').then(function (snapshot1) {
                         if (snapshot1.exists()) {
                             _this.ngZone.run(function () {
@@ -752,8 +777,7 @@ var HomePage = /** @class */ (function () {
                     });
                 }
                 else if (result.action == "showUniversities" && result.parameters.country != '' && _this.SignedIn == true) {
-                    _this.afDatabase.database.ref('/universtes').child(result.parameters.country)
-                        .once('value').then(function (snapshot1) {
+                    _this.afDatabase.database.ref('/universtes').child(result.parameters.country).once('value').then(function (snapshot1) {
                         snapshot1.forEach(function (snapshot2) {
                             var university = snapshot2.val();
                             university['country'] = result.parameters.country,
@@ -768,7 +792,26 @@ var HomePage = /** @class */ (function () {
                             _this.answer = 'There are some universities!';
                         });
                         _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
+                    });
+                }
+                else if (result.action == "Schools" && result.actionIncomplete == false && _this.SignedIn == true) {
+                    _this.afDatabase.database.ref('/Schools').child(result.parameters.location).once('value').then(function (snapshot1) {
+                        snapshot1.forEach(function (snapshot2) {
+                            var school = snapshot2.val();
+                            school['Region'] = result.parameters.location,
+                                _this.ngZone.run(function () {
+                                    _this.schools.push(school);
+                                });
+                        });
+                        _this.ngZone.run(function () {
+                            _this.need_school = 1;
+                        });
+                        _this.ngZone.run(function () {
+                            _this.answer = result.fulfillment.speech;
+                        });
+                        _this.session_log += 'Alis: ' + _this.answer + '<*>';
+                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                     });
                 }
                 else if (result.action == "applyToStudentActivity" && result.parameters.studentActivityName != '' && _this.SignedIn == true) {
@@ -786,7 +829,7 @@ var HomePage = /** @class */ (function () {
                             _this.answer = _this.allQuestions[_this.questionNumber];
                         });
                         _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                        _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                         _this.ngZone.run(function () {
                             _this.formQuestion = true;
                         });
@@ -797,7 +840,7 @@ var HomePage = /** @class */ (function () {
                         _this.answer = result.fulfillment.speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                     if (result.actionIncomplete == true) {
                         if (result.parameters["studentActivity"] == "") { }
                         else if (result.parameters["day"] == "") {
@@ -895,23 +938,41 @@ var HomePage = /** @class */ (function () {
                     });
                 }
                 else if (result.action == "ShowMajors" && _this.SignedIn == true) {
-                    _this.relevantMajors();
+                }
+                else if (result.action == "Career_Info" && result.actionIncomplete == false && _this.SignedIn == true) {
+                    _this.afDatabase.database.ref("Careers/" + result.parameters.career).once('value').then(function (snapshot) {
+                        if (snapshot.exists()) {
+                            var career = snapshot.val();
+                            career["Career"] = result.parameters.career;
+                            _this.Careers.push(career);
+                            _this.Show_Career = true;
+                        }
+                    });
                 }
                 else if (result.action !== "input.unknown" && result.action !== "input.welcome" && result.action !== "SignIn" && result.action !== "SignUp" && result.action !== "SignUp-Credentials" && _this.SignedIn == false) {
                     _this.ngZone.run(function () {
                         _this.answer = "I think you should sign in!😊";
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                 }
                 else {
                     _this.ngZone.run(function () {
                         _this.answer = result.fulfillment.speech;
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                 }
-                _this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(function (snapshot1) { _this.ngZone.run(function () { _this.options = snapshot1.val(); }); });
+                for (var index = 0; index < result.contexts.length; index++) {
+                    if (result.contexts[index]["name"].includes("dialog_params_")) {
+                        var parameter = result.contexts[index]["name"].substring(result.contexts[index]["name"].indexOf("dialog_params_") + "dialog_params_".length);
+                        _this.afDatabase.database.ref('options').child(result.metadata.intentName + " - " + parameter).once('value').then(function (snapshot) { _this.ngZone.run(function () { _this.options = snapshot.val(); }); });
+                        break;
+                    }
+                    else if (index == result.contexts.length - 1) {
+                        _this.afDatabase.database.ref('options').child(result.metadata.intentName).once('value').then(function (snapshot) { _this.ngZone.run(function () { _this.options = snapshot.val(); }); });
+                    }
+                }
             }).once('error', function (error) {
                 console.log(error);
             }).end();
@@ -996,7 +1057,7 @@ var HomePage = /** @class */ (function () {
             _this.answer = "Thanks for your Feedback😊";
         });
         this.session_log += 'Alis: ' + this.answer + '<*>';
-        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+        this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
     };
     HomePage.prototype.Invite = function () {
         var _this = this;
@@ -1052,7 +1113,7 @@ var HomePage = /** @class */ (function () {
                         _this.answer = "I invited your selected friends to the study group!😊";
                     });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
-                    //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+                    _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                 });
             });
         }
@@ -1061,7 +1122,7 @@ var HomePage = /** @class */ (function () {
                 _this.answer = "Please invite at least 1 of your friends";
             });
             this.session_log += 'Alis: ' + this.answer + '<*>';
-            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
         }
     };
     HomePage.prototype.Group_Select = function (Group) {
@@ -1070,7 +1131,7 @@ var HomePage = /** @class */ (function () {
             _this.answer = "Here are the people in the study group on " + Group["Date"] + " at " + Group["Time"] + " in " + Group["Place"];
         });
         this.session_log += 'Alis: ' + this.answer + '<*>';
-        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+        this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
         this.afDatabase.database.ref("users/" + this.Token + "/Study groups/" + Group["Study_Token"] + "/People").once('value').then(function (snapshot1) {
             var People = [];
             snapshot1.forEach(function (snapshot2) {
@@ -1111,7 +1172,7 @@ var HomePage = /** @class */ (function () {
                 _this.answer = "You have accepted to join that study group";
             });
             this.session_log += 'Alis: ' + this.answer + '<*>';
-            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
             this.afDatabase.database.ref("users/" + this.Token + "/Phone").once('value').then(function (MyPhone) {
                 _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
                     if (snapshot1.exists()) {
@@ -1166,7 +1227,7 @@ var HomePage = /** @class */ (function () {
                 _this.answer = "You have refused to join that study group";
             });
             this.session_log += 'Alis: ' + this.answer + '<*>';
-            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
             this.afDatabase.database.ref("users/" + this.Token + "/Phone").once('value').then(function (MyPhone) {
                 _this.afDatabase.database.ref('users').once('value').then(function (snapshot1) {
                     if (snapshot1.exists()) {
@@ -1266,7 +1327,7 @@ var HomePage = /** @class */ (function () {
             _this.answer = "I reserved your lesson! 😊";
         });
         this.session_log += 'Alis: ' + this.answer + '<*>';
-        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+        this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
     };
     HomePage.prototype.Make_Reminder = function (datetime, hours) {
         var reminder = new Date(datetime);
@@ -1303,13 +1364,12 @@ var HomePage = /** @class */ (function () {
     HomePage.prototype.selectUniversity = function (i) {
         var _this = this;
         var universityID = this.universities[i].university_id;
-        this.afDatabase.database.ref('users').child(this.Token).child('universityInterests').push(universityID)
-            .then(function () {
+        this.afDatabase.database.ref('users').child(this.Token).child('universityInterests').push(universityID).then(function () {
             _this.ngZone.run(function () {
                 _this.answer = "Nice, Reserved";
             });
             _this.session_log += 'Alis: ' + _this.answer + '<*>';
-            //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
             return;
         });
     };
@@ -1383,7 +1443,7 @@ var HomePage = /** @class */ (function () {
             _this.answer = "Thanks for your time. " + _this.Intent_data["SU_name"] + " is waiting to see you on " + slot.Date + " at " + slot.Start_time + " in " + slot.Place;
         });
         this.session_log += 'Alis: ' + this.answer + '<*>';
-        //this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+        this.afDatabase.database.ref("sessions/" + this.uuid + "/Text").set(this.session_log);
         this.afDatabase.database.ref(this.Intent_data["SU_name"] + "/applicants/" + this.Token + "/slot").update({
             Date: slot.Date,
             Start_time: slot.Start_time,
@@ -1546,7 +1606,7 @@ var HomePage = /** @class */ (function () {
     ], HomePage.prototype, "slides", void 0);
     HomePage = __decorate([
         Object(__WEBPACK_IMPORTED_MODULE_4__angular_core__["m" /* Component */])({
-            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n    <ion-navbar>\n\n        <ion-title>\n\n            <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n        <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n            <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n        </ion-title>\n\n    </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content no-bounce>\n\n    <ion-list>\n\n        <div *ngIf="answer?.length > 0" no-lines>\n\n            <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n\n                <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n                <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n            </ion-card>\n\n\n\n\n\n            <ion-card text-wrap class="purple">\n\n                <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n\n\n                <ion-card *ngIf="need_tutor == 1">\n\n                    <ion-slides class="slider-slide">\n\n                        <ion-slide class="slider-slide" *ngFor="let Tutor of Tutors">\n\n                            <ion-toolbar>\n\n                                <ion-buttons end>\n\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                                </ion-buttons>\n\n                            </ion-toolbar>\n\n                            <img src="{{Tutor.image}}" class="slide-image" />\n\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.name}}</h1>\n\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.phone}}</h1>\n\n                            <button ion-button color="primary" class="joinbutton" (click)="Tutor_Select(Tutor)" round>\n\n                                Join Tutor\n\n                            </button>\n\n                        </ion-slide>\n\n                    </ion-slides>\n\n                </ion-card>\n\n\n\n                <ion-list *ngIf="need_tutor == 2">\n\n                    <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>Slot</i></h2>\n\n                        <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n\n                        <h2><i>Place</i></h2>\n\n                        <p>{{lesson.place}}</p>\n\n                        <h2><i>Cost</i></h2>\n\n                        <p>{{lesson.cost}}</p>\n\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Tutor_Reserve(i)" item-end></ion-icon>\n\n                    </ion-item>\n\n                </ion-list>\n\n\n\n\n\n                <ion-list *ngIf="Show_applicants == true">\n\n                    <div *ngFor="let applicant of applicants; let i = index">\n\n                        <ion-item style="border-bottom: 1px solid purple;">\n\n                            <h2><i>{{applicant.Name}}</i></h2>\n\n                            <p>{{applicant.Status}}</p>\n\n                            <ion-icon *ngIf="applicant.IsViewed == false" name="arrow-dropright-circle" class="select_icon"\n\n                                (click)="Show_Applicant(applicant,i)" item-start></ion-icon>\n\n                            <ion-icon *ngIf="applicant.IsViewed == true" name="arrow-dropdown-circle" class="select_icon"\n\n                                (click)="Hide_Applicant(i)" item-start></ion-icon>\n\n                        </ion-item>\n\n\n\n                        <ion-list *ngIf="Show_application == true && applicant.IsViewed == true">\n\n                            <ion-item *ngFor="let Response of applicant.Responses;let i = index">\n\n                                <h2><i>{{applicant.Questions[i]}}</i></h2>\n\n                                <p>{{Response}}</p>\n\n                            </ion-item>\n\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n\n                                (click)="Action_on_Applicant($event,i)">Accept</button>\n\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n\n                                (click)="Action_on_Applicant($event,i)">Refuse</button>\n\n                        </ion-list>\n\n                    </div>\n\n                </ion-list>\n\n\n\n                <ion-list *ngIf="Show_Interview_slots == true">\n\n                    <ion-item *ngFor="let slot of Interview_slots; let i = index" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>Slot</i></h2>\n\n                        <p>{{slot.Date}}, {{slot.Start_time}} -> {{slot.End_time}}</p>\n\n                        <h2><i>Place</i></h2>\n\n                        <p>{{slot.Place}}</p>\n\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Choose_Interview_slot(slot)"\n\n                            item-end></ion-icon>\n\n                    </ion-item>\n\n                </ion-list>\n\n\n\n                <div *ngIf="tutor_Feedback == true">\n\n                    <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n\n                        name="star" (click)="rating(1)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n                        (click)="rating(2)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n                        (click)="rating(3)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n\n                </div>\n\n\n\n                <div *ngIf="Show_date == true">\n\n                    <ion-item>\n\n                        <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="date"></ion-datetime>\n\n                    </ion-item>\n\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=date;ask()">Choose\n\n                        Time</button>\n\n                </div>\n\n\n\n                <div *ngIf="Show_time == true">\n\n                    <ion-item>\n\n                        <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="time"></ion-datetime>\n\n                    </ion-item>\n\n                    <button ion-button clear block *ngIf="Show_ChooseFriends == true" (click)="question=time;ask()">Choose\n\n                        friends</button>\n\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=time;ask()">Choose\n\n                        Time</button>\n\n                    <button ion-button clear block *ngIf="Show_ChooseDuration == true" (click)="question=time;ask()">Choose\n\n                        Duration</button>\n\n                </div>\n\n\n\n                <div *ngIf="Show_duration == true">\n\n                    <ion-item>\n\n                        <ion-label>Duration</ion-label>\n\n                        <ion-select [(ngModel)]="duration">\n\n                            <div *ngFor="let number of \' \'.repeat(60).split(\'\'), let i = index">\n\n                                <ion-option value="{{i+1}}">{{i+1}}</ion-option>\n\n                            </div>\n\n                        </ion-select>\n\n                    </ion-item>\n\n                    <button ion-button clear block *ngIf="Show_WritePlace == true" (click)="question=duration;ask()">Write\n\n                        Place</button>\n\n                </div>\n\n\n\n                <ion-list *ngIf="Show_groups == 1">\n\n                    <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>{{Group.Place}}</i></h2>\n\n                        <p>{{Group.Date}}, {{Group.Time}}</p>\n\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Group_Select(Group)"\n\n                            item-end></ion-icon>\n\n                    </ion-item>\n\n                </ion-list>\n\n\n\n                <ion-list *ngIf="Show_groups == 2">\n\n                    <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>{{Study_Person.Name}}:</i></h2>\n\n                        <p item-end>{{Study_Person.Status}}</p>\n\n                    </ion-item>\n\n                </ion-list>\n\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>\n\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>\n\n\n\n                <ion-list *ngIf="Show_Friends == true">\n\n                    <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n\n                        <ion-label>\n\n                            <h2><i>{{Friend.Name}}:</i></h2>\n\n                        </ion-label>\n\n                        <p item-end>{{Friend.Phone}}</p>\n\n                        <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n\n                    </ion-item>\n\n                </ion-list>\n\n                <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n\n\n                <ion-card *ngIf="need_universty == 1">\n\n                    <ion-slides class="slider-slide">\n\n                        <ion-slide class="slider-slide" *ngFor="let slide of universities; let i = index">\n\n                            <ion-toolbar>\n\n                                <ion-buttons end>\n\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                                </ion-buttons>\n\n                            </ion-toolbar>\n\n                            <img src="{{slide.img_url}}" class="slide-image" />\n\n                            <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>\n\n                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>\n\n                            <p class="descriptioncard">{{slide.description}}</p>\n\n\n\n                            <button ion-button large clear icon-end color="primary" (click)="selectUniversity(i)"\n\n                                disabled={{interestedButton}}>\n\n                                Interested\n\n                                <ion-icon name="ios-flash-outline"></ion-icon>\n\n                            </button>\n\n\n\n                        </ion-slide>\n\n                    </ion-slides>\n\n                </ion-card>\n\n\n\n\n\n                <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n            </ion-card>\n\n            <br>\n\n        </div>\n\n    </ion-list>\n\n    <!--<div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n\n        <div style="text-align: center" class="options">\n\n            <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n                <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n            </div>\n\n\n\n        </div>\n\n    </div>-->\n\n</ion-content>\n\n\n\n<ion-footer style="background-color:#ffffff">\n\n    <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n\n        <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n            <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n        </div>\n\n    </div>\n\n    <div class="flex-items" padding>\n\n        <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n\n        <button class="circularbutton" ion-button icon-only (click)="ask()">\n\n            <ion-icon name="send" class="send"></ion-icon>\n\n        </button>\n\n    </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
+            selector: 'page-home',template:/*ion-inline-start:"D:\FF\ALIS\src\pages\home\home.html"*/'<ion-header no-border>\n\n    <ion-navbar>\n\n        <ion-title>\n\n            <!--<ion-icon class = "Lefticon" ios="ios-information-circle" md="md-information-circle"></ion-icon>\n\n        <ion-icon class ="Righticon" ios="ios-help-circle" md="md-help-circle"></ion-icon>-->\n\n            <img class="logo" src="../assets/imgs/Purple-PNG.png">\n\n        </ion-title>\n\n    </ion-navbar>\n\n</ion-header>\n\n\n\n<ion-content no-bounce>\n\n    <ion-list>\n\n        <div *ngIf="answer?.length > 0" no-lines>\n\n            <ion-card *ngIf="Alis_first == false" text-wrap class="grey">\n\n                <ion-item text-wrap class="greytext">{{chat}}</ion-item>\n\n                <ion-label class="greyclock">{{CurrentTime}}</ion-label>\n\n            </ion-card>\n\n\n\n\n\n            <ion-card text-wrap class="purple">\n\n                <ion-item text-wrap class="purpletext">{{answer}}</ion-item>\n\n\n\n                <ion-card *ngIf="need_tutor == 1">\n\n                    <ion-slides class="slider-slide">\n\n                        <ion-slide class="slider-slide" *ngFor="let Tutor of Tutors">\n\n                            <ion-toolbar>\n\n                                <ion-buttons end>\n\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                                </ion-buttons>\n\n                            </ion-toolbar>\n\n                            <img src="{{Tutor.image}}" class="slide-image" />\n\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.name}}</h1>\n\n                            <h1 class="description" style="font-size: 15px;">{{Tutor.phone}}</h1>\n\n                            <button ion-button color="primary" class="joinbutton" (click)="Tutor_Select(Tutor)" round>\n\n                                Join Tutor\n\n                            </button>\n\n                        </ion-slide>\n\n                    </ion-slides>\n\n                </ion-card>\n\n\n\n                <ion-list *ngIf="need_tutor == 2">\n\n                    <ion-item *ngFor="let lesson of Current_Tutor.lessons; let i = index" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>Slot</i></h2>\n\n                        <p>{{lesson.slot.date}}, {{lesson.slot.start_time}} -> {{lesson.slot.end_time}}</p>\n\n                        <h2><i>Place</i></h2>\n\n                        <p>{{lesson.place}}</p>\n\n                        <h2><i>Cost</i></h2>\n\n                        <p>{{lesson.cost}}</p>\n\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Tutor_Reserve(i)" item-end></ion-icon>\n\n                    </ion-item>\n\n                </ion-list>\n\n\n\n\n\n                <ion-list *ngIf="Show_applicants == true">\n\n                    <div *ngFor="let applicant of applicants; let i = index">\n\n                        <ion-item style="border-bottom: 1px solid purple;">\n\n                            <h2><i>{{applicant.Name}}</i></h2>\n\n                            <p>{{applicant.Status}}</p>\n\n                            <ion-icon *ngIf="applicant.IsViewed == false" name="arrow-dropright-circle" class="select_icon"\n\n                                (click)="Show_Applicant(applicant,i)" item-start></ion-icon>\n\n                            <ion-icon *ngIf="applicant.IsViewed == true" name="arrow-dropdown-circle" class="select_icon"\n\n                                (click)="Hide_Applicant(i)" item-start></ion-icon>\n\n                        </ion-item>\n\n\n\n                        <ion-list *ngIf="Show_application == true && applicant.IsViewed == true">\n\n                            <ion-item *ngFor="let Response of applicant.Responses;let i = index">\n\n                                <h2><i>{{applicant.Questions[i]}}</i></h2>\n\n                                <p>{{Response}}</p>\n\n                            </ion-item>\n\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n\n                                (click)="Action_on_Applicant($event,i)">Accept</button>\n\n                            <button ion-button block *ngIf="Select_Applicants == true && applicant.Status == \'Pending\'"\n\n                                (click)="Action_on_Applicant($event,i)">Refuse</button>\n\n                        </ion-list>\n\n                    </div>\n\n                </ion-list>\n\n\n\n                <ion-list *ngIf="Show_Interview_slots == true">\n\n                    <ion-item *ngFor="let slot of Interview_slots; let i = index" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>Slot</i></h2>\n\n                        <p>{{slot.Date}}, {{slot.Start_time}} -> {{slot.End_time}}</p>\n\n                        <h2><i>Place</i></h2>\n\n                        <p>{{slot.Place}}</p>\n\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Choose_Interview_slot(slot)"\n\n                            item-end></ion-icon>\n\n                    </ion-item>\n\n                </ion-list>\n\n\n\n                <div *ngIf="tutor_Feedback == true">\n\n                    <ion-icon class="rating" [color]="rated==1 ||rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'"\n\n                        name="star" (click)="rating(1)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==2 ||rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n                        (click)="rating(2)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==3 ||rated==4 ||rated==5? \'rate\' : \'light\'" name="star"\n\n                        (click)="rating(3)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==4 ||rated==5? \'rate\' : \'light\'" name="star" (click)="rating(4)"></ion-icon>\n\n                    <ion-icon class="rating" [color]="rated==5? \'rate\' : \'light\'" name="star" (click)="rating(5)"></ion-icon>\n\n                </div>\n\n\n\n                <div *ngIf="Show_date == true">\n\n                    <ion-item>\n\n                        <ion-datetime displayFormat="M/D/YYYY" min="2018" placeholder="M/D/YYYY" [(ngModel)]="date"></ion-datetime>\n\n                    </ion-item>\n\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=date;ask()">Choose\n\n                        Time</button>\n\n                </div>\n\n\n\n                <div *ngIf="Show_time == true">\n\n                    <ion-item>\n\n                        <ion-datetime displayFormat="h:mm A" placeholder="h:mm A" [(ngModel)]="time"></ion-datetime>\n\n                    </ion-item>\n\n                    <button ion-button clear block *ngIf="Show_ChooseFriends == true" (click)="question=time;ask()">Choose\n\n                        friends</button>\n\n                    <button ion-button clear block *ngIf="Show_ChooseTime == true" (click)="question=time;ask()">Choose\n\n                        Time</button>\n\n                    <button ion-button clear block *ngIf="Show_ChooseDuration == true" (click)="question=time;ask()">Choose\n\n                        Duration</button>\n\n                </div>\n\n\n\n                <div *ngIf="Show_duration == true">\n\n                    <ion-item>\n\n                        <ion-label>Duration</ion-label>\n\n                        <ion-select [(ngModel)]="duration">\n\n                            <div *ngFor="let number of \' \'.repeat(60).split(\'\'), let i = index">\n\n                                <ion-option value="{{i+1}}">{{i+1}}</ion-option>\n\n                            </div>\n\n                        </ion-select>\n\n                    </ion-item>\n\n                    <button ion-button clear block *ngIf="Show_WritePlace == true" (click)="question=duration;ask()">Write\n\n                        Place</button>\n\n                </div>\n\n\n\n                <ion-list *ngIf="Show_groups == 1">\n\n                    <ion-item *ngFor="let Group of Study_Groups" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>{{Group.Place}}</i></h2>\n\n                        <p>{{Group.Date}}, {{Group.Time}}</p>\n\n                        <ion-icon name="arrow-dropright-circle" class="select_icon" (click)="Group_Select(Group)"\n\n                            item-end></ion-icon>\n\n                    </ion-item>\n\n                </ion-list>\n\n\n\n                <ion-list *ngIf="Show_groups == 2">\n\n                    <ion-item *ngFor="let Study_Person of Current_Group.Study_People" style="border-bottom: 1px solid purple;">\n\n                        <h2><i>{{Study_Person.Name}}:</i></h2>\n\n                        <p item-end>{{Study_Person.Status}}</p>\n\n                    </ion-item>\n\n                </ion-list>\n\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Accept</button>\n\n                <button ion-button block *ngIf="Select_Groups == true" (click)="Group_Reply($event)">Refuse</button>\n\n\n\n                <ion-list *ngIf="Show_Friends == true">\n\n                    <ion-item *ngFor="let Friend of Friends" style="border-bottom: 1px solid purple;">\n\n                        <ion-label>\n\n                            <h2><i>{{Friend.Name}}:</i></h2>\n\n                        </ion-label>\n\n                        <p item-end>{{Friend.Phone}}</p>\n\n                        <ion-checkbox *ngIf="Select_Friends == true" [(ngModel)]="Friend.checked"></ion-checkbox>\n\n                    </ion-item>\n\n                </ion-list>\n\n                <button ion-button block *ngIf="Select_Friends == true" (click)="Invite()">Invite</button>\n\n\n\n                <ion-card *ngIf="need_universty == 1">\n\n                    <ion-slides class="slider-slide">\n\n                        <ion-slide class="slider-slide" *ngFor="let university of universities; let i = index">\n\n                            <ion-toolbar>\n\n                                <ion-buttons end>\n\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                                </ion-buttons>\n\n                            </ion-toolbar>\n\n                            <img src="{{university.img_url}}" class="slide-image" />\n\n                            <h1 class="description" style="font-size: 15px;">{{university.name}}</h1>\n\n                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{university.location}}</h6>\n\n                            <p class="descriptioncard">{{university.description}}</p>\n\n\n\n                            <button ion-button large clear icon-end color="primary" (click)="selectUniversity(i)"\n\n                                disabled={{interestedButton}}>\n\n                                Interested\n\n                                <ion-icon name="ios-flash-outline"></ion-icon>\n\n                            </button>\n\n\n\n                        </ion-slide>\n\n                    </ion-slides>\n\n                </ion-card>\n\n\n\n\n\n                <ion-card *ngIf="need_school == 1">\n\n                    <ion-slides class="slider-slide">\n\n                        <ion-slide class="slider-slide" *ngFor="let school of schools; let i = index">\n\n                            <ion-toolbar>\n\n                                <ion-buttons end>\n\n                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>\n\n                                </ion-buttons>\n\n                            </ion-toolbar>\n\n                            <img src="{{school.Picture}}" class="slide-image" />\n\n                            <h1 class="description" style="font-size: 15px;">{{school.Name}}</h1>\n\n                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{school.Region}}</h6>\n\n                            <p class="descriptioncard">{{school.Description}}</p>\n\n                        </ion-slide>\n\n                    </ion-slides>\n\n                </ion-card>\n\n\n\n                <ion-list *ngIf="Show_Career == true">\n\n                    <ion-item *ngFor="let Career of Careers" style="border-bottom: 1px solid purple;">\n\n                        <h2 style="text-align: center"><b><i>{{Career.Career}}</i></b></h2>\n\n                        <h2><i>Average Salary:</i></h2>\n\n                        <p>{{Career["Average Salary"]}}</p>\n\n                        <h2><i>Avg International Salary:</i></h2>\n\n                        <p>{{Career["Avg International Salary"]}}</p>\n\n                        <h2><i>Demand Ranking:</i></h2>\n\n                        <p>{{Career["Demand Ranking"]}}</p>\n\n                        <h2><i>Description:</i></h2>\n\n                        <p>{{Career["Description"]}}</p>\n\n                        <h2><i>Tasks:</i></h2>\n\n                        <p>{{Career["Tasks"]}}</p>\n\n                        <h2><i>Top Employers:</i></h2>\n\n                        <p>{{Career["Top Employers"]}}</p>\n\n                        <h2><i>Top Skills:</i></h2>\n\n                        <p>{{Career["Top Skills"]}}</p>\n\n                        <h2><i>Universities:</i></h2>\n\n                        <p>{{Career["Universities"]}}</p>\n\n                    </ion-item>\n\n                </ion-list>\n\n\n\n                <ion-label class="purpleclock">{{CurrentTime}}</ion-label>\n\n            </ion-card>\n\n            <br>\n\n        </div>\n\n    </ion-list>\n\n    <!--<div style=" padding-top:1px; position: absolute; bottom: 5px;width: 100%">\n\n        <div style="text-align: center" class="options">\n\n            <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n                <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n            </div>\n\n\n\n        </div>\n\n    </div>-->\n\n</ion-content>\n\n\n\n<ion-footer style="background-color:#ffffff">\n\n    <div style="background-color:#ffffff;margin-top:15px;text-align: center" class="options">\n\n        <div class="options" no-lines *ngFor="let option of options;" text-center>\n\n            <button class="optionbutton" ion-button round outline (click)="question=option;ask()">{{option}}</button>\n\n        </div>\n\n    </div>\n\n    <div class="flex-items" padding>\n\n        <ion-input [(ngModel)]="question" class="input_message" placeholder="Type a message..."></ion-input>\n\n        <button class="circularbutton" ion-button icon-only (click)="ask()">\n\n            <ion-icon name="send" class="send"></ion-icon>\n\n        </button>\n\n    </div>\n\n</ion-footer>'/*ion-inline-end:"D:\FF\ALIS\src\pages\home\home.html"*/
         }),
         __metadata("design:paramtypes", [__WEBPACK_IMPORTED_MODULE_5_ionic_angular__["f" /* NavController */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["g" /* Platform */], __WEBPACK_IMPORTED_MODULE_4__angular_core__["M" /* NgZone */], __WEBPACK_IMPORTED_MODULE_6__node_modules_angularfire2_database__["a" /* AngularFireDatabase */], __WEBPACK_IMPORTED_MODULE_3__services_Sharing_Service_SharingService_service__["a" /* SharingService */], __WEBPACK_IMPORTED_MODULE_7__ionic_native_contacts__["a" /* Contacts */], __WEBPACK_IMPORTED_MODULE_2__ionic_native_network__["a" /* Network */], __WEBPACK_IMPORTED_MODULE_1__ionic_native_calendar__["a" /* Calendar */], __WEBPACK_IMPORTED_MODULE_5_ionic_angular__["a" /* AlertController */], __WEBPACK_IMPORTED_MODULE_0__ionic_native_fcm__["a" /* FCM */], __WEBPACK_IMPORTED_MODULE_9__node_modules_angular_common_http__["a" /* HttpClient */]])
     ], HomePage);

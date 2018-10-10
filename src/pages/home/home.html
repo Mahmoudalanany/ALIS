@@ -161,16 +161,16 @@
 
                 <ion-card *ngIf="need_universty == 1">
                     <ion-slides class="slider-slide">
-                        <ion-slide class="slider-slide" *ngFor="let slide of universities; let i = index">
+                        <ion-slide class="slider-slide" *ngFor="let university of universities; let i = index">
                             <ion-toolbar>
                                 <ion-buttons end>
                                     <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>
                                 </ion-buttons>
                             </ion-toolbar>
-                            <img src="{{slide.img_url}}" class="slide-image" />
-                            <h1 class="description" style="font-size: 15px;">{{slide.universtyName}}</h1>
-                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{slide.location}}</h6>
-                            <p class="descriptioncard">{{slide.description}}</p>
+                            <img src="{{university.img_url}}" class="slide-image" />
+                            <h1 class="description" style="font-size: 15px;">{{university.name}}</h1>
+                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{university.location}}</h6>
+                            <p class="descriptioncard">{{university.description}}</p>
 
                             <button ion-button large clear icon-end color="primary" (click)="selectUniversity(i)"
                                 disabled={{interestedButton}}>
@@ -182,6 +182,44 @@
                     </ion-slides>
                 </ion-card>
 
+
+                <ion-card *ngIf="need_school == 1">
+                    <ion-slides class="slider-slide">
+                        <ion-slide class="slider-slide" *ngFor="let school of schools; let i = index">
+                            <ion-toolbar>
+                                <ion-buttons end>
+                                    <button ion-button class="nextbutton" color="primary" (click)="nextSlide()">Next</button>
+                                </ion-buttons>
+                            </ion-toolbar>
+                            <img src="{{school.Picture}}" class="slide-image" />
+                            <h1 class="description" style="font-size: 15px;">{{school.Name}}</h1>
+                            <h6 class="description" style="font-size : 12px;"><b>Location:</b>{{school.Region}}</h6>
+                            <p class="descriptioncard">{{school.Description}}</p>
+                        </ion-slide>
+                    </ion-slides>
+                </ion-card>
+
+                <ion-list *ngIf="Show_Career == true">
+                    <ion-item *ngFor="let Career of Careers" style="border-bottom: 1px solid purple;">
+                        <h2 style="text-align: center"><b><i>{{Career.Career}}</i></b></h2>
+                        <h2><i>Average Salary:</i></h2>
+                        <p>{{Career["Average Salary"]}}</p>
+                        <h2><i>Avg International Salary:</i></h2>
+                        <p>{{Career["Avg International Salary"]}}</p>
+                        <h2><i>Demand Ranking:</i></h2>
+                        <p>{{Career["Demand Ranking"]}}</p>
+                        <h2><i>Description:</i></h2>
+                        <p>{{Career["Description"]}}</p>
+                        <h2><i>Tasks:</i></h2>
+                        <p>{{Career["Tasks"]}}</p>
+                        <h2><i>Top Employers:</i></h2>
+                        <p>{{Career["Top Employers"]}}</p>
+                        <h2><i>Top Skills:</i></h2>
+                        <p>{{Career["Top Skills"]}}</p>
+                        <h2><i>Universities:</i></h2>
+                        <p>{{Career["Universities"]}}</p>
+                    </ion-item>
+                </ion-list>
 
                 <ion-label class="purpleclock">{{CurrentTime}}</ion-label>
             </ion-card>
