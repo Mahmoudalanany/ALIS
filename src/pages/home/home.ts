@@ -338,22 +338,8 @@ export class HomePage {
 
       if (this.allQuestions.length == this.questionNumber) {
         this.addFormAnswers(this.formAnswers);
-        this.relevantMajors()
-        this.afDatabase.database.ref(`users/${this.Token}/PossibleMajors`).once('value').then(snapshot1 => {
-          if (snapshot1.exists()) {
-            let majors = []
-            snapshot1.forEach(snapshot2 => {
-              majors.push({ 'Major': snapshot2.key, 'Rank': snapshot2.val() })
-            })
-            console.log(majors.sort(function (a, b) { return b.Rank - a.Rank }));
-            majors.forEach(major => {
-              this.ngZone.run(() => {
-                this.answer += major['Major'] + '\n'
-              })
-            })
-          }
-        })
         this.ngZone.run(() => {
+          this.answer = "okay now you're done";
           this.questionNumber = 0;
           this.formQuestion = false;
         })
@@ -510,7 +496,11 @@ export class HomePage {
             || result.action == 'getSat1' || result.action == 'getSat2'
             || result.action == 'getTanyaThanawyGrade' || result.action == 'getTaltaThanawyGrade'
             && this.SignedIn == true) {
-
+            this.ngZone.run(() => {
+              this.answer = result.fulfillment.speech;
+            })
+            this.session_log += 'Alis: ' + this.answer + '<*>'
+            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
             let parameters = result.parameters;
             let key = Object.keys(parameters)[0];
             let value = parameters[key]
@@ -521,44 +511,22 @@ export class HomePage {
               || result.action == 'getIGMathGrade' || result.action == 'getIGChemistryGrade'
               || result.action == 'getIGPhysicsGrade' || result.action == 'getIGBiologyGrade' &&
               value != '') {
-
               this.addData('/users', this.Token, 'IG_Grades', data).then().catch();
-              this.ngZone.run(() => {
-                this.answer = result.fulfillment.speech;
-              })
-              this.session_log += 'Alis: ' + this.answer + '<*>'
-              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-              return;
             }
             else if (result.action == 'getSat1' || result.action == 'getSat2' && value != '') {
-
               this.addData('/users', this.Token, 'satGrades', data).then().catch();
-              this.ngZone.run(() => {
-                this.answer = result.fulfillment.speech;
-              })
-              this.session_log += 'Alis: ' + this.answer + '<*>'
-              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-              return;
             }
             else if (result.action == 'getTanyaThanawyGrade' || result.action == 'getTaltaThanawyGrade' && value != '') {
               this.addData('/users', this.Token, 'thanawyGrades', data).then().catch();
-              this.ngZone.run(() => {
-                this.answer = result.fulfillment.speech;
-              })
-              this.session_log += 'Alis: ' + this.answer + '<*>'
-              this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
-              return;
             }
-            if (value != '') {
+            else if (value != '') {
               this.addData('users', this.Token, null, data).then(() => {
                 console.log('Saved');
               }).catch();
             }
-            this.ngZone.run(() => {
-              this.answer = result.fulfillment.speech;
-            })
-            this.session_log += 'Alis: ' + this.answer + '<*>'
-            this.afDatabase.database.ref(`sessions/${this.uuid}/Text`).set(this.session_log)
+            if (result.action == 'getIGBiologyGrade' || result.action == 'getSat2' || result.action == 'getTaltaThanawyGrade' && value != '') {
+              this.relevantMajors()
+            }
           }
           else if (result.action == 'getFeedback-yes' && this.SignedIn == true) {
             this.API_Agent.eventRequest({ name: "getFeedback-yes", data: { 'tutorName': this.Intent_data.tutorName, 'subject': this.Intent_data.subject } }, { sessionId: this.uuid })
@@ -1458,6 +1426,20 @@ export class HomePage {
             let data = {};
             data[Major] = rank;
             this.addData('/users', this.Token, 'PossibleMajors', data).then().catch();
+          }
+        })
+        this.afDatabase.database.ref(`users/${this.Token}/PossibleMajors`).once('value').then(snapshot1 => {
+          if (snapshot1.exists()) {
+            let majors = []
+            snapshot1.forEach(snapshot2 => {
+              majors.push({ 'Major': snapshot2.key, 'Rank': snapshot2.val() })
+            })
+            majors.sort(function (a, b) { return b.Rank - a.Rank });
+            majors.forEach(major => {
+              this.ngZone.run(() => {
+                this.answer += major['Major'] + '\n'
+              })
+            })
           }
         })
       })
