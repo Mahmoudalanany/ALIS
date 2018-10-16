@@ -846,6 +846,7 @@ export class HomePage {
           for (let index = 0; index < result.contexts.length; index++) {
             if (result.contexts[index]["name"].includes("dialog_params_")) {
               let parameter = result.contexts[index]["name"].substring(result.contexts[index]["name"].indexOf("dialog_params_") + "dialog_params_".length);
+              console.log(result);
               this.afDatabase.database.ref('options').child(`${result.metadata.intentName} - ${parameter}`).once('value').then(snapshot => { this.ngZone.run(() => { this.options = snapshot.val() }) })
               break;
             }
@@ -1406,20 +1407,34 @@ export class HomePage {
   relevantMajors() {
     let userschool;
     let usergrade;
+    let userhobbies;//step 1
     this.afDatabase.database.ref("/users").child(this.Token).once("value").then(snapshot => {
       userschool = snapshot.child("School").val();
       usergrade = snapshot.child("Grade").val();
+      userhobbies = snapshot.child("hobbies").val();
       this.afDatabase.database.ref("/Old Users").once("value").then(snapshot1 => {
         snapshot1.forEach(snapshot2 => {
           let schoolname = snapshot2.child("SchoolName").val();
           let schoolgrade = snapshot2.child("Grade").val();
+          let oldhobbies = snapshot2.child("hobbies").val();
           let Major = snapshot2.child("Major").val();
           let MatchedCases = 0;
           let schoolSimilarity = this.similarity(userschool, schoolname) * 100;
           if (schoolSimilarity > 0) { MatchedCases++; }
           let gradeSimilarity = this.similarnumber(usergrade, schoolgrade) * 100;
           if (gradeSimilarity > 0) { MatchedCases++; }
-          let totalPercent = schoolSimilarity + gradeSimilarity;
+          let hobbiesSimilarity = 0;
+          let common_hobbies = 0
+          for (let x = 0; x < userhobbies.length; x++) {
+            for (let y = 0; y < oldhobbies.length; y++) {
+              let hobbysimilarity = 0;
+              hobbysimilarity = this.similarity(userhobbies[x], oldhobbies[y]);
+              hobbiesSimilarity += hobbysimilarity
+              if (hobbysimilarity > 0) { common_hobbies += hobbysimilarity; }
+            }
+          } MatchedCases += (common_hobbies / oldhobbies.length)
+          hobbiesSimilarity *= 100;
+          let totalPercent = schoolSimilarity + gradeSimilarity + hobbiesSimilarity;
           let rank = MatchedCases * totalPercent;
           console.log("This users matched cases = " + MatchedCases + " with percentage " + totalPercent + " and rank " + rank);
           if (rank > 0) {

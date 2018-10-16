@@ -429,6 +429,7 @@ var HomePage = /** @class */ (function () {
             if (this.allQuestions.length == this.questionNumber) {
                 this.addFormAnswers(this.formAnswers);
                 this.ngZone.run(function () {
+                    _this.answer = "okay now you're done";
                     _this.questionNumber = 0;
                     _this.formQuestion = false;
                 });
@@ -588,11 +589,9 @@ var HomePage = /** @class */ (function () {
                     || result.action == 'getSat1' || result.action == 'getSat2'
                     || result.action == 'getTanyaThanawyGrade' || result.action == 'getTaltaThanawyGrade'
                     && _this.SignedIn == true) {
-                    if (result.fulfillment.speech != '') {
-                        _this.ngZone.run(function () {
-                            _this.answer = result.fulfillment.speech;
-                        });
-                    }
+                    _this.ngZone.run(function () {
+                        _this.answer = result.fulfillment.speech;
+                    });
                     _this.session_log += 'Alis: ' + _this.answer + '<*>';
                     _this.afDatabase.database.ref("sessions/" + _this.uuid + "/Text").set(_this.session_log);
                     var parameters = result.parameters;
@@ -1496,13 +1495,16 @@ var HomePage = /** @class */ (function () {
         var _this = this;
         var userschool;
         var usergrade;
+        var userhobbies; //step 1
         this.afDatabase.database.ref("/users").child(this.Token).once("value").then(function (snapshot) {
             userschool = snapshot.child("School").val();
             usergrade = snapshot.child("Grade").val();
+            userhobbies = snapshot.child("hobbies").val();
             _this.afDatabase.database.ref("/Old Users").once("value").then(function (snapshot1) {
                 snapshot1.forEach(function (snapshot2) {
                     var schoolname = snapshot2.child("SchoolName").val();
                     var schoolgrade = snapshot2.child("Grade").val();
+                    var oldhobbies = snapshot2.child("hobbies").val();
                     var Major = snapshot2.child("Major").val();
                     var MatchedCases = 0;
                     var schoolSimilarity = _this.similarity(userschool, schoolname) * 100;
@@ -1513,7 +1515,25 @@ var HomePage = /** @class */ (function () {
                     if (gradeSimilarity > 0) {
                         MatchedCases++;
                     }
-                    var totalPercent = schoolSimilarity + gradeSimilarity;
+                    var hobbiesSimilarity = 0;
+                    var common_hobbies = 0;
+                    for (var x = 0; x < userhobbies.length; x++) {
+                        for (var y = 0; y < oldhobbies.length; y++) {
+                            var hobbysimilarity = 0;
+                            hobbysimilarity = _this.similarity(userhobbies[x], oldhobbies[y]);
+                            hobbiesSimilarity += hobbysimilarity;
+                            if (hobbysimilarity > 0) {
+                                console.log(userhobbies[x] + " -> " + oldhobbies[y] + " = " + hobbysimilarity);
+                                common_hobbies++;
+                            }
+                        }
+                    }
+                    console.log("abl " + MatchedCases);
+                    console.log(common_hobbies + " " + oldhobbies.length + " " + common_hobbies / oldhobbies.length);
+                    MatchedCases += (common_hobbies / oldhobbies.length);
+                    console.log("b3d " + MatchedCases);
+                    hobbiesSimilarity *= 100;
+                    var totalPercent = schoolSimilarity + gradeSimilarity + hobbiesSimilarity;
                     var rank = MatchedCases * totalPercent;
                     console.log("This users matched cases = " + MatchedCases + " with percentage " + totalPercent + " and rank " + rank);
                     if (rank > 0) {
